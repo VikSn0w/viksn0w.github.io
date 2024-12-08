@@ -1,0 +1,462 @@
+/* General Reset */
+body {
+    margin: 0;
+    font-family: 'Inter', sans-serif;
+    line-height: 1.6;
+    color: #333;
+    background-color: #f9f9f9;
+}
+
+h1, h2, h3 {
+    margin: 0.5em 0;
+    font-weight: 600;
+}
+
+p {
+    margin: 0.5em 0;
+}
+
+/* Header */
+.hero {
+    background: linear-gradient(135deg, #ececec, #ffffff);
+    text-align: center;
+    padding: 2rem 0;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.hero h1 {
+    font-size: 2.5rem;
+    color: #333;
+}
+
+.subtitle {
+    font-size: 1.2rem;
+    color: #555;
+}
+
+/* Navigation */
+.navigation {
+    background: #333;
+    color: #fff;
+    padding: 1rem 0;
+}
+
+.navigation ul {
+    list-style: none;
+    display: flex;
+    justify-content: center;
+    margin: 0;
+    padding: 0;
+}
+
+.navigation li {
+    margin: 0 1rem;
+}
+
+.navigation a {
+    color: #fff;
+    text-decoration: none;
+    font-weight: 500;
+    font-size: 1rem;
+}
+
+/* Sections */
+.container {
+    max-width: 900px;
+    margin: 2rem auto;
+    padding: 0 1rem;
+}
+
+.about, .experience, .projects, .contact, .hobbies {
+    background: #fff;
+    border-radius: 8px;
+    padding: 1.5rem;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* Cards */
+.card {
+    background: #f5f5f5;
+    border-radius: 8px;
+    margin: 1rem 0;
+    padding: 1rem;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* Footer */
+footer {
+    background: #222;
+    color: #fff;
+    text-align: center;
+    padding: 1rem 0;
+}
+
+.map {
+    margin-top: 2rem;
+    background: #fff;
+    border-radius: 8px;
+    padding: 1.5rem;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.map-container {
+    margin-top: 1rem;
+    border: none;
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+#leaflet-map {
+    width: 100%;
+    height: 400px;
+    margin-top: 1rem;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.about-content {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+}
+
+.profile-pic {
+    border-radius: 50%;
+    width: 160px;
+    height: 160px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    animation: fadeIn 1s ease-in-out;
+}
+
+.intro-text {
+    animation: slideIn 1s ease-in-out;
+}
+
+.timeline {
+    position: relative;
+    margin: 30px 0;
+}
+
+.timeline-item {
+    padding: 15px;
+    border-left: 3px solid #333;
+    margin-left: 20px;
+}
+
+.timeline-item-work {
+    padding: 15px;
+    border-left: 3px solid #af0000;
+    margin-left: 20px;
+    transition: transform 0.3s ease;
+
+}
+
+.timeline-item-academic {
+    padding: 15px;
+    border-left: 3px solid #0000af;
+    margin-left: 20px;
+    transition: transform 0.3s ease;
+
+}
+
+.timeline-item-work:hover, .timeline-item-academic:hover, .certifications-column:hover {
+    transform: translateY(-10px);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+}
+
+.timeline-date {
+    font-style: italic;
+    font-size: 0.9em;
+    color: gray;
+}
+
+.project-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 20px;
+}
+
+.project-card {
+    padding: 15px;
+    border: 1px solid #ccc;
+    border-radius: 10px;
+    text-align: center;
+    transition: transform 0.3s ease;
+}
+
+.project-card:hover {
+    transform: translateY(-10px);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+}
+
+.project-card img {
+    width: 100%;
+    border-radius: 8px;
+    margin-bottom: 10px;
+}
+
+#leaflet-map {
+    height: 400px;
+    margin-top: 20px;
+    border-radius: 10px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+}
+
+body{
+    animation: fadeInAnimation ease 1s;
+    animation-iteration-count: 1;
+    animation-fill-mode: forwards;
+}
+
+@keyframes fadeInAnimation {
+    0% {
+        opacity: 0;
+    }
+    100% {
+        opacity: 1;
+    }
+}
+
+html {
+    scroll-behavior: smooth;
+}
+
+hr.rounded {
+    border-top: 5px solid #333;
+    border-radius: 10px;
+}
+
+.certifications {
+    background: #fff;
+    border-radius: 8px;
+    padding: 1.5rem;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.certifications h2 {
+    font-size: 2.5em;
+    margin-bottom: 20px;
+}
+
+.certifications-grid {
+    display: flex;
+    gap: 30px;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+.certifications-column {
+    flex: 1;
+    max-width: 400px;
+    min-width: 280px;
+    background-color: #fff;
+    padding: 20px;
+    border-radius: 10px;
+    border: 1px solid #ccc;
+    transition: transform 0.3s ease;
+}
+
+.certifications-column h3 {
+    font-size: 1.8em;
+    margin-bottom: 15px;
+    color: #333;
+}
+
+.certification-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.certification-item {
+    margin-bottom: 15px;
+    padding: 10px;
+    border-bottom: 1px solid #ccc;
+}
+
+.certification-item:last-child {
+    border-bottom: none;
+}
+
+.certification-item h4 {
+    font-size: 1.2em;
+    color: #4caf50;
+    margin-bottom: 5px;
+}
+
+.certification-item p {
+    margin: 2px 0;
+    font-size: 0.9em;
+    color: #555;
+}
+
+header {
+    position: relative;
+    z-index: 1000;
+}
+
+.navigation {
+    background-color: #333;
+    color: #fff;
+    display: flex;
+    justify-content: center;
+    padding: 10px 0;
+    position: sticky; /* Makes the nav stick */
+    top: 0; /* Stick at the very top of the viewport */
+    z-index: 999;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2); /* Adds a shadow for separation */
+}
+
+.navigation ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    gap: 15px;
+}
+
+.navigation ul li {
+    margin: 0;
+}
+
+.navigation ul li a {
+    text-decoration: none;
+    color: white;
+    padding: 8px 15px;
+    border-radius: 4px;
+    transition: background-color 0.3s ease;
+}
+
+.navigation ul li a:hover {
+    background-color: #4caf50;
+}
+
+.hobbies-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 20px;
+}
+
+.hobbies-card {
+    padding: 15px;
+    border: 1px solid #ccc;
+    border-radius: 10px;
+    text-align: center;
+    transition: transform 0.3s ease;
+}
+
+.hobbies-card:hover {
+    transform: translateY(-10px);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+}
+
+body, h1, h2, h3, p, ul, li, img {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+body {
+    font-family: 'Inter', sans-serif;
+    line-height: 1.6;
+    color: #333;
+    margin: 0;
+}
+
+.container {
+    width: 90%;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+/* Hero Section */
+.hero {
+    text-align: center;
+    padding: 2rem 1rem;
+    background-color: #f4f4f4;
+}
+
+.profile-pic {
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    margin-bottom: 1rem;
+}
+
+/* Navigation */
+.navigation {
+    background-color: #333;
+}
+
+.navigation ul {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    padding: 0.5rem 0;
+}
+
+.navigation a {
+    color: white;
+    text-decoration: none;
+    padding: 0.5rem 1rem;
+    margin: 0 0.5rem;
+    font-weight: bold;
+    border-radius: 5px;
+}
+
+.navigation a:hover {
+    background-color: #555;
+}
+
+/* Section Titles */
+h2 {
+    text-align: center;
+    margin: 2rem 0 1rem;
+    font-size: 1.8rem;
+}
+
+/* About Section */
+.about {
+    text-align: center;
+    padding: 1rem 0;
+}
+
+/* Footer */
+footer {
+    text-align: center;
+    padding: 1rem;
+    background: #333;
+    color: white;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .navigation ul {
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .profile-pic {
+        width: 80px;
+        height: 80px;
+    }
+
+    h2 {
+        font-size: 1.5rem;
+    }
+
+    p, a {
+        font-size: 0.9rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .navigation a {
+        font-size: 0.8rem;
+        padding: 0.4rem;
+    }
+
+    h2 {
+        font-size: 1.2rem;
+    }
+}
