@@ -19,20 +19,28 @@
     </div>
 </header>
 
-<nav id="navigation" class="navigation">
-    <div class="container">
-        <ul>
-            <li><a href="#about">About</a></li>
-            <li><a href="#work-experience">Work Experience</a></li>
-            <li><a href="#academic-experience">Academic Experience</a></li>
-            <li><a href="#projects">Projects</a></li>
-            <li><a href="#certifications">Certifications</a></li>
-            <li><a href="#hobbies">Hobbies</a></li>
-            <li><a href="#contact">Contacts</a></li>
-        </ul>
-    </div>
-</nav>
+<div class="hamburger-container">
+    <button id="hamburger" class="hamburger">&#9776;</button>
+</div>
 
+<!-- Sidebar -->
+<aside id="sidebar" class="sidebar">
+    <button id="close-sidebar" class="close-btn">&times;</button>
+    <div class="sidebar-content">
+        <nav style="margin-top:20%;">
+            <ul>
+                <li><a href="#about">About</a></li>
+                <li><a href="#work-experience">Work Experience</a></li>
+                <li><a href="#academic-experience">Academic Experience</a></li>
+                <li><a href="#projects">Projects</a></li>
+                <li><a href="#certifications">Certifications</a></li>
+                <li><a href="#hobbies">Hobbies</a></li>
+                <li><a href="#contact">Contact</a></li>
+            </ul>
+        </nav>
+    </div>
+</aside>
+<main>
 <section id="about" class="container about">
     <h2>Brief Me</h2>
     <div class="about-content">
@@ -96,24 +104,6 @@
     </div>
 </section>
 
-<section id="hobbies" class="container hobbies">
-    <h2>Hobbies</h2>
-    <div class="hobbies-grid">
-        <div class="hobbies-card">
-            <img src="images/project1.jpg" alt="Project Thumbnail">
-            <h3>Neural Network for Product Classification</h3>
-            <p>Analyzed text to generate a requirements matrix for products.</p>
-            <a href="https://github.com/vittoriopicone/project1" target="_blank">View on GitHub</a>
-        </div>
-        <div class="hobbies-card">
-            <img src="images/project2.jpg" alt="Project Thumbnail">
-            <h3>ECU Monitoring Platform</h3>
-            <p>Built a web app for real-time ECU data visualization.</p>
-            <a href="https://github.com/vittoriopicone/project2" target="_blank">View on GitHub</a>
-        </div>
-    </div>
-</section>
-
 <section id="certifications" class="container certifications">
     <h2>Certifications</h2>
     <div class="certifications-grid">
@@ -161,7 +151,26 @@
     </div>
 </section>
 
-<section id="contact" class="container contact">
+    <section id="hobbies" class="container hobbies">
+        <h2>Hobbies</h2>
+        <div class="hobbies-grid">
+            <div class="hobbies-card">
+                <img src="images/project1.jpg" alt="Project Thumbnail">
+                <h3>Neural Network for Product Classification</h3>
+                <p>Analyzed text to generate a requirements matrix for products.</p>
+                <a href="https://github.com/vittoriopicone/project1" target="_blank">View on GitHub</a>
+            </div>
+            <div class="hobbies-card">
+                <img src="images/project2.jpg" alt="Project Thumbnail">
+                <h3>ECU Monitoring Platform</h3>
+                <p>Built a web app for real-time ECU data visualization.</p>
+                <a href="https://github.com/vittoriopicone/project2" target="_blank">View on GitHub</a>
+            </div>
+        </div>
+    </section>
+
+
+    <section id="contact" class="container contact">
     <h2>Contact</h2>
     <form action="https://formspree.io/f/example" method="POST">
         <input type="text" name="name" placeholder="Your Name" required>
@@ -170,6 +179,7 @@
         <button type="submit">Send</button>
     </form>
 </section>
+</main>
 
 <footer>
     <div class="container">
@@ -178,6 +188,23 @@
 </footer>
 </body>
 <script>
+
+    document.addEventListener("DOMContentLoaded", () => {
+        const hamburger = document.getElementById("hamburger");
+        const sidebar = document.getElementById("sidebar");
+        const closeSidebar = document.getElementById("close-sidebar");
+
+        // Open sidebar
+        hamburger.addEventListener("click", () => {
+            sidebar.classList.add("active");
+        });
+
+        // Close sidebar
+        closeSidebar.addEventListener("click", () => {
+            sidebar.classList.remove("active");
+        });
+    });
+
     // Initialize the map
     const map = L.map('leaflet-map').setView([40.856880435120395, 14.284352589907105], 12); // Centered on Italy
 
