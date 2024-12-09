@@ -72,6 +72,8 @@ p {
     border-radius: 8px;
     padding: 1.5rem;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    margin-top: 1%;
+
 }
 
 /* Cards */
@@ -363,12 +365,6 @@ body {
     margin: 0;
 }
 
-.container {
-    width: 90%;
-    max-width: 1200px;
-    margin: 0 auto;
-}
-
 /* Hero Section */
 .hero {
     text-align: center;
@@ -415,11 +411,6 @@ h2 {
     font-size: 1.8rem;
 }
 
-/* About Section */
-.about {
-    text-align: center;
-    padding: 1rem 0;
-}
 
 /* Footer */
 footer {
