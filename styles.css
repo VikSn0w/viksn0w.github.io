@@ -543,3 +543,20 @@ footer {
     left: 0;
     z-index: 999;
 }
+
+i {
+    font-size: 23pt;
+}
+
+.contact-item img {
+    width: 24px;
+    height: 24px;
+    margin-right: 10px;
+}
+a {
+    text-decoration: none;
+    color: #007bff;
+}
+a:hover {
+    text-decoration: underline;
+}

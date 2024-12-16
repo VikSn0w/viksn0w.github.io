@@ -8,6 +8,9 @@
     <link rel="stylesheet" href="styles.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet" type='text/css' href="https://cdn.jsdelivr.net/gh/devicons/devicon@latest/devicon.min.css" />
+
 </head>
 
 <body>
@@ -85,21 +88,12 @@
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
+
+
 <section id="projects" class="container projects">
     <h2>Projects</h2>
-    <div class="project-grid">
-        <div class="project-card">
-            <img src="images/project1.jpg" alt="Project Thumbnail">
-            <h3>Neural Network for Product Classification</h3>
-            <p>Analyzed text to generate a requirements matrix for products.</p>
-            <a href="https://github.com/vittoriopicone/project1" target="_blank">View on GitHub</a>
-        </div>
-        <div class="project-card">
-            <img src="images/project2.jpg" alt="Project Thumbnail">
-            <h3>ECU Monitoring Platform</h3>
-            <p>Built a web app for real-time ECU data visualization.</p>
-            <a href="https://github.com/vittoriopicone/project2" target="_blank">View on GitHub</a>
-        </div>
+    <div class="project-grid" id="project-grid">
+
     </div>
 </section>
 
@@ -165,19 +159,43 @@
                 <p>Built a web app for real-time ECU data visualization.</p>
                 <a href="https://github.com/vittoriopicone/project2" target="_blank">View on GitHub</a>
             </div>
+            <div class="hobbies-card">
+                <img src="images/project2.jpg" alt="Project Thumbnail">
+                <h3>ECU Monitoring Platform</h3>
+                <p>Built a web app for real-time ECU data visualization.</p>
+                <a href="https://github.com/vittoriopicone/project2" target="_blank">View on GitHub</a>
+            </div>
+            <div class="hobbies-card">
+                <img src="images/project2.jpg" alt="Project Thumbnail">
+                <h3>ECU Monitoring Platform</h3>
+                <p>Built a web app for real-time ECU data visualization.</p>
+                <a href="https://github.com/vittoriopicone/project2" target="_blank">View on GitHub</a>
+            </div>
         </div>
     </section>
 
 
     <section id="contact" class="container contact">
-    <h2>Contact</h2>
-    <form action="https://formspree.io/f/example" method="POST">
-        <input type="text" name="name" placeholder="Your Name" required>
-        <input type="email" name="_replyto" placeholder="Your Email" required>
-        <textarea name="message" placeholder="Your Message" rows="5" required></textarea>
-        <button type="submit">Send</button>
-    </form>
-</section>
+        <h2>Contact</h2>
+        <div style="display: flex; flex-wrap: wrap; justify-content: space-around;">
+            <div class="contact-item">
+                <img src="https://cdn-icons-png.flaticon.com/512/174/174857.png" alt="LinkedIn">
+                <a href="https://www.linkedin.com/in/vittorio-picone-916319168/" target="_blank">vittorio-picone</a>
+            </div>
+            <div class="contact-item">
+                <img src="https://cdn-icons-png.flaticon.com/512/174/174855.png" alt="Instagram">
+                <a href="https://www.instagram.com/vik.desmo" target="_blank">@vik.desmo</a>
+            </div>
+            <div class="contact-item">
+                <img src="https://cdn-icons-png.flaticon.com/512/732/732200.png" alt="Email">
+                <a href="mailto:vittoriopicone30@gmail.com"  target="_blank">vittoriopicone30@gmail.com</a>
+            </div>
+            <div class="contact-item">
+                <img src="https://cdn-icons-png.flaticon.com/512/724/724664.png" alt="Phone">
+                <a href="tel:+393922016432">+39 3922016432</a>
+            </div>
+        </div>
+    </section>
 </main>
 
 <footer>
@@ -200,8 +218,7 @@
             if (isClosed) {
                 sidebar.classList.add("active");
                 isClosed = false;
-            }
-            else {
+            } else {
                 sidebar.classList.remove("active");
                 isClosed = true;
             }
@@ -240,6 +257,54 @@
         shadowAnchor: [14, 41]
     });
 
+    const projects = [
+        {
+            urlimg: "images/ducati.png",
+            title: "CoreDucati",
+            description: "This project was created to deepen my expertise in Swift, SwiftUI, and Core Data through a practical, hands-on approach. I chose a unique methodology, opting not to develop a conventional backend service or remote database. Instead, I fetch data and images from a remote JSON hosted on GitHub, fully integrating external resources into the app without an intermediary server.\n",
+
+            giturl: "https://github.com/VikSn0w/Ducati-CoreDatabike",
+            technologies: ["devicon-swift-plain", ]
+        },
+        {
+            urlimg: "https://raw.githubusercontent.com/VikSn0w/StudiSync/refs/heads/master/logo_studisync.jpeg",
+            title: "StudiSync",
+            description: "An application with the purpose of managing university exams between students and office with complete server and client side code.",
+
+            giturl: "https://github.com/VikSn0w/StudiSync/tree/master",
+            technologies: ["devicon-python-plain", "devicon-flask-plain"]
+        },
+        {
+            urlimg: "images/trigoai.png",
+            title: "TrigoAI",
+            description: "A series of AI experiments about trigonometric functions. This project was born with the purpose of better understading how neural networks work by starting with an easy concept. The first code is about the Sine function.",
+            giturl: "https://github.com/VikSn0w/TrigoAI",
+            technologies: ["devicon-matplotlib-plain", "devicon-python-plain", "devicon-pytorch-original"]
+        },
+        {
+            urlimg: "https://raw.githubusercontent.com/VikSn0w/DevBox/refs/heads/main/DevBox/Assets.xcassets/AppIcon.appiconset/Untitled-1.png",
+            title: "DevBox",
+            description: "Born from the ashes of DevUtilities, DevBox has the same mission of its predecessor but with SwiftUI and collaboration with other members of the community in mind.\n" +
+                "\n" +
+                "In short: DevBox is an application that provides plenty of utilities for coding, coded for coders. It has the necessary for fast calculations and operations, like Bitwise operations, Conversions, IP Operations and many more functions!",
+            giturl: "https://github.com/VikSn0w/DevBox",
+            technologies: ["devicon-swift-plain"]
+        },
+        {
+            urlimg: "images/FluidSimulation.png",
+            title: "FluidSimulation",
+            description: "2D fluid simulation in SFML written C++",
+            giturl: "https://github.com/VikSn0w/FluidSimulation-SFML-CXX",
+            technologies: ["devicon-c-plain","devicon-cplusplus-plain"]
+        },
+        {
+            urlimg: "images/EASY68k.png",
+            title: "68k",
+            description: "Programs coded in assembly 68k for education purpose",
+            giturl: "https://github.com/VikSn0w/68k",
+            technologies: ["asm"]
+        }
+    ]
 
     // Add markers for your locations
     const locations = [
@@ -327,7 +392,7 @@
             start: "August 2021",
             end: "May 2022",
             description: "Analysis and development of a web application that allows companies to effectively view and manage the traffic of their naval fleet, routes and ports connected to them."
-         },
+        },
     ];
 
     // Add markers to the map
@@ -340,8 +405,7 @@
     function populateTimelines() {
         const worktimeline = document.getElementById('work-timeline');
         const academictimeline = document.getElementById('academic-timeline');
-        console.log(worktimeline);
-        console.log(academictimeline);
+
         locations.forEach((location, index) => {
             // Create the timeline item
             const timelineItem = document.createElement('div');
@@ -371,9 +435,9 @@
             // Add click event to scroll to the map and focus on the marker
             timelineItem.addEventListener('click', () => {
                 const coords = location.coords;
-                map.setView(coords, 12, { animate: true }); // Zoom and pan to marker
+                map.setView(coords, 12, {animate: true}); // Zoom and pan to marker
                 markers[index].openPopup(); // Open the popup for the marker
-                document.getElementById('map').scrollIntoView({ behavior: 'smooth' });
+                document.getElementById('map').scrollIntoView({behavior: 'smooth'});
             });
 
             // Append to the timeline container
@@ -381,7 +445,43 @@
         });
     }
 
+    function populateProjects() {
+        const projectGrid = document.getElementById('project-grid');
+        projects.forEach((project, index) => {
+            let techs = "https://skillicons.dev/icons?i="
+            for (let i = 0; i < project.technologies.length; i++) {
+                techs += `${project.technologies[i]},`;
+            }
+
+            const projectItem = document.createElement('div');
+            projectItem.className = `project-card`;
+            let logos = ``
+            for (let i = 0; i < project.technologies.length; i++) {
+                if(project.technologies[i] === "asm"){
+                    logos += `<img style="width:23pt; margin-bottom: 0px;" src="images/asm_icon.jpeg">`;
+                }
+                else
+                {
+                    logos += `<i style="padding: 10px;" class="${project.technologies[i]}"></i>`;
+                }
+            }
+            projectItem.innerHTML = `
+                    <p style="text-align: center">
+                        ${logos}
+                    </p>
+                    <img style="max-width: 256px" src="${project.urlimg}" alt="Project Thumbnail">
+                    <h3>${project.title}</h3>
+                    <p>${project.description}</p>
+                    <a href="${project.giturl}" target="_blank">View on GitHub</a>
+
+            `
+
+            projectGrid.appendChild(projectItem);
+        });
+    }
+
     populateTimelines();
+    populateProjects();
 </script>
 
 
