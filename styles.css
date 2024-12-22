@@ -4,7 +4,8 @@ body {
     font-family: 'Inter', sans-serif;
     line-height: 1.6;
     color: #333;
-    background-color: #f9f9f9;
+    background-color: #4e4d4d;
+    background-image: url(images/img-noise-361x370.png);
 }
 
 h1, h2, h3 {
@@ -18,20 +19,21 @@ p {
 
 /* Header */
 .hero {
-    background: linear-gradient(135deg, #ececec, #ffffff);
+    background: linear-gradient(135deg, #3e3e3e, #393939);
     text-align: center;
     padding: 2rem 0;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    color: #ededed;
 }
 
 .hero h1 {
     font-size: 2.5rem;
-    color: #333;
+    color: #ededed;
 }
 
 .subtitle {
     font-size: 1.2rem;
-    color: #555;
+    color: #ededed;
 }
 
 /* Navigation */
@@ -68,12 +70,12 @@ p {
 }
 
 .about, .experience, .projects, .contact, .hobbies {
-    background: #fff;
+    background: #2e2e2e;
     border-radius: 8px;
     padding: 1.5rem;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
     margin-top: 1%;
-
+    color: #ededed;
 }
 
 /* Cards */
@@ -95,10 +97,11 @@ footer {
 
 .map {
     margin-top: 2rem;
-    background: #fff;
+    background: #2e2e2e;
     border-radius: 8px;
     padding: 1.5rem;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    color: #ededed;
 }
 
 .map-container {
@@ -128,6 +131,7 @@ footer {
     height: 160px;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
     animation: fadeIn 1s ease-in-out;
+    border: 5px solid #fff;
 }
 
 .intro-text {
@@ -184,6 +188,7 @@ footer {
     border-radius: 10px;
     text-align: center;
     transition: transform 0.3s ease;
+    background-color: #4e4d4d;
 }
 
 .project-card:hover {
@@ -224,15 +229,16 @@ html {
 }
 
 hr.rounded {
-    border-top: 5px solid #333;
+    border-top: 5px solid #ededed;
     border-radius: 10px;
 }
 
 .certifications {
-    background: #fff;
+    background: #2e2e2e;
     border-radius: 8px;
     padding: 1.5rem;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    color: #ededed;
 }
 
 .certifications h2 {
@@ -251,17 +257,19 @@ hr.rounded {
     flex: 1;
     max-width: 400px;
     min-width: 280px;
-    background-color: #fff;
     padding: 20px;
     border-radius: 10px;
     border: 1px solid #ccc;
     transition: transform 0.3s ease;
+    background-color: #4e4d4d;
+    color: #ededed;
+
 }
 
 .certifications-column h3 {
     font-size: 1.8em;
     margin-bottom: 15px;
-    color: #333;
+    color: #ededed;
 }
 
 .certification-list {
@@ -274,6 +282,8 @@ hr.rounded {
     margin-bottom: 15px;
     padding: 10px;
     border-bottom: 1px solid #ccc;
+    color: #ededed;
+
 }
 
 .certification-item:last-child {
@@ -284,12 +294,14 @@ hr.rounded {
     font-size: 1.2em;
     color: #4caf50;
     margin-bottom: 5px;
+
 }
 
 .certification-item p {
     margin: 2px 0;
     font-size: 0.9em;
-    color: #555;
+    color: #ededed;
+
 }
 
 header {
@@ -356,13 +368,6 @@ body, h1, h2, h3, p, ul, li, img {
     margin: 0;
     padding: 0;
     list-style: none;
-}
-
-body {
-    font-family: 'Inter', sans-serif;
-    line-height: 1.6;
-    color: #333;
-    margin: 0;
 }
 
 /* Hero Section */
@@ -555,7 +560,7 @@ i {
 }
 a {
     text-decoration: none;
-    color: #007bff;
+    color: #ededed;
 }
 a:hover {
     text-decoration: underline;
