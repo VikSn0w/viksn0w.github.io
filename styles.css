@@ -16,7 +16,15 @@ h1, h2, h3 {
 p {
     margin: 0.5em 0;
 }
-
+.leaflet-layer,
+.leaflet-control-zoom-in,
+.leaflet-control-zoom-out,
+.leaflet-control-attribution {
+    filter: invert(100%) hue-rotate(180deg) brightness(95%) contrast(90%);
+}
+.leaflet-container {
+    background: #2e2e2e !important;
+}
 /* Header */
 .hero {
     background: linear-gradient(135deg, #3e3e3e, #393939);
