@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Desmo Special Parts - Prodotti</title>
+  <!-- Bootstrap CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <style>
+    /* Custom Dark Theme Styles */
+    body {
+      background-color: #000;
+      color: #fff;
+      opacity: 0;
+      transition: opacity 2s;
+      -webkit-transition: opacity 2s; /* Safari */
+    }
+    .navbar, .offcanvas, .modal-content {
+      background-color: #111;
+    }
+    .navbar-brand, .nav-link, .offcanvas-title, .offcanvas a {
+      color: #ffffff;
+    }
+    .card {
+      background-color: #111;
+      border: 1px solid #ffffff;
+      transition: transform 0.3s ease;
+    }
+    .card:hover {
+      transform: scale(1.03);
+    }
+    .card-title {
+      color: #ffffff;
+    }
+    /* Make product images smaller */
+    .card-img-top {
+      max-height: 180px;
+      object-fit: cover;
+    }
+    .btn-custom {
+      background-color: #ffffff;
+      color: #000;
+      transition: background-color 0.3s ease, color 0.3s ease;
+    }
+    .btn-custom:hover {
+      background-color: #fff;
+      color: #000;
+    }
+    /* Slideshow Styles for Product Modal */
+    .slideshow-container {
+      position: relative;
+      text-align: center;
+      margin-bottom: 20px;
+      transition: all 0.3s ease;
+    }
+    .slideshow-container img {
+      max-width: 100%;
+      border-radius: 5px;
+    }
+    .prev, .next {
+      cursor: pointer;
+      position: absolute;
+      top: 50%;
+      width: auto;
+      padding: 8px;
+      color: #ffffff;
+      font-weight: bold;
+      font-size: 24px;
+      user-select: none;
+      background: rgba(0,0,0,0.5);
+      border-radius: 3px;
+      transform: translateY(-50%);
+      transition: background 0.3s ease;
+    }
+    .prev:hover, .next:hover {
+      background: rgba(0,0,0,0.7);
+    }
+    .prev {
+      left: 10px;
+    }
+    .next {
+      right: 10px;
+    }
+
+    @font-face {
+      font-family: 'UNIVERS'; /*a name to be used later*/
+      src: url('univers-lt-85-extra-black-oblique.otf'); /*URL to font*/
+    }
+
+    .titolo_sito {
+      font-family: 'UNIVERS',serif;
+      transition: color 0.5s;
+      -webkit-transition: color 0.5s; /* Safari */
+    }
+
+    .titolo_sito:hover{
+      color: #CB1517;;
+    }
+
+    .titolo_sito:not(:hover) {
+      color: #ffffff;
+      transition: color 0.5s;
+      -webkit-transition: color 0.5s;
+    }
+  </style>
+</head>
+<body onload="document.body.style.opacity='1'">
+<!-- Navbar con Offcanvas per Categorie -->
+<nav class="navbar navbar-expand-lg">
+  <div class="container-fluid">
+    <button class="btn btn-link text-decoration-none text-white" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasCategories" aria-controls="offcanvasCategories">
+      &#9776;
+    </button>
+    <a class="navbar-brand titolo_sito" href="index.html">Desmo Special Parts</a>
+    <button class="btn btn-custom" id="cartButton">Carrello (0)</button>
+  </div>
+</nav>
+
+<!-- Offcanvas Sidebar per Categorie -->
+<div class="offcanvas offcanvas-start" tabindex="-1" id="offcanvasCategories" aria-labelledby="offcanvasCategoriesLabel">
+  <div class="offcanvas-header">
+    <h5 class="offcanvas-title" id="offcanvasCategoriesLabel">Categorie</h5>
+    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas" aria-label="Chiudi"></button>
+  </div>
+  <div class="offcanvas-body" id="categoryLinks">
+    <!-- "Tutte le Categorie" link (altri link sono iniettati dinamicamente) -->
+    <a href="#" class="d-block mb-2" onclick="filterCategory('all');">Tutte le Categorie</a>
+  </div>
+</div>
+
+<!-- Contenuto Principale: Pulsanti di filtro e Griglia dei Prodotti -->
+<div class="container my-4">
+  <div id="filterButtons" class="mb-3">
+    <!-- Pulsanti filtro iniettati via JavaScript -->
+  </div>
+  <div class="row" id="productGrid">
+    <!-- Le card dei prodotti sono iniettate dinamicamente -->
+  </div>
+</div>
+
+<!-- Modal per Dettagli Prodotto (con fade per animazioni smooth) -->
+<div class="modal fade" id="productModal" tabindex="-1" aria-labelledby="productModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="productModalLabel">Dettagli Prodotto</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Chiudi"></button>
+      </div>
+      <div class="modal-body" id="productDetails">
+        <!-- I dettagli del prodotto (incluso slideshow) vengono iniettati qui -->
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal per il Carrello (con fade) -->
+<div class="modal fade" id="cartModal" tabindex="-1" aria-labelledby="cartModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="cartModalLabel">Il Tuo Carrello</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Chiudi"></button>
+      </div>
+      <div class="modal-body" id="cartItems">
+        <!-- Gli articoli del carrello sono iniettati qui -->
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-custom w-100" id="checkoutButton">Procedi al Checkout</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Bootstrap JS Bundle con Popper -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<!-- External Script for Articles -->
+<script src="articoli.js"></script>
+
+<script>
+  // Caricamento del carrello da localStorage (già definito in articoli.js)
+  let cart = JSON.parse(localStorage.getItem('cart')) || [];
+  function updateCartButton() {
+    document.getElementById('cartButton').textContent = 'Carrello (' + cart.length + ')';
+    localStorage.setItem('cart', JSON.stringify(cart));
+  }
+  updateCartButton();
+
+  // Raggruppa gli articoli per categoria (articoli definiti in articoli.js)
+  let groupedArticles = {};
+  articles.forEach(article => {
+    if (!groupedArticles[article.category]) {
+      groupedArticles[article.category] = [];
+    }
+    groupedArticles[article.category].push(article);
+  });
+
+  // Inietta i link delle categorie nell'offcanvas e i pulsanti di filtro
+  function populateCategories() {
+    const categoryLinksContainer = document.getElementById('categoryLinks');
+    const filterButtonsContainer = document.getElementById('filterButtons');
+
+    for (const category in groupedArticles) {
+      // Link per offcanvas
+      const link = document.createElement('a');
+      link.href = "#";
+      link.classList.add("d-block", "mb-2");
+      link.textContent = category;
+      link.onclick = () => {
+        filterCategory(category);
+      };
+      categoryLinksContainer.appendChild(link);
+
+      // Pulsante filtro
+      const btn = document.createElement('button');
+      btn.classList.add("btn", "btn-custom", "me-2", "mb-2");
+      btn.textContent = category;
+      btn.onclick = () => filterCategory(category);
+      filterButtonsContainer.appendChild(btn);
+    }
+  }
+
+  // Renderizza la griglia dei prodotti in base alla categoria selezionata
+  function renderProducts(categoryFilter = 'all') {
+    const productGrid = document.getElementById('productGrid');
+    productGrid.innerHTML = '';
+    const filteredArticles = (categoryFilter === 'all')
+            ? articles
+            : articles.filter(article => article.category === categoryFilter);
+
+    filteredArticles.forEach(article => {
+      const col = document.createElement('div');
+      col.className = 'col-md-4 mb-4';
+
+      const card = document.createElement('div');
+      card.className = 'card h-100';
+
+      const img = document.createElement('img');
+      img.src = 'img/' + article.images[0];
+      img.className = 'card-img-top';
+      img.alt = article.name;
+      card.appendChild(img);
+
+      const cardBody = document.createElement('div');
+      cardBody.className = 'card-body';
+      const title = document.createElement('h5');
+      title.className = 'card-title';
+      title.textContent = article.name;
+      cardBody.appendChild(title);
+
+      const comp = document.createElement('p');
+      comp.className = 'card-text';
+      comp.textContent = 'Compatibile con: ' + article.compatibility.join(', ');
+      comp.style = "color: #CB1517;";
+      cardBody.appendChild(comp);
+
+      card.appendChild(cardBody);
+      card.style.cursor = "pointer";
+      card.onclick = () => openProductModal(article);
+      col.appendChild(card);
+      productGrid.appendChild(col);
+    });
+  }
+
+  // Aggiorna lo stato dei pulsanti filtro e renderizza i prodotti
+  function filterCategory(category) {
+    const buttons = document.querySelectorAll('#filterButtons button');
+    buttons.forEach(btn => {
+      btn.classList.remove('active');
+      if (btn.textContent === category) btn.classList.add('active');
+    });
+    renderProducts(category);
+  }
+
+  // Apre il Modal del prodotto con slideshow
+  function openProductModal(article) {
+    const productDetails = document.getElementById('productDetails');
+    productDetails.innerHTML = '';
+
+    const slideshowContainer = document.createElement('div');
+    slideshowContainer.className = 'slideshow-container';
+    let slideIndex = 0;
+
+    function showSlide(index) {
+      if (index >= article.images.length) slideIndex = 0;
+      else if (index < 0) slideIndex = article.images.length - 1;
+      else slideIndex = index;
+      slideshowContainer.innerHTML = '';
+      const img = document.createElement('img');
+      img.src = 'img/' + article.images[slideIndex];
+      img.alt = article.name;
+      slideshowContainer.appendChild(img);
+
+      if (article.images.length > 1) {
+        const prevButton = document.createElement('a');
+        prevButton.className = 'prev';
+        prevButton.innerHTML = '&#10094;';
+        prevButton.onclick = (e) => { e.stopPropagation(); showSlide(slideIndex - 1); };
+        slideshowContainer.appendChild(prevButton);
+
+        const nextButton = document.createElement('a');
+        nextButton.className = 'next';
+        nextButton.innerHTML = '&#10095;';
+        nextButton.onclick = (e) => { e.stopPropagation(); showSlide(slideIndex + 1); };
+        slideshowContainer.appendChild(nextButton);
+      }
+    }
+    showSlide(slideIndex);
+    productDetails.appendChild(slideshowContainer);
+
+    const title = document.createElement('h2');
+    title.textContent = article.name;
+    productDetails.appendChild(title);
+
+    const description = document.createElement('p');
+    description.textContent = article.description;
+    productDetails.appendChild(description);
+
+    const articleCode = document.createElement('p');
+    articleCode.textContent = 'Codice Articolo: ' + article.articleCode;
+    productDetails.appendChild(articleCode);
+
+    const compatibility = document.createElement('p');
+    compatibility.textContent = 'Compatibile con: ' + article.compatibility.join(', ');
+    productDetails.appendChild(compatibility);
+
+    const addToCartBtn = document.createElement('button');
+    addToCartBtn.className = 'btn btn-custom';
+    addToCartBtn.textContent = 'Aggiungi al Carrello';
+    addToCartBtn.onclick = () => {
+      addToCart(article);
+      const productModal = bootstrap.Modal.getInstance(document.getElementById('productModal'));
+      productModal.hide();
+    };
+    productDetails.appendChild(addToCartBtn);
+
+    const productModalEl = document.getElementById('productModal');
+    const productModal = new bootstrap.Modal(productModalEl);
+    productModal.show();
+  }
+
+  // Funzioni per il Carrello
+  function addToCart(article) {
+    cart.push(article);
+    updateCartButton();
+  }
+  function updateCartButton() {
+    document.getElementById('cartButton').textContent = 'Carrello (' + cart.length + ')';
+    localStorage.setItem('cart', JSON.stringify(cart));
+  }
+  function openCartModal() {
+    const cartItems = document.getElementById('cartItems');
+    cartItems.innerHTML = '';
+    cart.forEach((item, index) => {
+      const div = document.createElement('div');
+      div.className = 'mb-2';
+      div.innerHTML = `<strong>${index + 1}. ${item.name}</strong><br/>Codice: ${item.articleCode}`;
+      cartItems.appendChild(div);
+    });
+    const cartModalEl = document.getElementById('cartModal');
+    const cartModal = new bootstrap.Modal(cartModalEl);
+    cartModal.show();
+  }
+  document.getElementById('cartButton').addEventListener('click', () => {
+    if (cart.length === 0) {
+      alert('Il tuo carrello è vuoto.');
+    } else {
+      openCartModal();
+    }
+  });
+  document.getElementById('checkoutButton').addEventListener('click', () => {
+    let message = 'Dettagli Ordine:%0A';
+    cart.forEach((item, index) => {
+      message += `%0A${index + 1}. ${item.name} (Codice: ${item.articleCode})`;
+    });
+    const whatsappUrl = 'https://wa.me/1234567890?text=' + message;
+    window.open(whatsappUrl, '_blank');
+    cart = [];
+    updateCartButton();
+    const cartModal = bootstrap.Modal.getInstance(document.getElementById('cartModal'));
+    if (cartModal) cartModal.hide();
+  });
+  // Inizializza la pagina
+  populateCategories();
+  renderProducts();
+</script>
+</body>
+</html>

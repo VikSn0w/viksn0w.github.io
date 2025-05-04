@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Desmo Special Parts - Home</title>
+  <!-- Bootstrap CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <script src="https://code.jquery.com/jquery-3.4.1.slim.min.js" integrity="sha384-J6qa4849blE2+poT4WnyKhv5vZF5SrPo0iEjwBvKU7imGFAV0wwj1yYfoRSJoZ+n" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js" integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.min.js" crossorigin="anonymous"></script>
+  <style>
+    body {
+      background-color: #000;
+      color: #fff;
+      opacity: 0;
+      transition: opacity 2s;
+      -webkit-transition: opacity 2s; /* Safari */
+    }
+    .navbar, .footer, .map-container, .offcanvas {
+      background-color: #111;
+    }
+    .navbar-brand, .nav-link {
+      color: #ffffff;
+    }
+    .btn-custom {
+      background-color: #ffffff;
+      color: #000;
+    }
+    .btn-custom:hover {
+      background-color: #fff;
+      color: #000;
+    }
+    .footer {
+      padding: 20px;
+      text-align: center;
+    }
+    .titolo_sito:hover {
+      color: #CB1517;
+      transition: color 0.5s;
+      -webkit-transition: color 0.5s;
+    }
+    .titolo_sito:not(:hover) {
+      color: #ffffff;
+      transition: color 0.5s;
+      -webkit-transition: color 0.5s;
+    }
+    @font-face {
+      font-family: 'UNIVERS';
+      src: url('univers-lt-85-extra-black-oblique.otf');
+    }
+    .titolo_sito {
+      font-family: 'UNIVERS', serif;
+    }
+
+    .nav-link:hover {
+      color: #CB1517;
+    }
+
+    .custom-toggler-icon{
+      background-image: url("data:image/svg+xml;charset=utf8,%3Csvg viewBox='0 0 32 32' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath stroke='rgba(255,255,255, 0.5)' stroke-width='2' stroke-linecap='round' stroke-miterlimit='10' d='M4 8h24M4 16h24M4 24h24'/%3E%3C/svg%3E");
+
+    }
+
+    .card {
+      height: 400px;
+    }
+    .card-img {
+      object-fit: cover;
+      height: 100%;
+    }
+
+  </style>
+</head>
+<body class="d-flex flex-column min-vh-100" onload="document.body.style.opacity='1'">
+<!-- Navbar -->
+<nav class="navbar navbar-expand-lg">
+  <div class="container-fluid">
+    <a class="navbar-brand titolo_sito" href="#">Desmo Special Parts</a>
+    <button class="navbar-toggler" style="    border-color: rgb(255,255,255);" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNavDropdown" aria-controls="navbarNavDropdown" aria-expanded="false" aria-label="Toggle navigation">
+      <span class="navbar-toggler-icon custom-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="navbarNavDropdown">
+      <ul class="navbar-nav  ms-auto ">
+        <li class="nav-item">
+          <a class="nav-link" type="button" href="articles.html">
+            Prodotti
+          </a>
+        </li>
+        <li class="nav-item">
+          <button class="nav-link" id="cartButton">Carrello (0)</button>
+        </li>
+      </ul>
+    </div>
+  </div>
+</nav>
+
+<div class="container mt-4">
+  <div class="card bg-dark text-white">
+    <!-- The video becomes the background of the card -->
+    <video autoplay loop muted class="card-img" style="object-fit: cover; width: 100%; height: 100%;">
+      <source src="video.mp4" type="video/mp4">
+      Your browser does not support the video tag.
+    </video>
+    <!-- Overlay container -->
+    <div class="card-img-overlay d-flex flex-column justify-content-center">
+
+      <h1 style="color: #ffffff !important; text-shadow: -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000;" class="display-5 fw-bold text-body-emphasis">Tutto per la tua Ducati.</h1>
+
+    </div>
+  </div>
+</div>
+
+<!-- Modal per il Carrello -->
+<div class="modal fade" id="cartModal" tabindex="-1" aria-labelledby="cartModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="cartModalLabel">Il Tuo Carrello</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Chiudi"></button>
+      </div>
+      <div class="modal-body" id="cartItems">
+        <!-- Gli articoli del carrello verranno iniettati qui -->
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-custom w-100" id="checkoutButton">Procedi al Checkout</button>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="container col-xxl-8 px-4 py-5">
+  <div class="row flex-lg-row-reverse align-items-center g-5 py-5">
+    <div class="col-10 col-sm-8 col-lg-6">
+      <img src="collage.png" class="d-block mx-lg-auto img-fluid" alt="Bootstrap Themes" width="700" height="500" loading="lazy">
+    </div>
+    <div class="col-lg-6">
+      <p class="lead">
+        Ricambi e componenti nuovi, usati e artiginali, dove qualità e precisione sono le nostre priorità.
+      </p>
+      <p class="lead">
+        Ci occupiamo di personalizzazione e manifattura di carenature, kit di potenziamento e tanto altro per soddisfare le vostre esigenze.
+      </p>
+
+      <p class="lead">
+        Tutti i prodotti creati da noi sono realizzati con processi professionali e materiali allo stato dell'arte, dove tutto è Made In Italy.
+      </p>
+    </div>
+  </div>
+</div>
+
+<!-- Main Content: Map e Contatti -->
+<main class="flex-grow-1">
+  <div class="container my-5" id="contatti">
+    <div class="row">
+      <div class="col-12 col-md-6 mb-4 mb-md-0">
+        <h2 class="mb-3" style="color: #ffffff;">Dove Siamo</h2>
+        <div class="map-container ratio ratio-16x9">
+          <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d2899.787714733748!2d13.227626175604033!3d38.171066871888165!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x1319eb99b595663f%3A0x9ea9d4f79e98e4be!2sCorso%20Isola%20delle%20Femmine%2C%202%2C%2090040%20Capaci%20PA!5e1!3m2!1sit!2sit!4v1740584674172!5m2!1sit!2sit" style="border:0;" allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
+        </div>
+      </div>
+      <div class="col-12 col-md-6">
+        <h2 class="mb-3" style="color: #ffffff;">Contatti</h2>
+        <p style="color: #ffffff;">Telefono: +39 345 463 2398</p>
+        <p style="color: #ffffff;">Email: info@desmospecialparts.com</p>
+        <p style="color: #ffffff;">Indirizzo: Corso Isola Delle Femmine, 2, 90040, Capaci, Palermo</p>
+      </div>
+    </div>
+  </div>
+</main>
+
+<!-- Footer -->
+<footer class="footer mt-auto">
+  <div class="container">
+    <p style="color: #ffffff;">&copy; 2025 Desmo Special Parts. Tutti i diritti riservati.</p>
+  </div>
+</footer>
+
+<!-- Bootstrap JS Bundle -->
+<script>
+  // Carica il carrello da localStorage e aggiorna il bottone del carrello
+  let cart = JSON.parse(localStorage.getItem('cart')) || [];
+  function updateCartButton() {
+    document.getElementById('cartButton').textContent = 'Carrello (' + cart.length + ')';
+    localStorage.setItem('cart', JSON.stringify(cart));
+  }
+  updateCartButton();
+
+  // Funzione per aprire il modal del carrello e visualizzare gli articoli
+  function openCartModal() {
+    const cartItemsContainer = document.getElementById('cartItems');
+    cartItemsContainer.innerHTML = '';
+    cart.forEach((item, index) => {
+      const div = document.createElement('div');
+      div.className = 'mb-2';
+      div.innerHTML = `<strong>${index + 1}. ${item.name}</strong><br/>Codice: ${item.articleCode}`;
+      cartItemsContainer.appendChild(div);
+    });
+    const cartModalEl = document.getElementById('cartModal');
+    const cartModal = new bootstrap.Modal(cartModalEl);
+    cartModal.show();
+  }
+
+  document.getElementById('cartButton').addEventListener('click', () => {
+    if (cart.length === 0) {
+      alert('Il tuo carrello è vuoto.');
+    } else {
+      openCartModal();
+    }
+  });
+
+  document.getElementById('checkoutButton').addEventListener('click', () => {
+    let message = 'Dettagli Ordine:%0A';
+    cart.forEach((item, index) => {
+      message += `%0A${index + 1}. ${item.name} (Codice: ${item.articleCode})`;
+    });
+    const whatsappUrl = 'https://wa.me/1234567890?text=' + message;
+    window.open(whatsappUrl, '_blank');
+    cart = [];
+    updateCartButton();
+    const cartModal = bootstrap.Modal.getInstance(document.getElementById('cartModal'));
+    if (cartModal) cartModal.hide();
+  });
+</script>
+</body>
+</html>
