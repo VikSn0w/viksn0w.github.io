@@ -1,0 +1,587 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Viaggio in Danimarca - 8 Giorni</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Georgia', serif;
+            line-height: 1.6;
+            color: #2c3e50;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.95);
+            margin-top: 20px;
+            margin-bottom: 20px;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            backdrop-filter: blur(10px);
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+            padding: 30px 0;
+            background: linear-gradient(45deg, #ff6b6b, #4ecdc4);
+            margin: -20px -20px 40px -20px;
+            border-radius: 20px 20px 0 0;
+            color: white;
+        }
+        
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+        
+        .subtitle {
+            font-size: 1.2em;
+            opacity: 0.9;
+        }
+        
+        .day-card {
+            background: #fff;
+            margin: 30px 0;
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+            border-left: 5px solid #4ecdc4;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        
+        .day-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 30px rgba(0,0,0,0.15);
+        }
+        
+        .day-title {
+            color: #2c3e50;
+            font-size: 1.8em;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #4ecdc4;
+            padding-bottom: 10px;
+        }
+        
+        .activity {
+            background: #f8f9fa;
+            margin: 15px 0;
+            padding: 15px;
+            border-radius: 10px;
+            border-left: 3px solid #ff6b6b;
+        }
+        
+        .activity-name {
+            font-weight: bold;
+            color: #2c3e50;
+            font-size: 1.1em;
+        }
+        
+        .price {
+            color: #e74c3c;
+            font-weight: bold;
+            background: #ffe6e6;
+            padding: 3px 8px;
+            border-radius: 5px;
+            display: inline-block;
+            margin: 5px 0;
+        }
+        
+        .coords {
+            color: #7f8c8d;
+            font-size: 0.9em;
+            font-family: 'Courier New', monospace;
+        }
+        
+        .map-container {
+            margin: 40px 0;
+            text-align: center;
+        }
+        
+        .map {
+            width: 100%;
+            height: 500px;
+            border-radius: 15px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+        }
+        
+        .summary {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            padding: 30px;
+            border-radius: 15px;
+            margin: 40px 0;
+        }
+        
+        .summary h2 {
+            margin-bottom: 20px;
+            font-size: 1.8em;
+        }
+        
+        .price-list {
+            background: #fff;
+            color: #2c3e50;
+            padding: 20px;
+            border-radius: 10px;
+            margin-top: 20px;
+        }
+        
+        .price-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 0;
+            border-bottom: 1px solid #ecf0f1;
+        }
+        
+        .price-item:last-child {
+            border-bottom: none;
+        }
+        
+        .tips {
+            background: #e8f5e8;
+            padding: 20px;
+            border-radius: 10px;
+            border-left: 4px solid #27ae60;
+            margin: 20px 0;
+        }
+        
+        .tips h3 {
+            color: #27ae60;
+            margin-bottom: 10px;
+        }
+    </style>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/leaflet.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/leaflet.min.css" />
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🇩🇰 Viaggio in Danimarca</h1>
+            <p class="subtitle">8 Giorni magici tra Copenhagen e Aalborg</p>
+        </div>
+        
+        <div class="day-card">
+            <h2 class="day-title">📅 Giorno 1 - Copenhagen Classica</h2>
+            <div class="activity">
+                <div class="activity-name">🏘️ Nyhavn - Quartiere Colorato</div>
+                <div class="price">GRATIS</div>
+                <div class="coords">📍 55.6796, 12.5900</div>
+            </div>
+            <div class="activity">
+                <div class="activity-name">🚢 Crociera sui Canali (Sip & Sail)</div>
+                <div class="price">da €31 (229 DKK)</div>
+                <div class="coords">📍 55.6845, 12.5969</div>
+            </div>
+            <div class="activity">
+                <div class="activity-name">🗼 Round Tower - Panorama</div>
+                <div class="price">€8 (60 DKK)</div>
+                <div class="coords">📍 55.6828, 12.5730</div>
+            </div>
+            <div class="activity">
+                <div class="activity-name">🍴 Torvehallerne Food Market</div>
+                <div class="price">GRATIS ingresso</div>
+                <div class="coords">📍 55.6863, 12.5711</div>
+            </div>
+            <div class="activity">
+                <div class="activity-name">🌳 Giardini del Re & Rosenborg</div>
+                <div class="price">GRATIS (esterni)</div>
+                <div class="coords">📍 55.6856, 12.5766</div>
+            </div>
+            <div class="activity">
+                <div class="activity-name">🎠 Tivoli Gardens</div>
+                <div class="price">Prezzo variabile</div>
+                <div class="coords">📍 55.6736, 12.5683</div>
+            </div>
+        </div>
+
+        <div class="day-card">
+            <h2 class="day-title">📅 Giorno 2 - Palazzi e La Sirenetta</h2>
+            <div class="activity">
+                <div class="activity-name">🏰 Christiansborg Palace</div>
+                <div class="price">Prezzo variabile</div>
+                <div class="coords">📍 55.6761, 12.5796</div>
+            </div>
+            <div class="activity">
+                <div class="activity-name">👑 Amalienborg + Cambio Guardia</div>
+                <div class="price">GRATIS</div>
+                <div class="coords">📍 55.6849, 12.5930</div>
+            </div>
+            <div class="activity">
+                <div class="activity-name">🧜‍♀️ La Sirenetta</div>
+                <div class="price">GRATIS</div>
+                <div class="coords">📍 55.6929, 12.5993</div>
+            </div>
+            <div class="activity">
+                <div class="activity-name">⭐ Kastellet - Cittadella</div>
+                <div class="price">GRATIS</div>
+                <div class="coords">📍 55.6954, 12.5999</div>
+            </div>
+            <div class="activity">
+                <div class="activity-name">🍽️ Reffen Street Food</div>
+                <div class="price">Vari prezzi</div>
+                <div class="coords">📍 55.6956, 12.6140</div>
+            </div>
+        </div>
+
+        <div class="day-card">
+            <h2 class="day-title">📅 Giorno 3 - Arte e Castelli del Nord</h2>
+            <div class="activity">
+                <div class="activity-name">🎨 Louisiana Museum of Modern Art</div>
+                <div class="price">Verificare sul sito</div>
+                <div class="coords">📍 55.9690, 12.5420 (Humlebæk)</div>
+            </div>
+            <div class="activity">
+                <div class="activity-name">🏰 Kronborg Castle (Castello di Amleto)</div>
+                <div class="price">€19 (145 DKK)</div>
+                <div class="coords">📍 56.0394, 12.6200 (Helsingør)</div>
+            </div>
+        </div>
+
+        <div class="day-card">
+            <h2 class="day-title">📅 Giorno 4 - Musei e Relax</h2>
+            <div class="activity">
+                <div class="activity-name">🏛️ National Museum of Denmark</div>
+                <div class="price">Prezzo variabile</div>
+                <div class="coords">📍 55.6741, 12.5729</div>
+            </div>
+            <div class="activity">
+                <div class="activity-name">🎨 Nørrebro o Christiania Street Art</div>
+                <div class="price">GRATIS</div>
+            </div>
+        </div>
+
+        <div class="day-card">
+            <h2 class="day-title">📅 Giorno 5 - LEGOLAND Billund 🧱</h2>
+            <div class="activity">
+                <div class="activity-name">🚆 Treno Copenhagen → Vejle + Bus 43</div>
+                <div class="price">Prezzi DSB dinamici</div>
+                <div>Treno: ~2h30-3h | Bus: ~35-40 min ogni 30 min</div>
+            </div>
+            <div class="activity">
+                <div class="activity-name">🎢 LEGOLAND Billund</div>
+                <div class="price">Online da €44 (329 DKK) | Walk-up €67 (499 DKK) | Undated €60 (449 DKK)</div>
+                <div class="coords">📍 55.7351, 9.1280</div>
+            </div>
+            <div class="activity">
+                <div class="activity-name">🏠 LEGO House (opzionale)</div>
+                <div class="price">Prenotazione anticipata</div>
+            </div>
+        </div>
+
+        <div class="day-card">
+            <h2 class="day-title">📅 Giorno 6 - Trasferimento ad Aalborg</h2>
+            <div class="activity">
+                <div class="activity-name">🚆 Copenhagen → Aalborg</div>
+                <div class="price">Prezzi dinamici (~4h05-4h30)</div>
+            </div>
+            <div class="activity">
+                <div class="activity-name">⛪ Budolfi Kirke</div>
+                <div class="price">GRATIS</div>
+                <div class="coords">📍 57.0487, 9.9197</div>
+            </div>
+            <div class="activity">
+                <div class="activity-name">🏰 Aalborghus Slot</div>
+                <div class="price">GRATIS (esterni)</div>
+                <div class="coords">📍 57.0492, 9.9211</div>
+            </div>
+            <div class="activity">
+                <div class="activity-name">🎵 Musikkens Hus</div>
+                <div class="price">Architettura moderna</div>
+                <div class="coords">📍 57.0500, 9.9269</div>
+            </div>
+            <div class="activity">
+                <div class="activity-name">🍽️ Aalborg Street Food - The Lighthouse</div>
+                <div class="price">Vari prezzi</div>
+                <div class="coords">📍 57.0487, 9.9354</div>
+            </div>
+        </div>
+
+        <div class="day-card">
+            <h2 class="day-title">📅 Giorno 7 - Utzon & Arte</h2>
+            <div class="activity">
+                <div class="activity-name">🏗️ Utzon Center</div>
+                <div class="price">Prezzi variabili</div>
+                <div class="coords">📍 57.0504, 9.9260</div>
+            </div>
+            <div class="activity">
+                <div class="activity-name">🎨 Kunsten Museum of Modern Art</div>
+                <div class="price">Consultare sito</div>
+                <div class="coords">📍 57.0371, 9.9187</div>
+            </div>
+            <div class="activity">
+                <div class="activity-name">🌊 Waterfront Serale</div>
+                <div class="price">GRATIS</div>
+            </div>
+        </div>
+
+        <div class="day-card">
+            <h2 class="day-title">📅 Giorno 8 - Vichinghi & Zoo (Partenza)</h2>
+            <div class="activity">
+                <div class="activity-name">⚔️ Lindholm Høje - Cimitero Vichingo</div>
+                <div class="price">Consultare museo</div>
+                <div class="coords">📍 57.0778, 9.9086</div>
+            </div>
+            <div class="activity">
+                <div class="activity-name">🦁 Aalborg Zoo</div>
+                <div class="price">€32 alla cassa (249 DKK) | €31 online (-10 DKK)</div>
+                <div class="coords">📍 57.0376, 9.8946</div>
+            </div>
+        </div>
+
+        <div class="map-container">
+            <h2>🗺️ Mappa del Viaggio</h2>
+            <div id="map" class="map"></div>
+        </div>
+
+        <div class="summary">
+            <h2>💰 Riepilogo Completo Prezzi</h2>
+            <div class="price-list">
+                <h3 style="color: #4ecdc4; margin-bottom: 15px;">🏛️ Attrazioni e Musei</h3>
+                <div class="price-item">
+                    <span>🎢 LEGOLAND Billund (online)</span>
+                    <span>da €44 (329 DKK)</span>
+                </div>
+                <div class="price-item">
+                    <span>🎢 LEGOLAND Billund (walk-up)</span>
+                    <span>€67 (499 DKK)</span>
+                </div>
+                <div class="price-item">
+                    <span>🎢 LEGOLAND Billund (undated)</span>
+                    <span>€60 (449 DKK)</span>
+                </div>
+                <div class="price-item">
+                    <span>🚢 Crociera Canali (Sip & Sail Stromma)</span>
+                    <span>da €31 (229 DKK)</span>
+                </div>
+                <div class="price-item">
+                    <span>🗼 Round Tower</span>
+                    <span>€8 (60 DKK)</span>
+                </div>
+                <div class="price-item">
+                    <span>🏰 Kronborg Castle</span>
+                    <span>€19 (145 DKK)</span>
+                </div>
+                <div class="price-item">
+                    <span>🦁 Aalborg Zoo (cassa)</span>
+                    <span>€33 (249 DKK)</span>
+                </div>
+                <div class="price-item">
+                    <span>🦁 Aalborg Zoo (online)</span>
+                    <span>€32 (239 DKK)</span>
+                </div>
+                
+                <h3 style="color: #4ecdc4; margin: 25px 0 15px 0;">🎨 Musei con Prezzi Variabili</h3>
+                <div class="price-item">
+                    <span>🎨 Louisiana Museum of Modern Art</span>
+                    <span>Verificare sul sito ufficiale</span>
+                </div>
+                <div class="price-item">
+                    <span>🏰 Christiansborg Palace</span>
+                    <span>Prezzi variabili per aree</span>
+                </div>
+                <div class="price-item">
+                    <span>🏛️ National Museum of Denmark</span>
+                    <span>Prezzo variabile online</span>
+                </div>
+                <div class="price-item">
+                    <span>🏗️ Utzon Center</span>
+                    <span>Prezzi variabili, verificare orari</span>
+                </div>
+                <div class="price-item">
+                    <span>🎨 Kunsten Museum Aalborg</span>
+                    <span>Consultare sito per prezzi correnti</span>
+                </div>
+                <div class="price-item">
+                    <span>⚔️ Lindholm Høje Museum</span>
+                    <span>Prezzi sul sito del museo</span>
+                </div>
+                <div class="price-item">
+                    <span>🎠 Tivoli Gardens</span>
+                    <span>Prezzi variabili per giorno, online</span>
+                </div>
+                <div class="price-item">
+                    <span>🏠 LEGO House (opzionale)</span>
+                    <span>Prenotazione anticipata richiesta</span>
+                </div>
+                
+                <h3 style="color: #27ae60; margin: 25px 0 15px 0;">✅ Attrazioni Gratuite</h3>
+                <div class="price-item">
+                    <span>🏘️ Nyhavn - Quartiere Colorato</span>
+                    <span>GRATIS</span>
+                </div>
+                <div class="price-item">
+                    <span>🍴 Torvehallerne - Ingresso Food Market</span>
+                    <span>GRATIS (consumazioni a parte)</span>
+                </div>
+                <div class="price-item">
+                    <span>🌳 Kongens Have e Rosenborg (esterni)</span>
+                    <span>GRATIS</span>
+                </div>
+                <div class="price-item">
+                    <span>👑 Amalienborg + Cambio della Guardia</span>
+                    <span>GRATIS</span>
+                </div>
+                <div class="price-item">
+                    <span>🧜‍♀️ La Sirenetta</span>
+                    <span>GRATIS</span>
+                </div>
+                <div class="price-item">
+                    <span>⭐ Kastellet - Cittadella Pentagonale</span>
+                    <span>GRATIS</span>
+                </div>
+                <div class="price-item">
+                    <span>🎨 Nørrebro/Christiania Street Art</span>
+                    <span>GRATIS</span>
+                </div>
+                <div class="price-item">
+                    <span>⛪ Budolfi Kirke - Cattedrale</span>
+                    <span>GRATIS</span>
+                </div>
+                <div class="price-item">
+                    <span>🏰 Aalborghus Slot (esterni)</span>
+                    <span>GRATIS</span>
+                </div>
+                <div class="price-item">
+                    <span>🌊 Waterfront Aalborg</span>
+                    <span>GRATIS</span>
+                </div>
+                
+                <h3 style="color: #e74c3c; margin: 25px 0 15px 0;">🚆 Trasporti</h3>
+                <div class="price-item">
+                    <span>🚆 Treni DSB (Copenhagen ↔ Vejle)</span>
+                    <span>Prezzi dinamici, cerca offerte Orange</span>
+                </div>
+                <div class="price-item">
+                    <span>🚆 Treni DSB (Copenhagen ↔ Aalborg)</span>
+                    <span>Prezzi dinamici, ~19 treni/giorno</span>
+                </div>
+                <div class="price-item">
+                    <span>🚌 Bus 43 (Vejle → Billund)</span>
+                    <span>Ogni ~30 min, durata 35-40 min</span>
+                </div>
+                <div class="price-item">
+                    <span>🚢 Alternative Crociere (Netto-bådene)</span>
+                    <span>Prezzi variabili, opzione economica</span>
+                </div>
+                <div class="price-item">
+                    <span>🚢 Grand Canal Tour</span>
+                    <span>Prezzi variabili</span>
+                </div>
+                
+                <h3 style="color: #9b59b6; margin: 25px 0 15px 0;">🍽️ Food & Dining</h3>
+                <div class="price-item">
+                    <span>🍽️ Reffen Street Food</span>
+                    <span>Vari chioschi, budget flessibile</span>
+                </div>
+                <div class="price-item">
+                    <span>🍽️ Aalborg Street Food - The Lighthouse</span>
+                    <span>Cena informale, vari prezzi</span>
+                </div>
+                <div class="price-item">
+                    <span>🍴 Torvehallerne Food Market</span>
+                    <span>Qualità e budget flessibile</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="tips">
+            <h3>💡 Consigli Pratici</h3>
+            <p><strong>📱 Trasporti:</strong> Valutate la Copenhagen Card per molti ingressi, altrimenti biglietti singoli/City Pass.</p>
+            <p><strong>⏰ LEGOLAND:</strong> Partite presto (treno entro le 7-8) per essere all'apertura. La fermata bus è "Legoland/Lalandia", a 2-3 minuti dall'ingresso.</p>
+            <p><strong>💻 Prenotazioni:</strong> Prenotate online per tariffe migliori (Tivoli, LEGOLAND, tour in barca).</p>
+            <p><strong>🍽️ Pasti:</strong> Torvehallerne (CPH) e Aalborg Street Food offrono qualità e budget flessibile.</p>
+            <p><strong>🚂 Treni DSB:</strong> Cercate le tariffe Orange scontate sull'app/sito per risparmiare sui trasferimenti.</p>
+        </div>
+    </div>
+
+    <script>
+        // Inizializza la mappa
+        var map = L.map('map').setView([55.8, 11.5], 7);
+        
+        // Aggiungi il layer della mappa
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '© OpenStreetMap contributors'
+        }).addTo(map);
+
+        // Punti di interesse con coordinate
+        var locations = [
+            {name: "Nyhavn", coords: [55.6796, 12.5900], day: "Giorno 1"},
+            {name: "Crociera Canali", coords: [55.6845, 12.5969], day: "Giorno 1"},
+            {name: "Round Tower", coords: [55.6828, 12.5730], day: "Giorno 1"},
+            {name: "Torvehallerne", coords: [55.6863, 12.5711], day: "Giorno 1"},
+            {name: "Rosenborg", coords: [55.6856, 12.5766], day: "Giorno 1"},
+            {name: "Tivoli Gardens", coords: [55.6736, 12.5683], day: "Giorno 1"},
+            {name: "Christiansborg Palace", coords: [55.6761, 12.5796], day: "Giorno 2"},
+            {name: "Amalienborg", coords: [55.6849, 12.5930], day: "Giorno 2"},
+            {name: "La Sirenetta", coords: [55.6929, 12.5993], day: "Giorno 2"},
+            {name: "Kastellet", coords: [55.6954, 12.5999], day: "Giorno 2"},
+            {name: "Reffen Street Food", coords: [55.6956, 12.6140], day: "Giorno 2"},
+            {name: "Louisiana Museum", coords: [55.9690, 12.5420], day: "Giorno 3"},
+            {name: "Kronborg Castle", coords: [56.0394, 12.6200], day: "Giorno 3"},
+            {name: "National Museum", coords: [55.6741, 12.5729], day: "Giorno 4"},
+            {name: "LEGOLAND Billund", coords: [55.7351, 9.1280], day: "Giorno 5"},
+            {name: "Budolfi Kirke", coords: [57.0487, 9.9197], day: "Giorno 6"},
+            {name: "Aalborghus Slot", coords: [57.0492, 9.9211], day: "Giorno 6"},
+            {name: "Musikkens Hus", coords: [57.0500, 9.9269], day: "Giorno 6"},
+            {name: "Aalborg Street Food", coords: [57.0487, 9.9354], day: "Giorno 6"},
+            {name: "Utzon Center", coords: [57.0504, 9.9260], day: "Giorno 7"},
+            {name: "Kunsten Museum", coords: [57.0371, 9.9187], day: "Giorno 7"},
+            {name: "Lindholm Høje", coords: [57.0778, 9.9086], day: "Giorno 8"},
+            {name: "Aalborg Zoo", coords: [57.0376, 9.8946], day: "Giorno 8"}
+        ];
+
+        // Colori per i diversi giorni
+        var dayColors = {
+            "Giorno 1": "#ff6b6b",
+            "Giorno 2": "#4ecdc4", 
+            "Giorno 3": "#45b7d1",
+            "Giorno 4": "#96ceb4",
+            "Giorno 5": "#feca57",
+            "Giorno 6": "#ff9ff3",
+            "Giorno 7": "#54a0ff",
+            "Giorno 8": "#5f27cd"
+        };
+
+        // Aggiungi marcatori per ogni location
+        locations.forEach(function(location) {
+            var marker = L.marker(location.coords).addTo(map);
+            marker.bindPopup(`<b>${location.name}</b><br>${location.day}`);
+            
+            // Aggiungi cerchio colorato per il giorno
+            L.circle(location.coords, {
+                color: dayColors[location.day],
+                fillColor: dayColors[location.day],
+                fillOpacity: 0.3,
+                radius: 2000
+            }).addTo(map);
+        });
+
+        // Linee di connessione per il percorso
+        var copenhagenPoints = locations.filter(l => l.day.includes("Giorno 1") || l.day.includes("Giorno 2") || l.day.includes("Giorno 3") || l.day.includes("Giorno 4")).map(l => l.coords);
+        var billundPoint = locations.filter(l => l.day.includes("Giorno 5")).map(l => l.coords)[0];
+        var aalborgPoints = locations.filter(l => l.day.includes("Giorno 6") || l.day.includes("Giorno 7") || l.day.includes("Giorno 8")).map(l => l.coords);
+
+        // Linea da Copenhagen a Billund
+        if (copenhagenPoints.length > 0 && billundPoint) {
+            L.polyline([copenhagenPoints[0], billundPoint], {color: '#feca57', weight: 3, opacity: 0.7, dashArray: '10, 10'}).addTo(map);
+        }
+
+        // Linea da Copenhagen ad Aalborg
+        if (copenhagenPoints.length > 0 && aalborgPoints.length > 0) {
+            L.polyline([copenhagenPoints[0], aalborgPoints[0]], {color: '#ff9ff3', weight: 3, opacity: 0.7, dashArray: '10, 10'}).addTo(map);
+        }
+    </script>
+</body>
+</html>
