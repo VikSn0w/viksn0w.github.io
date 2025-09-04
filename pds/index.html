@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Pallatore di Succhio</title>
+  <!-- Leaflet -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+  <script src="https://unpkg.com/@turf/turf/turf.min.js"></script>
+
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: #fff;
+      min-height: 100vh;
+      line-height: 1.6;
+    }
+
+    .container { max-width: 1400px; margin: 0 auto; padding: 20px; }
+
+    .header {
+      text-align: center;
+      margin-bottom: 40px;
+      background: rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(10px);
+      border-radius: 20px;
+      padding: 40px 20px;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+    }
+
+    .header h1 {
+      font-size: 3.5rem;
+      font-weight: 800;
+      margin-bottom: 10px;
+      background: linear-gradient(45deg, #ef4444, #3b82f6, #45b7d1, #96ceb4);
+      background-size: 300% 300%;
+      -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;
+      animation: gradientShift 3s ease infinite;
+    }
+
+    @keyframes gradientShift { 0%, 100% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } }
+
+    .subtitle { font-size: 1.2rem; opacity: 0.9; margin-bottom: 20px; }
+    .challenge-desc { font-size: 1rem; opacity: 0.8; max-width: 600px; margin: 0 auto; }
+
+    .main-content { display: grid; grid-template-columns: 1fr 1fr; gap: 30px; margin-top: 40px; }
+
+    .map-section, .placements-section {
+      background: rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(10px);
+      border-radius: 20px;
+      padding: 30px;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+    }
+
+    .map-section h2, .placements-section h2 { font-size: 2rem; margin-bottom: 20px; text-align: center; }
+
+    .map-container { width: 100%; height: 500px; border-radius: 15px; overflow: hidden; }
+    #map { width: 100%; height: 100%; border-radius: 15px; }
+
+    .map-legend { margin-top: 20px; display: flex; justify-content: center; gap: 30px; }
+    .legend-item { display: flex; align-items: center; gap: 8px; }
+    .legend-color { width: 20px; height: 20px; border-radius: 4px; }
+    .legend-color.country { background: #3b82f6; } /* blue */
+    .legend-color.city { background: #ef4444; }    /* red  */
+
+    .placements-list { max-height: 400px; overflow-y: auto; scrollbar-width: thin; scrollbar-color: rgba(255,255,255,.3) transparent; }
+    .placements-list::-webkit-scrollbar { width: 6px; }
+    .placements-list::-webkit-scrollbar-track { background: rgba(255,255,255,.1); border-radius: 3px; }
+    .placements-list::-webkit-scrollbar-thumb { background: rgba(255,255,255,.3); border-radius: 3px; }
+
+    .placement-item {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 15px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      position: relative;
+      overflow: hidden;
+    }
+    .placement-item::before {
+      content: '';
+      position: absolute; top: 0; left: 0; width: 4px; height: 100%;
+      background: linear-gradient(135deg, #ef4444, #3b82f6);
+    }
+    .placement-item:hover { background: rgba(255, 255, 255, 0.15); transform: translateY(-3px); box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2); }
+
+    .placement-location { font-size: 1.3rem; font-weight: 600; margin-bottom: 10px; color: #ffffff; }
+    .placement-details { display: flex; flex-direction: column; gap: 8px; }
+
+    .stats-section { grid-column: 1 / -1; background: rgba(255,255,255,.1); border-radius: 20px; padding: 30px; margin-top: 20px; }
+    .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; }
+    .stat-card { text-align: center; padding: 20px; background: rgba(255,255,255,.05); border-radius: 15px; border: 1px solid rgba(255,255,255,.1); }
+    .stat-number { font-size: 3rem; font-weight: 800; color: #3b82f6; }
+    .stat-label { font-size: 1rem; opacity: 0.8; margin-top: 5px; }
+
+    @media (max-width: 768px) { .main-content { grid-template-columns: 1fr; gap: 20px; } .header h1 { font-size: 2.5rem; } }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <img src="img.jpg" width="15%" height="auto" style="border-radius: 5%;" alt="pds"/>
+      <h1>Pallatore di Succhio</h1>
+      <div class="subtitle">Global Sticker Challenge</div>
+      <div class="challenge-desc">
+        Mappa per evidenziare le conquiste del nostro dio e salvatore Pallatore di Succhio, protettore dei succhi pallati.
+      </div>
+    </div>
+
+    <div class="main-content">
+      <div class="map-section">
+        <h2>Mappa globale</h2>
+        <div class="map-container"><div id="map"></div></div>
+        <div class="map-legend">
+          <div class="legend-item"><div class="legend-color country"></div><span>Nazioni</span></div>
+          <div class="legend-item"><div class="legend-color city"></div><span>Citta'</span></div>
+        </div>
+      </div>
+
+      <div class="placements-section">
+        <h2>Conquiste</h2>
+        <div class="placements-list" id="placementsList"></div>
+      </div>
+    </div>
+
+    <div class="stats-section">
+      <div class="stats-grid">
+        <div class="stat-card"><div class="stat-number" id="countriesCount">0</div><div class="stat-label">Nazioni conquistate</div></div>
+        <div class="stat-card"><div class="stat-number" id="citiesCount">0</div><div class="stat-label">Citta' attaccate</div></div>
+        <div class="stat-card"><div class="stat-number" id="contributorsCount">0</div><div class="stat-label">Conquistadores</div></div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // --- Data ---------------------------------------------------------------
+    const placements = [
+      { 
+        id: 'london',    
+        coords: [51.506924312788776, -0.14223085400771496],  // Better coordinates for London
+        location: '🇬🇧 Londra, UK',       
+        placedBy: 'Vittorio P.',  
+        date: 'Dicembre, 2024', 
+        specificLocation: 'Su una cabina telefonica, fuori alla metro di Green Park',
+            country_id: 'GBR'  // <-- nuovo attributo
+      },
+	  {
+        id: 'benidrom',    
+        coords: [38.5360093754509, -0.12465152386328616],  // Better coordinates for London
+        location: '🇪🇸 Benidorm, Spagna',       
+        placedBy: 'Vittorio P. & Luca S.',  
+        date: 'Agosto, 2024', 
+        specificLocation: 'Sulla porta del bagno',
+            country_id: 'ESP'  // <-- nuovo attributo
+
+      },
+      {
+        id: 'milano',    
+        coords: [45.468160084387925, 9.175931205784131],  // Better coordinates for London
+        location: '🇮🇹 Milano, Italia',       
+        placedBy: 'Vittorio P.',  
+        date: 'Novembre, 2023', 
+        specificLocation: 'Pilastro appena esci lato statua',
+            country_id: 'ITA'  // <-- nuovo attributo
+      },
+      {
+        id: 'hurghada',    
+        coords: [27.08285618254355, 33.859262489468854],  // Better coordinates for London
+        location: '🇪🇬 Hurghada, Egitto',       
+        placedBy: 'Vittorio P.',  
+        date: 'Febbraio, 2024', 
+        specificLocation: 'Sul muro delle piscine',
+            country_id: 'EGY'  // <-- nuovo attributo
+      },
+      {
+        id: 'casamicciola',    
+        coords: [40.750775198160866, 13.90706205528711],  // Better coordinates for London
+        location: '🇮🇹 Casamicciola, Ischia, Italia',       
+        placedBy: 'Vittorio P.',  
+        date: 'Luglio, 2024', 
+        specificLocation: 'Uscita del traghetto',
+            country_id: 'ITA'  // <-- nuovo attributo
+      },
+    ];
+
+    // --- Map ----------------------------------------------------------------
+    let map, countryLayers = [];
+    const cityMarkers = {};
+
+    // Custom marker icon (red pin)
+    const customIcon = L.icon({
+      iconUrl: 'data:image/svg+xml;base64,' + btoa(`
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 36" width="24" height="36">
+          <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z" fill="#ef4444" stroke="#dc2626" stroke-width="1"/>
+          <circle cx="12" cy="9" r="3" fill="white"/>
+        </svg>
+      `),
+      iconSize: [24, 36],
+      iconAnchor: [12, 36],
+      popupAnchor: [0, -36]
+    });
+
+    function extractCountryFromLocationString(locStr) {
+      // Remove flag emoji and extract country
+      const cleanStr = locStr.replace(/🇬🇧|🇺🇸|🇩🇪|🇫🇷|🇮🇹|🇪🇸|🇳🇱|🇯🇵|🇨🇳|🇷🇺|🇨🇦|🇦🇺|🇧🇷|🇮🇳|🇰🇷/g, '').trim();
+      const parts = cleanStr.split(',');
+      return parts[parts.length - 1].trim();
+    }
+
+    function initializeMap() {
+      // Create map
+      map = L.map('map').setView([30, 0], 2);
+
+      // Base tile layer with better styling
+      L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager_labels_under/{z}/{x}/{y}{r}.png', {
+        attribution: '&copy; <a href="https://carto.com/">CARTO</a> &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+        subdomains: 'abcd',
+        maxZoom: 19
+      }).addTo(map);
+
+      // Load country data and highlight countries with placements
+      loadCountryData();
+
+      // Add city markers
+      placements.forEach(placement => {
+        const marker = L.marker(placement.coords, { icon: customIcon })
+          .addTo(map)
+          .bindPopup(`
+            <div style="font-family: 'Inter', sans-serif; max-width: 200px;">
+              <h3 style="color: #1f2937; margin-bottom: 8px;">${placement.location}</h3>
+              <p style="margin: 4px 0;"><strong>Dove:</strong> ${placement.specificLocation}</p>
+              <p style="margin: 4px 0;"><strong>Conquistador:</strong> ${placement.placedBy}</p>
+              <p style="margin: 4px 0;"><strong>Data:</strong> ${placement.date}</p>
+            </div>
+          `);
+
+        cityMarkers[placement.id] = marker;
+      });
+
+      // Fix rendering
+      setTimeout(() => map.invalidateSize(), 100);
+    }
+
+    async function loadCountryData() {
+      try {
+        // Using Natural Earth data for better country recognition
+        const response = await fetch('https://raw.githubusercontent.com/holtzy/D3-graph-gallery/master/DATA/world.geojson');
+        const worldGeo = await response.json();
+
+        // Create base layer for all countries (subtle outline)
+        L.geoJSON(worldGeo, {
+          style: {
+            color: '#64748b',
+            weight: 0.5,
+            fillOpacity: 0,
+            opacity: 0.3
+          }
+        }).addTo(map);
+
+        // Find and highlight countries with placements
+        const highlightedCountries = findCountriesWithPlacements(worldGeo);
+        
+        if (highlightedCountries.length > 0) {
+          highlightedCountries.forEach(country => {
+          L.geoJSON(country, {
+            style: {
+              color: '#2563eb',
+              weight: 2,
+              fillColor: '#3b82f6',
+              fillOpacity: 0.25
+            }
+          }).addTo(map);
+            
+          });
+        }
+
+      } catch (error) {
+        console.error('Error loading country data:', error);
+      }
+    }
+
+    function findCountriesWithPlacements(worldGeo) {
+  const highlightedCountries = [];
+  const processedCountries = new Set();
+
+  placements.forEach(p => {
+    if (!p.country_id || processedCountries.has(p.country_id)) return;
+
+    // Cerca il paese usando l'id
+    const feature = worldGeo.features.find(f => f.id === p.country_id);
+    if (feature) {
+      processedCountries.add(p.country_id);
+      highlightedCountries.push(feature);
+      console.log(`✓ Found country for ${p.location}: ${p.country_id}`);
+    } else {
+      console.warn(`⚠️ Country not found in GeoJSON for ${p.location}: ${p.country_id}`);
+    }
+  });
+  return highlightedCountries;
+}
+
+
+    // --- UI Functions -------------------------------------------------------
+    function focusOnPlacement(placementId) {
+      const marker = cityMarkers[placementId];
+      if (marker) {
+        map.setView(marker.getLatLng(), 10, { animate: true, duration: 1 });
+        setTimeout(() => marker.openPopup(), 500);
+      }
+    }
+
+    function renderPlacements() {
+      const list = document.getElementById('placementsList');
+      list.innerHTML = '';
+      
+      placements.forEach(placement => {
+        const item = document.createElement('div');
+        item.className = 'placement-item';
+        item.onclick = () => focusOnPlacement(placement.id);
+        item.innerHTML = `
+          <div class="placement-location">${placement.location}</div>
+          <div class="placement-details">
+            <div><b>Conquistador:</b> ${placement.placedBy}</div>
+            <div><b>Data:</b> ${placement.date}</div>
+            <div><b>Dove:</b> ${placement.specificLocation}</div>
+          </div>
+        `;
+        list.appendChild(item);
+      });
+    }
+
+    function updateStats() {
+      const countrySet = new Set(placements.map(p => extractCountryFromLocationString(p.location)));
+      const contributorSet = new Set(placements.map(p => p.placedBy));
+      
+      document.getElementById('countriesCount').textContent = countrySet.size;
+      document.getElementById('citiesCount').textContent = placements.length;
+      document.getElementById('contributorsCount').textContent = contributorSet.size;
+    }
+
+    // --- Initialize ---------------------------------------------------------
+    document.addEventListener('DOMContentLoaded', () => {
+      renderPlacements();
+      updateStats();
+      initializeMap();
+    });
+  </script>
+</body>
+</html>
