@@ -3,17 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Vittorio Picone - 3D Portfolio</title>
-    
+    <title>Vittorio Picone - Terminal</title>
+
     <script src="https://cdn.tailwindcss.com"></script>
-    
-    <!-- FIXED: Added ?external=react,react-dom to lucide-react to prevent "Two Reacts" crash -->
+
     <script type="importmap">
         {
             "imports": {
                 "react": "https://esm.sh/react@18.2.0",
                 "react-dom/client": "https://esm.sh/react-dom@18.2.0/client",
-                "three": "https://esm.sh/three@0.160.0",
                 "lucide-react": "https://esm.sh/lucide-react@0.468.0?external=react,react-dom"
             }
         }
@@ -22,1011 +20,759 @@
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 
     <style>
-        /* Custom Animations */
-        @keyframes slideUp {
-            from { opacity: 0; transform: translateY(20px); }
-            to { opacity: 1; transform: translateY(0); }
+        @import url('https://fonts.googleapis.com/css2?family=Fira+Code:wght@300;400;500;600;700&display=swap');
+
+        :root {
+            --terminal-green: #00ff00;
+            --terminal-bg: #0a0a0a;
+            --terminal-glow: rgba(0, 255, 0, 0.5);
+            --scanline-color: rgba(0, 0, 0, 0.5);
         }
-        .animate-slideUp {
-            animation: slideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-        }
+
+        /* FIXED: Use fixed inset-0 to prevent scroll issues on mobile */
         body {
-            background-color: #000;
+            background-color: var(--terminal-bg);
+            color: var(--terminal-green);
+            font-family: 'Fira Code', monospace;
+            overflow: hidden;
             margin: 0;
-            overflow: hidden; /* Prevent scrollbars from 3D canvas */
-            touch-action: none; /* Prevent pull-to-refresh on mobile */
+            position: fixed;
+            inset: 0;
         }
-        /* Hide scrollbar for Chrome, Safari and Opera */
-        .no-scrollbar::-webkit-scrollbar {
-            display: none;
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
         }
-        /* Hide scrollbar for IE, Edge and Firefox */
-        .no-scrollbar {
-            -ms-overflow-style: none;  /* IE and Edge */
-            scrollbar-width: none;  /* Firefox */
+        ::-webkit-scrollbar-track {
+            background: #000;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #004400;
+            border: 1px solid var(--terminal-green);
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--terminal-green);
+        }
+
+        /* CRT Effects */
+        .scanlines {
+            background: linear-gradient(
+                    to bottom,
+                    rgba(255,255,255,0),
+                    rgba(255,255,255,0) 50%,
+                    rgba(0,0,0,0.2) 50%,
+                    rgba(0,0,0,0.2)
+            );
+            background-size: 100% 4px;
+            position: fixed;
+            pointer-events: none;
+            inset: 0;
+            z-index: 50;
+        }
+
+        .crt-flicker {
+            animation: flicker 0.15s infinite;
+            position: fixed;
+            inset: 0;
+            pointer-events: none;
+            background: rgba(0, 255, 0, 0.02);
+            z-index: 49;
+        }
+
+        @keyframes flicker {
+            0% { opacity: 0.97; }
+            5% { opacity: 0.95; }
+            10% { opacity: 0.9; }
+            15% { opacity: 0.95; }
+            20% { opacity: 0.99; }
+            25% { opacity: 0.95; }
+            30% { opacity: 0.9; }
+            35% { opacity: 0.96; }
+            40% { opacity: 0.98; }
+            45% { opacity: 0.95; }
+            50% { opacity: 0.99; }
+            55% { opacity: 0.93; }
+            60% { opacity: 0.9; }
+            65% { opacity: 0.96; }
+            70% { opacity: 1; }
+            75% { opacity: 0.97; }
+            80% { opacity: 0.95; }
+            85% { opacity: 0.92; }
+            90% { opacity: 0.98; }
+            95% { opacity: 0.99; }
+            100% { opacity: 0.96; }
+        }
+
+        .typing-cursor::after {
+            content: '█';
+            animation: blink 1s step-end infinite;
+            margin-left: 2px;
+            opacity: 0.7;
+        }
+
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0; }
+        }
+
+        .terminal-text-shadow {
+            text-shadow: 0 0 5px var(--terminal-glow);
+        }
+
+        /* Retro Image Filter */
+        .retro-img {
+            filter: grayscale(100%) contrast(1.2) brightness(0.9) sepia(20%) hue-rotate(90deg) saturate(300%);
+            border: 1px solid var(--terminal-green);
+            transition: all 0.3s ease;
+        }
+        .retro-img:hover {
+            filter: grayscale(0%) contrast(1);
+            border-color: #fff;
+        }
+
+        /* Utilities */
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+        input {
+            background: transparent;
+            border: none;
+            color: var(--terminal-green);
+            outline: none;
+            font-family: 'Fira Code', monospace;
+            width: 100%;
+            text-shadow: 0 0 5px var(--terminal-glow);
+        }
+
+        ::selection {
+            background: var(--terminal-green);
+            color: black;
         }
     </style>
 </head>
 <body>
-    <div id="root"></div>
+<div id="root"></div>
 
-    <script type="text/babel" data-type="module">
-        import React, { useState, useEffect, useRef, useMemo } from 'react';
-        import { createRoot } from 'react-dom/client';
-        /* ADDED User, Zap, FolderOpen for page titles */
-        import { Github, Linkedin, Instagram, Mail, Phone, ChevronRight, X, MapPin, Calendar, Book, Briefcase, Heart, Code, Terminal, Cpu, Globe, Database, Layers, Award, GraduationCap, FileBadge, Languages, Bike, Camera, Menu, Handshake, User, Zap, FolderOpen, University, Dumbbell} from 'lucide-react';
-        import * as THREE from 'three';
+<script type="text/babel" data-type="module">
+    import React, { useState, useEffect, useRef, useLayoutEffect } from 'react';
+    import { createRoot } from 'react-dom/client';
+    import {
+        Terminal, User, Zap, Briefcase, GraduationCap,
+        Award, Languages, FolderOpen, Heart, ChevronRight,
+        Maximize2, Minimize2, X, AlertCircle, Handshake
+    } from 'lucide-react';
 
-        /**
-         * ------------------------------------------------------------------
-         * DATA CONFIGURATION
-         * ------------------------------------------------------------------
-         */
-        
-        const SECTIONS_CONFIG = [
-            { id: 'profile', label: 'Profile', emoji: '👤' }, 
-            { id: 'skills', label: 'Skills', emoji: '⚡' },   
-            { id: 'experience', label: 'Work', emoji: '💼' }, 
-            { id: 'education', label: 'Education', emoji: '🎓' }, 
-            { id: 'training', label: 'Training', emoji: '📜' }, 
-            { id: 'languages', label: 'Languages', emoji: '🗣️' },
-            { id: 'projects', label: 'Projects', emoji: '📂' }, 
-            { id: 'hobbies', label: 'Hobbies', emoji: '❤️' }, 
-        ];
-
-        const DATA = {
-            profile: {
-                name: "Vittorio Picone",
-                title: "Computer Science Student & Software Engineer",
-                /* ADDED AVATAR URL */
-                avatar: "https://github.com/VikSn0w.png",
-                bio: "Hi, I'm Vittorio Picone! I’m a passionate Computer Science student and Software Engineer who thrives on building intelligent systems. Whether coding for AI solutions, leading projects, or exploring new challenges, I approach every task with precision and enthusiasm. Beyond coding, I'm a rugby enthusiast and Ducatista, balancing logic with adrenaline on the pitch and the road. Let's create something extraordinary!",
-                about: "As a highly skilled and versatile software developer, I bring deep expertise in C/C++/ASM, acquired through my academic career, alongside a strong passion for AI algorithms and computer vision, honed through hands-on work and personal projects.\nI possess extensive knowledge of the Apple Development Ecosystem, particularly with Swift and SwiftUI, and a robust background in full stack development, focusing on PHP, Django, JavaScript, HTML, and MySQL.\nAdditionally, my proficiency in Python, PyQt, Flask, and AI-related libraries empowers me to craft intelligent, dynamic solutions.\nThrough my job experiences, I have developed strong skills in teamwork, team management, and project management, allowing me to effectively lead and collaborate in dynamic environments. I thrive on solving complex problems and am driven to continually expand my technical expertise.",
+    /**
+     * DATA CONFIGURATION
+     */
+    const DATA = {
+        profile: {
+            name: "Vittorio Picone",
+            title: "Computer Science Student & Software Engineer",
+            avatar: "https://github.com/VikSn0w.png",
+            bio: "Hi, I'm Vittorio Picone! I’m a passionate Computer Science student and Software Engineer who thrives on building intelligent systems. Whether coding for AI solutions, leading projects, or exploring new challenges, I approach every task with precision and enthusiasm. Beyond coding, I'm a rugby enthusiast and Ducatista, balancing logic with adrenaline on the pitch and the road. Let's create something extraordinary!",
+            about: "As a highly skilled and versatile software developer, I bring deep expertise in C/C++/ASM, acquired through my academic career, alongside a strong passion for AI algorithms and computer vision, honed through hands-on work and personal projects.\nI possess extensive knowledge of the Apple Development Ecosystem, particularly with Swift and SwiftUI, and a robust background in full stack development, focusing on PHP, Django, JavaScript, HTML, and MySQL.\nAdditionally, my proficiency in Python, PyQt, Flask, and AI-related libraries empowers me to craft intelligent, dynamic solutions.\nThrough my job experiences, I have developed strong skills in teamwork, team management, and project management, allowing me to effectively lead and collaborate in dynamic environments. I thrive on solving complex problems and am driven to continually expand my technical expertise.",
+            location: "Naples, IT",
+            currentStudy: "BCompSc at University of Naples \"Parthenope\"",
+            email: "vittoriopicone30@gmail.com",
+            phone: "+39 3922016432",
+            social: {
+                github: "https://github.com/VikSn0w",
+                linkedin: "https://www.linkedin.com/in/vittorio-picone-916319168",
+                instagram: "https://www.instagram.com/vik.desmo"
+            }
+        },
+        skills: [
+            { name: "iOS & Swift", level: "Advanced", desc: "Native app development with SwiftUI & UIKit" },
+            { name: "AI & Research", level: "Advanced", desc: "Python, PyTorch, Computer Vision" },
+            { name: "Low-Level Dev", level: "Academic", desc: "C, C++, Assembly (68k)" },
+            { name: "Web Development", level: "Advanced", desc: "React, Flask, Full Stack, Djagno" },
+            { name: "Software Engineering", level: "Expert", desc: "System Design, Architecture" },
+            { name: "Data Science", level: "Intermediate", desc: "Data Analysis & Regression Models" }
+        ],
+        experience: [
+            {
+                name: "Addway Advisory SRL",
                 location: "Naples, IT",
-                currentStudy: "BCompSc at University of Naples \"Parthenope\"",
-                email: "vittoriopicone30@gmail.com",
-                phone: "+39 3922016432",
-                social: {
-                    github: "https://github.com/VikSn0w",
-                    linkedin: "https://www.linkedin.com/in/vittorio-picone-916319168",
-                    instagram: "https://www.instagram.com/vik.desmo"
-                }
+                role: "AI Researcher & Developer",
+                start: "May 2025",
+                end: "Present",
+                logo: "images/employer/addway.png",
+                description: "As an AI Researcher and Developer, I am responsible for identifying opportunities where artificial intelligence can be applied to automate and enhance work-related tasks across various domains."
             },
-            skills: [
-                { name: "iOS & Swift", icon: "Code", level: "Advanced", desc: "Native app development with SwiftUI & UIKit" },
-                { name: "AI & Research", icon: "Cpu", level: "Advanced", desc: "Python, PyTorch, Computer Vision" },
-                { name: "Low-Level Dev", icon: "Terminal", level: "Academic", desc: "C, C++, Assembly (68k)" },
-                { name: "Web Development", icon: "Globe", level: "Advanced", desc: "React, Flask, Full Stack, Djagno" },
-                { name: "Software Engineering", icon: "Layers", level: "Expert", desc: "System Design, Architecture" },
-                { name: "Data Science", icon: "Database", level: "Intermediate", desc: "Data Analysis & Regression Models" }
-            ],
-            experience: [
-                {
-                    name: "Addway Advisory SRL",
-                    location: "Naples, IT",
-                    role: "AI Researcher & Developer",
-                    start: "May 2025",
-                    end: "Present",
-                    logo: "https://github.com/VikSn0w/viksn0w.github.io/blob/main/images/employer/addway.png?raw=true", 
-                    description: "As an AI Researcher and Developer, I am responsible for identifying opportunities where artificial intelligence can be applied to automate and enhance work-related tasks across various domains."
-                },
-                {
-                    name: "Qualifica Group",
-                    location: "Naples, IT",
-                    role: "STEM Teacher",
-                    start: "May 2025",
-                    end: "Present",
-                    logo: "https://github.com/VikSn0w/viksn0w.github.io/blob/main/images/employer/qualifica.png?raw=true",
-                    description: "Expert STEM teacher, specialized in Artificial Intelligence and Computer Science subjects. Delivering engaging lessons, fostering critical thinking, and inspiring students to excel in the ever-evolving field of technology."
-                },
-                {
-                    name: "GreenTechSolution",
-                    location: "Naples, IT",
-                    role: "Lead Software Development Engineer",
-                    start: "January 2023",
-                    end: "May 2025",
-                    logo: "https://github.com/VikSn0w/viksn0w.github.io/blob/main/images/employer/gts.jpg?raw=true",
-                    description: "Developing web-based platforms, management software. AI-based software and computer vision programs. Team-leading, team coordination and task force creation."
-                },
-                {
-                    name: "Accenture Italia",
-                    location: "Naples, IT",
-                    role: "Database Watchdog",
-                    start: "July 2022",
-                    end: "September 2022",
-                    logo: "https://github.com/VikSn0w/viksn0w.github.io/blob/main/images/employer/accenture.png?raw=true",
-                    description: "Analysing the queues and solve eventual problems. Creation of remediations and medicines for high traffic queues."
-                },
-                {
-                    name: "3F&EDIN",
-                    location: "Naples, IT",
-                    role: "Software Programmer",
-                    start: "May 2022",
-                    end: "October 2022",
-                    logo: "https://github.com/VikSn0w/viksn0w.github.io/blob/main/images/employer/3f.png?raw=true",
-                    description: "Intensive Course about learning how to use all the necessary tools for web development, from Angular to Java."
-                },
-                {
-                    name: "Pointel Communication S.p.A",
-                    location: "Naples, IT",
-                    role: "Full Stack Developer",
-                    start: "August 2021",
-                    end: "May 2022",
-                    logo: "https://github.com/VikSn0w/viksn0w.github.io/blob/main/images/employer/pointel.png?raw=true",
-                    description: "Analysis and development of a web application that allows companies to effectively view and manage the traffic of their naval fleet, routes and ports connected to them."
-                }
-            ],
-            collaborations: [
-                {
-                    company: "JKJ srl",
-                    project: "TPAI",
-                    logo: "https://github.com/VikSn0w/viksn0w.github.io/blob/main/images/employer/JKJ.png?raw=true",
-                    status: "Suspended",
-                    description: "Engineered and developed a full-stack web platform utilizing Flask, PHP (to be reweritten), PyTorch and other components to detect crosswalks and tactile paths for visually impaired individuals."
-                },
-                {
-                    company: "Beducci Bus Travels",
-                    project: "Bus Manager",
-                    logo: "https://github.com/VikSn0w/viksn0w.github.io/blob/main/images/employer/beducci.png?raw=true",
-                    status: "Completed",
-                    description: "Developed a comprehensive web application for managing bus fleets, routes, maintenance and driver scheduling, enhancing operational efficiency."
-                },
-                {
-                    company: "Desmo Special Parts",
-                    project: "Desmo Special Parts E-commerce",
-                    logo: "https://github.com/VikSn0w/viksn0w.github.io/blob/main/images/employer/dsp.png?raw=true",
-                    status: "Ongoing",
-                    description: "Developed a full-featured e-commerce platform using Django, enabling seamless online sales and inventory management for motorcycle parts."
-                },
-                {
-                    company: "Traliccio Randagio",
-                    project: "Web Presence & E-commerce",
-                    logo: "https://github.com/VikSn0w/viksn0w.github.io/blob/main/images/employer/tralicciorandagio.png?raw=true",
-                    status: "Starting",
-                    description: "Building a modern web presence and e-commerce platform using React and Django to enhance brand visibility and online sales."
-                }
-            ],
-            education: [
-                {
-                    name: "University of Naples \"Parthenope\"",
-                    location: "Naples, IT",
-                    start: "September 2021",
-                    end: "Present",
-                    description: "Where I am currently pursuing a bachelor's degree in Computer Science."
-                },
-                {
-                    name: "ITI E. Medi High School",
-                    location: "San Giorgio a Cremano, IT",
-                    start: "September 2018",
-                    end: "June 2021",
-                    description: "Secondary High School specialised in Computer Science. Graduated with 100/100."
-                },
-                {
-                    name: "Christ's Hospital School",
-                    location: "Horsham, UK",
-                    start: "June 2019",
-                    end: "August 2019",
-                    description: "Intercultural exchange where I deepened my computer science skills in English. Achieved English B2 level."
-                },
-                {
-                    name: "University College Dublin - UCD",
-                    location: "Dublin, IE",
-                    start: "May 2018",
-                    end: "September 2018",
-                    description: "Intercultural exchange attending classes about economics in the computer science field."
-                }
-            ],
-            languages: [
-                { name: "Italian", level: "Native", detail: "Mother tongue" },
-                { name: "English", level: "C1", detail: "Current Proficiency" },
-                { name: "English", level: "C1", detail: "ESB - July 2020" },
-                { name: "English", level: "B2", detail: "Trinity College London - July 2019" },
-                { name: "English", level: "B1", detail: "Trinity College London - July 2018" }
-            ],
-            training: [
-                { name: "iOS Foundation", issuer: "Apple", date: "April 2023" },
-                { name: "Cisco Cybersecurity Scholarship", issuer: "Cisco Networking Academy", date: "March 2021" },
-                { name: "Young Manager Course", issuer: "Plus & British Council", date: "July 2018" }
-            ],
-            projects: [
-                {
-                    urlimg: "https://viksn0w.github.io/images/ducati.png", 
-                    title: "CoreDucati",
-                    description: "Deepening expertise in Swift, SwiftUI, and Core Data. Fetches data and images from a remote JSON hosted on GitHub, fully integrating external resources without an intermediary server.",
-                    giturl: "https://github.com/VikSn0w/Ducati-CoreDatabike",
-                    technologies: ["Swift", "SwiftUI", "CoreData"]
-                },
-                {
-                    urlimg: "https://raw.githubusercontent.com/VikSn0w/StudiSync/refs/heads/master/logo_studisync.jpeg",
-                    title: "StudiSync",
-                    description: "An application for managing university exams between students and office with complete server and client side code.",
-                    giturl: "https://github.com/VikSn0w/StudiSync/tree/master",
-                    technologies: ["Python", "Flask"]
-                },
-                {
-                    urlimg: "https://viksn0w.github.io/images/trigoai.png",
-                    title: "TrigoAI",
-                    description: "AI experiments about trigonometric functions. Understanding neural networks by starting with the Sine function.",
-                    giturl: "https://github.com/VikSn0w/TrigoAI",
-                    technologies: ["Matplotlib", "Python", "PyTorch"]
-                },
-                {
-                    urlimg: "https://raw.githubusercontent.com/VikSn0w/DevBox/refs/heads/main/DevBox/Assets.xcassets/AppIcon.appiconset/Untitled-1.png",
-                    title: "DevBox",
-                    description: "Utilities for coding, coded for coders. Fast calculations for Bitwise operations, Conversions, IP Operations and more.",
-                    giturl: "https://github.com/VikSn0w/DevBox",
-                    technologies: ["Swift"]
-                },
-                {
-                    urlimg: "https://github.com/VikSn0w/MindBogglerCPP/blob/main/gitimg/cover.png?raw=true",
-                    title: "MindBoggler++",
-                    description: "A full-fledged Brainfuck IDE written in C++, ported from MindBoggler (Python)",
-                    giturl: "https://github.com/VikSn0w/MindBogglerCPP",
-                    technologies: ["C", "C++"]
-                },
-                {
-                    urlimg: "https://placehold.co/600x400/1a1a1a/ffffff?text=68k",
-                    title: "68k Assembly",
-                    description: "Programs coded in assembly 68k for education purpose",
-                    giturl: "https://github.com/VikSn0w/68k",
-                    technologies: ["Assembly"]
-                }
-            ],
-            hobbies: [
-                {
-                    title: "Ducati & Motorcycles",
-                    description: "Passionate about riding and mechanics. Currently owning a Ducati Monster fully customised with dry clutch and all. Lately enjoying fixing and tuning other Ducati bikes. Thinking about starting a YouTube channel about a software for ECU reading and tuning for older Ducati.",
-                    icon: "Bike",
-                    image: "https://github.com/VikSn0w/viksn0w.github.io/blob/main/images/duc2025.jpg?raw=true"
-                },
-                {
-                    title: "Gym & Rugby",
-                    description: "Fitness enthusiast and rugby player. I love pushing my limits both in the gym and on the rugby field, where teamwork and strategy come together.",
-                    icon: "Dumbbell",
-                    image: "https://github.com/VikSn0w/viksn0w.github.io/blob/main/images/IMG_3353.JPG?raw=true"
-                }
-            ]
-        };
-
-        // --- UTILS ---
-const IconMap = { Code, Cpu, Globe, Layers, Terminal, Database, Heart, Briefcase, Book, Award, GraduationCap, FileBadge, Languages, Bike, Camera, Menu, Handshake, User, Zap, FolderOpen, Dumbbell };
-        const getStatusColor = (status) => {
-            switch(status.toLowerCase()) {
-                case 'ongoing': return 'bg-blue-500/20 text-blue-400 border-blue-500/30';
-                case 'starting': return 'bg-gray-500/20 text-gray-400 border-gray-500/30';
-                case 'suspended': return 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30';
-                case 'completed': return 'bg-green-500/20 text-green-400 border-green-500/30';
-                default: return 'bg-gray-500/20 text-gray-400 border-gray-500/30';
+            {
+                name: "Qualifica Group",
+                location: "Naples, IT",
+                role: "STEM Teacher",
+                start: "May 2025",
+                end: "Present",
+                logo: "images/employer/qualifica.png",
+                description: "Expert STEM teacher, specialized in Artificial Intelligence and Computer Science subjects. Delivering engaging lessons, fostering critical thinking, and inspiring students to excel in the ever-evolving field of technology."
+            },
+            {
+                name: "GreenTechSolution",
+                location: "Naples, IT",
+                role: "Lead Software Development Engineer",
+                start: "January 2023",
+                end: "May 2025",
+                logo: "images/employer/gts.jpg",
+                description: "Developing web-based platforms, management software. AI-based software and computer vision programs. Team-leading, team coordination and task force creation."
+            },
+            {
+                name: "Accenture Italia",
+                location: "Naples, IT",
+                role: "Database Watchdog",
+                start: "July 2022",
+                end: "September 2022",
+                logo: "images/employer/accenture.png",
+                description: "Analysing the queues and solve eventual problems. Creation of remediations and medicines for high traffic queues."
+            },
+            {
+                name: "3F&EDIN",
+                location: "Naples, IT",
+                role: "Software Programmer",
+                start: "May 2022",
+                end: "October 2022",
+                logo: "images/employer/3f.png",
+                description: "Intensive Course about learning how to use all the necessary tools for web development, from Angular to Java."
+            },
+            {
+                name: "Pointel Communication S.p.A",
+                location: "Naples, IT",
+                role: "Full Stack Developer",
+                start: "August 2021",
+                end: "May 2022",
+                logo: "images/employer/pointel.png",
+                description: "Analysis and development of a web application that allows companies to effectively view and manage the traffic of their naval fleet, routes and ports connected to them."
             }
-        };
-
-        const getSectionIcon = (id) => {
-            switch(id) {
-                case 'profile': return User;
-                case 'skills': return Zap;
-                case 'experience': return Briefcase;
-                case 'education': return GraduationCap;
-                case 'training': return Award;
-                case 'languages': return Languages;
-                case 'projects': return FolderOpen;
-                case 'hobbies': return Heart;
-                default: return Heart;
+        ],
+        collaborations: [
+            {
+                company: "JKJ srl",
+                project: "TPAI",
+                logo: "images/employer/JKJ.png",
+                status: "Suspended",
+                description: "Engineered and developed a full-stack web platform utilizing Flask, PHP (to be reweritten), PyTorch and other components to detect crosswalks and tactile paths for visually impaired individuals."
+            },
+            {
+                company: "Beducci Bus Travels",
+                project: "Bus Manager",
+                logo: "images/employer/beducci.png",
+                status: "Completed",
+                description: "Developed a comprehensive web application for managing bus fleets, routes, maintenance and driver scheduling, enhancing operational efficiency."
+            },
+            {
+                company: "Desmo Special Parts",
+                project: "Desmo Special Parts E-commerce",
+                logo: "images/employer/dsp.png",
+                status: "Ongoing",
+                description: "Developed a full-featured e-commerce platform using Django, enabling seamless online sales and inventory management for motorcycle parts."
+            },
+            {
+                company: "Traliccio Randagio",
+                project: "Web Presence & E-commerce",
+                logo: "images/employer/tralicciorandagio.png",
+                status: "Starting",
+                description: "Building a modern web presence and e-commerce platform using React and Django to enhance brand visibility and online sales."
             }
-        };
+        ],
+        education: [
+            { name: "University of Naples \"Parthenope\"", location: "Naples, IT", start: "2021", end: "Present", description: "BCompSc in Computer Science." },
+            { name: "ITI E. Medi High School", location: "San Giorgio a Cremano, IT", start: "2018", end: "2021", description: "Graduated with 100/100." },
+            { name: "Christ's Hospital School", location: "Horsham, UK", start: "2019", end: "2019", description: "English CS exchange (B2)." },
+            { name: "University College Dublin", location: "Dublin, IE", start: "2018", end: "2018", description: "Economics in CS." }
+        ],
+        languages: [
+            { name: "Italian", level: "Native", detail: "Mother tongue" },
+            { name: "English", level: "C1", detail: "Current Proficiency" }
+        ],
+        training: [
+            { name: "iOS Foundation", issuer: "Apple", date: "April 2023" },
+            { name: "Cisco Cybersecurity", issuer: "Cisco", date: "March 2021" },
+            { name: "Young Manager", issuer: "Plus & BC", date: "July 2018" }
+        ],
+        projects: [
+            { title: "CoreDucati", desc: "Swift, SwiftUI, CoreData. Remote JSON fetching without middleware.", git: "https://github.com/VikSn0w/Ducati-CoreDatabike" },
+            { title: "StudiSync", desc: "Exam management app. Python & Flask.", git: "https://github.com/VikSn0w/StudiSync" },
+            { title: "TrigoAI", desc: "Neural networks learning Sine function. PyTorch.", git: "https://github.com/VikSn0w/TrigoAI" },
+            { title: "DevBox", desc: "Utilities for coders (Bitwise, IP, etc). Swift.", git: "https://github.com/VikSn0w/DevBox" },
+            { title: "MindBoggler++", desc: "Brainfuck IDE in C++.", git: "https://github.com/VikSn0w/MindBogglerCPP" },
+            { title: "68k Assembly", desc: "Educational Assembly 68k programs.", git: "https://github.com/VikSn0w/68k" }
+        ],
+        hobbies: [
+            { title: "Ducati & Motorcycles", desc: "Riding, mechanics, ECU tuning." },
+            { title: "Gym & Rugby", desc: "Fitness enthusiast and player." }
+        ]
+    };
 
-        // Helper: Create Icon Sprite using Canvas
-        const createIconSprite = (emoji) => {
-            const canvas = document.createElement('canvas');
-            canvas.width = 128;
-            canvas.height = 128;
-            const ctx = canvas.getContext('2d');
-            ctx.clearRect(0, 0, 128, 128);
-            ctx.font = "90px Arial";
-            ctx.textAlign = "center";
-            ctx.textBaseline = "middle";
-            ctx.fillStyle = "#ffffff";
-            ctx.fillText(emoji, 64, 68);
-            
-            const texture = new THREE.CanvasTexture(canvas);
-            const material = new THREE.SpriteMaterial({ map: texture, transparent: true });
-            const sprite = new THREE.Sprite(material);
-            sprite.scale.set(0.7, 0.7, 0.7); 
-            return sprite;
-        };
+    const COMMANDS = [
+        { cmd: 'whoami', desc: 'Display profile info', section: 'profile' },
+        { cmd: 'ls', desc: 'List available sections' },
+        { cmd: 'open skills', desc: 'View technical skills', section: 'skills' },
+        { cmd: 'open experience', desc: 'View work history', section: 'experience' },
+        { cmd: 'open education', desc: 'View academic background', section: 'education' },
+        { cmd: 'open projects', desc: 'View code projects', section: 'projects' },
+        { cmd: 'open training', desc: 'View certifications', section: 'training' },
+        { cmd: 'open languages', desc: 'View languages', section: 'languages' },
+        { cmd: 'open hobbies', desc: 'View personal interests', section: 'hobbies' },
+        { cmd: 'clear', desc: 'Clear terminal screen' },
+        { cmd: 'help', desc: 'Show this help message' }
+    ];
 
-        // Helper: Get Icosahedron Vertices manually for 12 points
-        const getIcosahedronVertices = (radius) => {
-            const t = (1 + Math.sqrt(5)) / 2;
-            const points = [
-                [-1, t, 0], [1, t, 0], [-1, -t, 0], [1, -t, 0],
-                [0, -1, t], [0, 1, t], [0, -1, -t], [0, 1, -t],
-                [t, 0, -1], [t, 0, 1], [-t, 0, -1], [-t, 0, 1]
-            ];
-            return points.map(p => new THREE.Vector3(p[0], p[1], p[2]).normalize().multiplyScalar(radius));
-        };
+    // --- COMPONENTS ---
 
-        // --- 3D SCENE COMPONENT ---
-        const Scene3D = ({ activeSection, onSectionSelect }) => {
-            const mountRef = useRef(null);
-            const sceneRef = useRef(null);
-            const rendererRef = useRef(null);
-            const cameraRef = useRef(null);
-            const frameIdRef = useRef(null);
-            
-            const activeSectionRef = useRef(activeSection);
+    const Prompt = ({ user = "guest", path = "~" }) => (
+        <span className="whitespace-nowrap">
+                <span className="text-green-500 font-bold">{user}@vittorio-portfolio</span>
+                <span className="text-white">:</span>
+                <span className="text-blue-500 font-bold">{path}</span>
+                <span className="text-white">$ </span>
+            </span>
+    );
 
-            useEffect(() => {
-                activeSectionRef.current = activeSection;
-            }, [activeSection]);
-
-            const mouse = useRef(new THREE.Vector2());
-            const raycaster = useRef(new THREE.Raycaster());
-            const isDragging = useRef(false);
-            const previousMouse = useRef({ x: 0, y: 0 });
-
-            const icosahedronRef = useRef(null);
-            const markersRef = useRef([]);
-
-            // Responsive Orbit Position
-            const getOrbitPos = () => {
-                // If screen width < 768 (Mobile), move camera back
-                return window.innerWidth < 768 
-                    ? new THREE.Vector3(0, 0, 9.5) 
-                    : new THREE.Vector3(0, 0, 6.5);
-            };
-
-            const ZOOM_POS = new THREE.Vector3(0, 0, 1.5); 
-
-            useEffect(() => {
-                if (!mountRef.current) return;
-                markersRef.current = [];
-
-                // 1. Setup
-                const scene = new THREE.Scene();
-                scene.fog = new THREE.FogExp2(0x000000, 0.02);
-                sceneRef.current = scene;
-
-                const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-                camera.position.copy(getOrbitPos());
-                cameraRef.current = camera;
-
-                const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
-                renderer.setSize(window.innerWidth, window.innerHeight);
-                renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-                mountRef.current.appendChild(renderer.domElement);
-                rendererRef.current = renderer;
-
-                // 2. Objects
-                const geometry = new THREE.IcosahedronGeometry(2.0, 0);
-                const material = new THREE.MeshBasicMaterial({ 
-                    color: 0x888888, wireframe: true, transparent: true, opacity: 0.15 
-                });
-                const icosahedron = new THREE.Mesh(geometry, material);
-                icosahedronRef.current = icosahedron;
-                scene.add(icosahedron);
-
-                const innerGeo = new THREE.SphereGeometry(1.2, 32, 32);
-                const innerMat = new THREE.MeshBasicMaterial({
-                    color: 0x007aff, transparent: true, opacity: 0.05, blending: THREE.AdditiveBlending
-                });
-                const glow = new THREE.Mesh(innerGeo, innerMat);
-                scene.add(glow);
-
-                // 3. Markers
-                const uniqueVertices = getIcosahedronVertices(2.0);
-                SECTIONS_CONFIG.forEach((section, index) => {
-                    const vertex = uniqueVertices[index % uniqueVertices.length];
-                    const group = new THREE.Group();
-                    group.position.copy(vertex);
-                    
-                    const markerGeo = new THREE.IcosahedronGeometry(0.55, 0);
-                    const markerMat = new THREE.MeshBasicMaterial({ 
-                        color: 0xffffff, wireframe: true, transparent: true, opacity: 0.6 
-                    });
-                    const markerMesh = new THREE.Mesh(markerGeo, markerMat);
-                    group.add(markerMesh);
-
-                    const sprite = createIconSprite(section.emoji);
-                    group.add(sprite);
-                    
-                    const hitGeo = new THREE.SphereGeometry(0.75, 16, 16);
-                    const hitMat = new THREE.MeshBasicMaterial({ color: 0xff0000, transparent: true, opacity: 0 });
-                    const hitTarget = new THREE.Mesh(hitGeo, hitMat);
-                    hitTarget.userData = { id: section.id, label: section.label };
-                    group.add(hitTarget);
-
-                    icosahedron.add(group); 
-                    markersRef.current.push({ group, mesh: markerMesh, sprite: sprite, hit: hitTarget, id: section.id });
-                });
-
-                // 4. Stars
-                const starGeo = new THREE.BufferGeometry();
-                const starCount = 1500;
-                const posArray = new Float32Array(starCount * 3);
-                for(let i = 0; i < starCount * 3; i++) {
-                    posArray[i] = (Math.random() - 0.5) * 40;
-                }
-                starGeo.setAttribute('position', new THREE.BufferAttribute(posArray, 3));
-                const starMat = new THREE.PointsMaterial({ size: 0.02, color: 0xffffff, transparent: true, opacity: 0.4 });
-                const stars = new THREE.Points(starGeo, starMat);
-                scene.add(stars);
-
-                // -- HANDLERS --
-                
-                // Unified logic for rotation
-                const handleRotation = (clientX, clientY) => {
-                     if (activeSectionRef.current) return;
-                    const deltaX = clientX - previousMouse.current.x;
-                    const deltaY = clientY - previousMouse.current.y;
-                    icosahedron.rotation.y += deltaX * 0.005;
-                    icosahedron.rotation.x += deltaY * 0.005;
-                    previousMouse.current = { x: clientX, y: clientY };
-                };
-
-                // Mouse Events
-                const onMouseDown = (e) => {
-                    if (activeSectionRef.current) return;
-                    isDragging.current = true;
-                    previousMouse.current = { x: e.clientX, y: e.clientY };
-                };
-
-                const onMouseMove = (e) => {
-                    mouse.current.x = (e.clientX / window.innerWidth) * 2 - 1;
-                    mouse.current.y = -(e.clientY / window.innerHeight) * 2 + 1;
-                    if (isDragging.current) {
-                        handleRotation(e.clientX, e.clientY);
-                    }
-                };
-                
-                const onMouseUp = () => { isDragging.current = false; };
-
-                // Touch Events (Mobile Support)
-                const onTouchStart = (e) => {
-                    if (activeSectionRef.current || e.touches.length > 1) return;
-                    isDragging.current = true;
-                    const touch = e.touches[0];
-                    previousMouse.current = { x: touch.clientX, y: touch.clientY };
-                    // We also update mouse ref for raycasting logic
-                    mouse.current.x = (touch.clientX / window.innerWidth) * 2 - 1;
-                    mouse.current.y = -(touch.clientY / window.innerHeight) * 2 + 1;
-                };
-
-                const onTouchMove = (e) => {
-                    if (!isDragging.current || e.touches.length > 1) return;
-                    const touch = e.touches[0];
-                    // Update mouse position for logic
-                    mouse.current.x = (touch.clientX / window.innerWidth) * 2 - 1;
-                    mouse.current.y = -(touch.clientY / window.innerHeight) * 2 + 1;
-                    
-                    handleRotation(touch.clientX, touch.clientY);
-                };
-
-                const onTouchEnd = () => { isDragging.current = false; };
-
-                const onClick = (e) => {
-                    if (activeSectionRef.current) return;
-                    raycaster.current.setFromCamera(mouse.current, camera);
-                    const targets = markersRef.current.map(m => m.hit);
-                    const intersects = raycaster.current.intersectObjects(targets, true);
-                    if (intersects.length > 0) {
-                        onSectionSelect(intersects[0].object.userData.id);
-                    }
-                };
-
-                const onResize = () => {
-                    const width = window.innerWidth;
-                    const height = window.innerHeight;
-                    camera.aspect = width / height;
-                    camera.updateProjectionMatrix();
-                    renderer.setSize(width, height);
-                    
-                    // Adjust camera Z if not in active mode
-                    if (!activeSectionRef.current) {
-                        const newPos = getOrbitPos();
-                        // Smooth transition not needed for resize, just snap
-                        camera.position.set(newPos.x, newPos.y, newPos.z);
-                    }
-                };
-
-                // Attach Listeners
-                window.addEventListener('mousedown', onMouseDown);
-                window.addEventListener('mousemove', onMouseMove);
-                window.addEventListener('mouseup', onMouseUp);
-                
-                // Add Touch Listeners
-                window.addEventListener('touchstart', onTouchStart, { passive: false });
-                window.addEventListener('touchmove', onTouchMove, { passive: false });
-                window.addEventListener('touchend', onTouchEnd);
-                
-                window.addEventListener('click', onClick);
-                window.addEventListener('resize', onResize);
-
-                // Animation Loop
-                const animate = () => {
-                    frameIdRef.current = requestAnimationFrame(animate);
-                    const time = Date.now() * 0.001;
-                    const active = activeSectionRef.current;
-
-                    if (!active) {
-                        const swayTarget = new THREE.Vector3(Math.cos(time * 0.3) * 0.2, Math.sin(time * 0.5) * 0.3, 0);
-                        icosahedron.position.lerp(swayTarget, 0.05);
-                        if (!isDragging.current) {
-                            icosahedron.rotation.y += 0.001;
-                            icosahedron.rotation.x += 0.0005;
-                        }
-                        
-                        // Lerp back to correct orbit position (desktop vs mobile)
-                        const targetOrbit = getOrbitPos();
-                        camera.position.lerp(targetOrbit, 0.04);
-                        camera.lookAt(0, 0, 0);
-                        
-                        // Raycasting
-                        raycaster.current.setFromCamera(mouse.current, camera);
-                        const targets = markersRef.current.map(m => m.hit);
-                        const intersects = raycaster.current.intersectObjects(targets);
-                        markersRef.current.forEach(m => {
-                            m.mesh.rotation.y += 0.01;
-                            m.mesh.rotation.z += 0.01;
-                            if (intersects.length > 0 && intersects[0].object === m.hit) {
-                                m.mesh.scale.lerp(new THREE.Vector3(1.2, 1.2, 1.2), 0.1);
-                                m.mesh.material.color.setHex(0x007aff);
-                                m.sprite.scale.lerp(new THREE.Vector3(1.0, 1.0, 1.0), 0.1);
-                                document.body.style.cursor = 'pointer';
-                            } else {
-                                m.mesh.scale.lerp(new THREE.Vector3(1, 1, 1), 0.1);
-                                m.mesh.material.color.setHex(0xffffff);
-                                m.sprite.scale.lerp(new THREE.Vector3(0.7, 0.7, 0.7), 0.1);
-                            }
-                        });
-                        if (intersects.length === 0) document.body.style.cursor = 'default';
-                    } else {
-                        icosahedron.rotation.y += 0.0005;
-                        icosahedron.position.lerp(new THREE.Vector3(0,0,0), 0.05);
-                        camera.position.lerp(ZOOM_POS, 0.04);
-                        camera.lookAt(0, 0, 0);
-                    }
-                    
-                    const scale = 1 + Math.sin(time * 2) * 0.02;
-                    glow.scale.set(scale, scale, scale);
-                    renderer.render(scene, camera);
-                };
-                animate();
-
-                return () => {
-                    window.removeEventListener('mousedown', onMouseDown);
-                    window.removeEventListener('mousemove', onMouseMove);
-                    window.removeEventListener('mouseup', onMouseUp);
-                    window.removeEventListener('touchstart', onTouchStart);
-                    window.removeEventListener('touchmove', onTouchMove);
-                    window.removeEventListener('touchend', onTouchEnd);
-                    window.removeEventListener('click', onClick);
-                    window.removeEventListener('resize', onResize);
-                    cancelAnimationFrame(frameIdRef.current);
-                    if (mountRef.current && renderer.domElement) {
-                        mountRef.current.removeChild(renderer.domElement);
-                    }
-                    geometry.dispose();
-                    material.dispose();
-                };
-            }, []);
-
-            return <div ref={mountRef} className="fixed inset-0 z-0 touch-none" />;
-        };
-
-        // --- CONTENT COMPONENTS ---
-        
-        const ProfileContent = () => (
-            <div className="flex flex-col md:flex-row gap-8 md:gap-12 items-start animate-slideUp pb-10 md:pb-0">
-                <div className="flex-1 space-y-4 md:space-y-6">
-                    
-                    {/* Updated Profile Layout: Image on Left */}
-                    <div className="flex flex-col md:flex-row items-center md:items-start gap-6 md:gap-8">
-                        <div className="w-24 h-24 md:w-32 md:h-32 rounded-full overflow-hidden border-4 border-white/10 shadow-2xl shrink-0">
-                            <img 
-                                src={DATA.profile.avatar} 
-                                alt={DATA.profile.name} 
-                                className="w-full h-full object-cover"
-                                onError={(e) => { e.target.style.display='none'; }} 
-                            />
-                        </div>
-                        <div>
-                            <h1 className="text-4xl md:text-7xl font-bold text-transparent bg-clip-text bg-gradient-to-b from-white to-white/40">{DATA.profile.name}</h1>
-                            <h2 className="text-xl md:text-2xl text-blue-400 font-medium mt-2">{DATA.profile.title}</h2>
-                        </div>
-                    </div>
-
-                    <p className="text-lg md:text-xl text-white font-light leading-relaxed max-w-2xl">{DATA.profile.bio}</p>
-                    <div className="space-y-4 text-sm md:text-base text-gray-400 leading-relaxed max-w-2xl border-t border-white/10 pt-6">
-                        {DATA.profile.about.split('\n').map((paragraph, i) => (<p key={i}>{paragraph}</p>))}
-                    </div>
-                    <div className="flex flex-wrap gap-4 pt-4">
-                        <a href={DATA.profile.social.github} className="flex items-center gap-2 px-4 md:px-6 py-2 md:py-3 rounded-full bg-white/5 hover:bg-white/10 border border-white/10 transition-all text-sm md:text-base"><Github className="w-4 h-4 md:w-5 md:h-5" /> <span>GitHub</span></a>
-                        <a href={DATA.profile.social.linkedin} className="flex items-center gap-2 px-4 md:px-6 py-2 md:py-3 rounded-full bg-blue-600/20 hover:bg-blue-600/30 text-blue-400 border border-blue-500/20 transition-all text-sm md:text-base"><Linkedin className="w-4 h-4 md:w-5 md:h-5" /> <span>LinkedIn</span></a>
-						<a href={DATA.profile.social.instagram} className="flex items-center gap-2 px-4 md:px-6 py-2 md:py-3 rounded-full bg-red-600/20 hover:bg-red-600/30 text-red-400 border border-red-500/20 transition-all text-sm md:text-base"><Instagram className="w-4 h-4 md:w-5 md:h-5" /> <span>Instagram</span></a>
-                    </div>
-                </div>
-                
-                {/* Sidebar Column: Contact and Current Position */}
-                <div className="w-full md:w-1/3 flex flex-col gap-6">
-                    
-                    {/* Contact Box */}
-                    <div className="p-6 rounded-2xl bg-white/5 border border-white/5">
-                        <h3 className="text-sm uppercase tracking-widest text-gray-500 mb-6">Contact</h3>
-                        <a href={`mailto:${DATA.profile.email}`} className="flex items-center gap-3 text-white hover:text-blue-400 transition-colors mb-4 break-all"><Mail className="w-4 h-4" /> {DATA.profile.email}</a>
-                        <a href={`tel:${DATA.profile.phone}`} className="flex items-center gap-3 text-white hover:text-blue-400 transition-colors mb-4 break-all"><Phone className="w-4 h-4" /> {DATA.profile.phone}</a>
-                        <div className="flex items-center gap-3 text-gray-400"><University className="w-6 h-6" /> {DATA.profile.currentStudy}</div>
-                        <div className="flex items-center gap-3 text-gray-400"><MapPin className="w-4 h-4" /> {DATA.profile.location}</div>
-                    </div>
-                    
-                    {/* Current Position Box */}
-                    <div className="p-6 rounded-2xl bg-white/5 border border-white/5">
-                        
-                        {/* Updated: Added Company Logo here */}
-                        <div className="flex items-center gap-4 mb-4">
-                             {DATA.experience[0].logo && (
-                                <div className="w-12 h-12 bg-white rounded-lg p-1 flex items-center justify-center overflow-hidden shrink-0">
-                                    <img 
-                                        src={DATA.experience[0].logo} 
-                                        alt={DATA.experience[0].name} 
-                                        className="w-full h-full object-contain"
-                                        onError={(e) => { e.target.style.display='none'; }}
-                                    />
+    const SectionRenderer = ({ section }) => {
+        switch(section) {
+            case 'profile':
+                return (
+                    <div className="animate-slideUp mt-2 mb-6 border-l-2 border-green-800 pl-4">
+                        <div className="flex flex-col md:flex-row gap-6 mb-4">
+                            <img src={DATA.profile.avatar} className="w-32 h-32 retro-img rounded" alt="Profile" />
+                            <div>
+                                <h1 className="text-2xl font-bold text-white mb-1">{DATA.profile.name}</h1>
+                                <div className="text-green-400 mb-2">{DATA.profile.title}</div>
+                                <div className="text-sm text-gray-400 mb-1">📍 {DATA.profile.location}</div>
+                                <div className="text-sm text-gray-400 mb-1">📧 {DATA.profile.email}</div>
+                                <div className="text-sm text-gray-400">📱 {DATA.profile.phone}</div>
+                                <div className="flex gap-4 mt-3">
+                                    <a href={DATA.profile.social.github} target="_blank" className="text-blue-400 hover:text-blue-300 underline">[GitHub]</a>
+                                    <a href={DATA.profile.social.linkedin} target="_blank" className="text-blue-400 hover:text-blue-300 underline">[LinkedIn]</a>
+                                    <a href={DATA.profile.social.instagram} target="_blank" className="text-blue-400 hover:text-blue-300 underline">[Instagram]</a>
                                 </div>
-                             )}
-                            <h3 className="text-sm uppercase tracking-widest text-gray-500">Current Position</h3>
-                        </div>
-                        
-                        <div className="mb-2">
-                            <h4 className="text-lg font-bold text-white leading-tight">{DATA.experience[0].name}</h4>
-                            <div className="text-blue-400 font-medium text-sm mt-1">{DATA.experience[0].role}</div>
-                        </div>
-
-                        <div className="flex items-center gap-2 text-xs text-gray-500 font-mono mb-4">
-                            <Calendar className="w-3 h-3" />
-                            <span>{DATA.experience[0].start} — {DATA.experience[0].end}</span>
-                        </div>
-
-                        <p className="text-sm text-gray-300 leading-relaxed">
-                            {DATA.experience[0].description}
-                        </p>
-                    </div>
-                </div>
-            </div>
-        );
-
-        const SkillsContent = () => (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6 animate-slideUp pb-10">
-                {DATA.skills.map((skill, idx) => {
-                    const Icon = IconMap[skill.icon] || Code;
-                    return (
-                        <div key={idx} className="p-6 rounded-2xl bg-white/5 border border-white/5 hover:bg-white/10 transition-colors group">
-                            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-500/20 to-purple-500/20 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-                                <Icon className="w-6 h-6 text-blue-400" />
                             </div>
-                            <h3 className="text-lg font-semibold text-white mb-1">{skill.name}</h3>
-                            <p className="text-sm text-gray-500">{skill.desc}</p>
-                            <p className="text-xs text-blue-400 mt-2 font-mono">{skill.level}</p>
                         </div>
-                    );
-                })}
-            </div>
-        );
-
-        /* UPDATED EXPERIENCE CONTENT: Includes Logos */
-        const ExperienceContent = () => (
-            <div className="animate-slideUp pb-10">
-                <div className="mb-10">
-                    {/* Added Briefcase Icon */}
-                    <div className="flex items-center gap-3 mb-8 border-b border-white/10 pb-4">
-                        <Briefcase className="w-6 h-6 text-blue-400" />
-                        <h3 className="text-xl font-bold text-white m-0 border-none p-0">Career History</h3>
+                        <p className="text-gray-300 leading-relaxed max-w-3xl mb-4">{DATA.profile.bio}</p>
+                        <p className="text-gray-400 text-sm leading-relaxed max-w-3xl whitespace-pre-line">{DATA.profile.about}</p>
                     </div>
+                );
 
-                    <div className="space-y-8 md:space-y-12">
-                        {DATA.experience.map((item, idx) => (
-                            <div key={idx} className="relative pl-6 md:pl-12 border-l border-white/10">
-                                <div className="absolute left-[-6px] top-1 w-3 h-3 rounded-full ring-4 ring-[#111111] bg-blue-500" />
-                                
-                                {/* Layout container to separate logo from text */}
-                                <div className="flex flex-col md:flex-row gap-4 md:gap-6">
-                                    {/* Logo Container */}
-                                    {item.logo && (
-                                        <div className="shrink-0 mt-1">
-                                            <div className="w-12 h-12 md:w-14 md:h-14 bg-white rounded-lg p-1 flex items-center justify-center overflow-hidden">
-                                                <img 
-                                                    src={item.logo} 
-                                                    alt={item.name} 
-                                                    className="w-full h-full object-contain"
-                                                    onError={(e) => { e.target.style.display='none'; }}
-                                                />
-                                            </div>
-                                        </div>
-                                    )}
-
-                                    {/* Text Content */}
-                                    <div className="flex-1">
-                                        <div className="flex flex-col md:flex-row md:items-baseline justify-between mb-2">
-                                            <h3 className="text-xl md:text-2xl font-bold text-white">{item.name}</h3>
-                                            <span className="text-xs md:text-sm font-mono text-gray-500">{item.start} — {item.end}</span>
-                                        </div>
-                                        {item.role && <h4 className="text-md md:text-lg text-blue-400 mb-1">{item.role}</h4>}
-                                        <div className="flex items-center gap-2 text-sm text-gray-500 mb-4"><MapPin className="w-3 h-3" /> {item.location}</div>
-                                        <p className="text-sm md:text-base text-gray-300 leading-relaxed bg-white/5 p-4 md:p-6 rounded-2xl border border-white/5">{item.description}</p>
-                                    </div>
+            case 'skills':
+                return (
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-2 mb-6">
+                        {DATA.skills.map((s, i) => (
+                            <div key={i} className="border border-green-900 bg-green-900/10 p-3 rounded hover:bg-green-900/20 transition-colors">
+                                <div className="flex justify-between items-center mb-1">
+                                    <span className="font-bold text-green-400">{s.name}</span>
+                                    <span className="text-xs border border-green-700 px-2 py-0.5 rounded text-green-300">{s.level}</span>
+                                </div>
+                                <p className="text-xs text-gray-400">{s.desc}</p>
+                                <div className="text-green-800 text-xs mt-2 font-mono tracking-tighter">
+                                    [{'█'.repeat(s.level === 'Expert' ? 20 : s.level === 'Advanced' ? 16 : s.level === 'Academic' ? 12 : 10)}{'.'.repeat(s.level === 'Expert' ? 0 : s.level === 'Advanced' ? 4 : s.level === 'Academic' ? 8 : 10)}]
                                 </div>
                             </div>
                         ))}
                     </div>
-                </div>
+                );
 
-                {/* COLLABORATION SECTION WITH LOGOS & STATUS */}
-                <div>
-                    {/* Added Handshake Icon */}
-                    <div className="flex items-center gap-3 mb-6 border-b border-white/10 pb-4">
-                        <Handshake className="w-6 h-6 text-green-400" />
-                        <h3 className="text-xl font-bold text-white m-0 border-none p-0">Project Collaborations</h3>
-                    </div>
+            case 'experience':
+                return (
+                    <div className="mt-2 mb-6 space-y-6">
+                        {DATA.experience.map((exp, i) => (
+                            <div key={i} className="relative pl-6 border-l border-green-800/30">
+                                <div className="absolute left-[-5px] top-6 w-2 h-2 bg-green-500 rounded-full"></div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        {DATA.collaborations.map((collab, idx) => (
-                            <div key={idx} className="relative p-5 rounded-2xl bg-white/5 border border-white/5 flex gap-4 items-start hover:bg-white/10 transition-colors overflow-hidden">
-                                {/* Status Badge (Top Right) */}
-                                <div className={`absolute top-4 right-4 px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider border ${getStatusColor(collab.status)}`}>
-                                    {collab.status}
-                                </div>
+                                {/* UPDATED LAYOUT: Logo Left, Text Right */}
+                                <div className="flex flex-col md:flex-row gap-4 items-start">
 
-                                {/* Logo or Icon Fallback */}
-                                <div className="shrink-0">
-                                    {collab.logo ? (
-                                        <div className="w-12 h-12 bg-white rounded-lg p-1 flex items-center justify-center overflow-hidden">
-                                            <img 
-                                                src={collab.logo} 
-                                                alt={collab.company} 
-                                                className="w-full h-full object-contain"
+                                    {/* Logo Column */}
+                                    {exp.logo ? (
+                                        <div className="shrink-0 pt-1">
+                                            <img
+                                                src={exp.logo}
+                                                className="w-16 h-16 object-contain bg-white/10 p-1 rounded-lg retro-img"
+                                                alt={exp.name}
                                                 onError={(e) => { e.target.style.display='none'; }}
                                             />
                                         </div>
                                     ) : (
-                                        <div className="p-2 rounded-lg bg-green-500/10 text-green-400 mt-1">
-                                            <Handshake className="w-6 h-6" />
+                                        <div className="shrink-0 pt-1 w-16 h-16 flex items-center justify-center bg-green-900/20 rounded-lg">
+                                            <Briefcase className="text-green-600 w-8 h-8" />
                                         </div>
                                     )}
-                                </div>
-                                
-                                <div className="flex-1 pr-20"> {/* Padding Right to avoid overlap with badge */}
-                                    <h4 className="text-lg font-bold text-white">{collab.company}</h4>
-                                    <div className="text-green-400 text-sm font-medium mb-2">{collab.project}</div>
-                                    <p className="text-sm text-gray-400 leading-relaxed">{collab.description}</p>
+
+                                    {/* Content Column */}
+                                    <div className="flex-1 w-full">
+                                        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-baseline mb-1">
+                                            <h3 className="text-lg font-bold text-white leading-tight">{exp.name}</h3>
+                                            <span className="text-xs text-green-600 font-mono whitespace-nowrap mt-1 sm:mt-0">{exp.start} — {exp.end}</span>
+                                        </div>
+
+                                        <div className="text-green-400 text-sm font-semibold mb-2">{exp.role}</div>
+                                        <p className="text-sm text-gray-400 leading-relaxed">{exp.description}</p>
+                                    </div>
                                 </div>
                             </div>
                         ))}
-                    </div>
-                </div>
-            </div>
-        );
 
-        const EducationContent = () => (
-            <div className="space-y-8 md:space-y-12 animate-slideUp pb-10">
-                {DATA.education.map((item, idx) => (
-                    <div key={idx} className="relative pl-6 md:pl-12 border-l border-white/10">
-                        <div className="absolute left-[-6px] top-1 w-3 h-3 rounded-full ring-4 ring-[#111111] bg-purple-500" />
-                        <div className="flex flex-col md:flex-row md:items-baseline justify-between mb-2">
-                            <h3 className="text-xl md:text-2xl font-bold text-white">{item.name}</h3>
-                            <span className="text-xs md:text-sm font-mono text-gray-500">{item.start} — {item.end}</span>
-                        </div>
-                        <div className="flex items-center gap-2 text-sm text-gray-500 mb-4"><MapPin className="w-3 h-3" /> {item.location}</div>
-                        <p className="text-sm md:text-base text-gray-300 leading-relaxed bg-white/5 p-4 md:p-6 rounded-2xl border border-white/5">{item.description}</p>
-                    </div>
-                ))}
-            </div>
-        );
-
-        const TrainingContent = () => (
-            <div className="animate-slideUp grid grid-cols-1 gap-4 md:gap-6 pb-10">
-                {DATA.training.map((cert, idx) => (
-                    <div key={idx} className="p-4 md:p-6 rounded-2xl bg-white/5 border border-white/5 hover:bg-white/10 transition-colors flex flex-col md:flex-row justify-between md:items-center gap-4">
-                        <div className="flex items-center gap-4">
-                            <div className="p-3 rounded-full bg-purple-500/10 text-purple-400"><Award className="w-6 h-6" /></div>
-                            <div>
-                                <h4 className="text-lg md:text-xl font-bold text-white">{cert.name}</h4>
-                                <p className="text-sm text-gray-400">{cert.issuer}</p>
+                        <div className="pt-6 mt-8 border-t border-green-900/50">
+                            <div className="flex items-center gap-2 mb-6">
+                                <Handshake className="w-5 h-5 text-green-500"/>
+                                <h3 className="text-white font-bold text-lg">Collaborations</h3>
                             </div>
-                        </div>
-                        <div className="text-sm font-mono text-gray-500 border border-white/10 px-3 py-1 rounded-full self-start md:self-auto">{cert.date}</div>
-                    </div>
-                ))}
-            </div>
-        );
 
-        const LanguagesContent = () => (
-            <div className="animate-slideUp grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6 pb-10">
-                {DATA.languages.map((lang, idx) => (
-                    <div key={idx} className="p-4 md:p-6 rounded-2xl bg-white/5 border border-white/5 flex justify-between items-center group hover:border-white/20 transition-colors">
-                        <div className="flex items-center gap-4">
-                            <div className="p-3 rounded-full bg-blue-500/10 text-blue-400"><Globe className="w-6 h-6" /></div>
-                            <div>
-                                <h4 className="text-lg md:text-xl font-bold text-white">{lang.name}</h4>
-                                <p className="text-sm text-gray-500 mt-1">{lang.detail}</p>
-                            </div>
-                        </div>
-                        <div className="px-3 py-1 md:px-4 md:py-2 rounded-full bg-blue-500/10 text-blue-400 font-mono text-xs md:text-sm border border-blue-500/20 group-hover:bg-blue-500/20 transition-colors">{lang.level}</div>
-                    </div>
-                ))}
-            </div>
-        );
+                            <div className="grid grid-cols-1 gap-6">
+                                {DATA.collaborations.map((col, i) => (
+                                    <div key={i} className="flex gap-4 items-start pl-4 border-l border-gray-800 hover:border-green-800 transition-colors">
+                                        {/* Collaboration Logo */}
+                                        {col.logo ? (
+                                            <div className="shrink-0 pt-1">
+                                                <img
+                                                    src={col.logo}
+                                                    className="w-12 h-12 object-contain bg-white/10 p-1 rounded retro-img"
+                                                    alt={col.company}
+                                                    onError={(e) => { e.target.style.display='none'; }}
+                                                />
+                                            </div>
+                                        ) : (
+                                            <div className="shrink-0 pt-1 w-12 h-12 flex items-center justify-center bg-gray-800 rounded">
+                                                <Handshake className="text-gray-500 w-6 h-6" />
+                                            </div>
+                                        )}
 
-        const ProjectsContent = () => (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8 animate-slideUp pb-10">
-                {DATA.projects.map((project, idx) => (
-                    <div key={idx} className="group flex flex-col bg-black border border-white/10 rounded-3xl overflow-hidden hover:border-blue-500/50 transition-colors duration-500">
-                        <div className="relative h-40 md:h-48 bg-gray-900 overflow-hidden">
-                            <img 
-                                src={project.urlimg} 
-                                alt={project.title}
-                                className="w-full h-full object-cover opacity-80 group-hover:scale-105 transition-transform duration-700"
-                                onError={(e) => { e.target.onerror = null; e.target.src = "https://placehold.co/600x400/1a1a1a/ffffff?text=Project"; }}
-                            />
-                            <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent" />
-                        </div>
-                        <div className="flex-1 p-6 flex flex-col">
-                            <div className="flex gap-2 mb-4 flex-wrap">
-                                {project.technologies && project.technologies.map((tag, i) => (
-                                    <span key={i} className="px-2.5 py-1 text-xs font-medium text-blue-300 bg-blue-500/10 rounded-md border border-blue-500/20">
-                                        {tag.replace('devicon-', '').replace('-plain', '')}
-                                    </span>
-                                ))}
-                            </div>
-                            <h3 className="text-xl font-bold text-white mb-2">{project.title}</h3>
-                            <p className="text-gray-400 text-sm mb-6 line-clamp-3 flex-1">{project.description}</p>
-                            <a href={project.giturl} target="_blank" rel="noreferrer" className="inline-flex items-center gap-2 text-sm font-semibold text-white hover:text-blue-400 transition-colors mt-auto">View Code <ChevronRight className="w-4 h-4" /></a>
-                        </div>
-                    </div>
-                ))}
-            </div>
-        );
-
-        const HobbiesContent = () => (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 animate-slideUp pb-10">
-                {DATA.hobbies.map((hobby, idx) => {
-                    const Icon = IconMap[hobby.icon] || Heart;
-                    return (
-                        <div key={idx} className="group relative h-64 md:h-80 rounded-3xl overflow-hidden border border-white/10 hover:border-white/30 transition-all cursor-default">
-                            {/* Background Image */}
-                            <img 
-                                src={hobby.image} 
-                                alt={hobby.title}
-                                className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110 opacity-80 group-hover:opacity-100"
-                            />
-                            
-                            {/* Overlay Gradient */}
-                            <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent" />
-
-                            {/* Content */}
-                            <div className="absolute bottom-0 left-0 right-0 p-6 md:p-8 flex items-end justify-between">
-                                <div>
-                                    <h3 className="text-2xl font-bold text-white mb-2">{hobby.title}</h3>
-                                    <p className="text-gray-300 text-sm leading-relaxed max-w-xs">{hobby.description}</p>
-                                </div>
-                                <div className="p-3 rounded-full bg-white/10 backdrop-blur-md border border-white/10 text-white group-hover:bg-blue-500 group-hover:border-blue-500 transition-colors shadow-lg">
-                                    <Icon className="w-6 h-6" />
-                                </div>
-                            </div>
-                        </div>
-                    );
-                })}
-            </div>
-        );
-
-        const FloatingLabels = ({ activeSection }) => {
-            if (activeSection) return null;
-            return (
-                <div className="fixed bottom-12 left-0 right-0 z-10 text-center pointer-events-none animate-pulse">
-                    <p className="text-gray-400 text-xs md:text-sm font-light tracking-[0.2em] md:tracking-[0.3em] uppercase px-4">
-                        Drag to Rotate &bull; Click to Enter
-                    </p>
-                </div>
-            );
-        };
-
-        /* LEGEND WITH POINTER-EVENTS-AUTO */
-        const Legend = ({ activeSection }) => {
-            const [isOpen, setIsOpen] = useState(false);
-            
-            if (activeSection) return null;
-
-            return (
-                <div className="fixed top-4 right-4 md:top-6 md:right-6 z-20 flex flex-col items-end gap-2 pointer-events-auto">
-                    <button 
-                        onClick={() => setIsOpen(!isOpen)}
-                        className="p-3 rounded-full bg-white/10 backdrop-blur-md border border-white/10 text-white hover:bg-white/20 transition-all shadow-lg group"
-                    >
-                        {isOpen ? <X className="w-5 h-5"/> : <Menu className="w-5 h-5 group-hover:scale-110 transition-transform"/>}
-                    </button>
-
-                    {isOpen && (
-                        <div className="bg-black/60 backdrop-blur-xl border border-white/10 rounded-2xl p-5 shadow-2xl animate-slideUp origin-top-right min-w-[160px]">
-                            <h3 className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-3 border-b border-white/10 pb-2">Legend</h3>
-                            <div className="space-y-2">
-                                {SECTIONS_CONFIG.map(item => (
-                                    <div key={item.id} className="flex items-center gap-3 text-xs text-gray-300 hover:text-white transition-colors">
-                                        <span className="text-base">{item.emoji}</span>
-                                        <span className="font-light tracking-wide">{item.label}</span>
+                                        <div className="flex-1">
+                                            <div className="flex items-center gap-2 mb-1 flex-wrap">
+                                                <span className="text-green-300 font-bold">{col.company}</span>
+                                                <span className={`text-[10px] px-1.5 py-0.5 rounded border ${
+                                                    col.status === 'Ongoing' ? 'border-green-500 text-green-400' :
+                                                        col.status === 'Completed' ? 'border-blue-500 text-blue-400' :
+                                                            'border-gray-600 text-gray-500'
+                                                }`}>{col.status}</span>
+                                            </div>
+                                            <div className="text-sm text-gray-300 font-medium mb-1">{col.project}</div>
+                                            <div className="text-xs text-gray-500 leading-relaxed">{col.description}</div>
+                                        </div>
                                     </div>
                                 ))}
                             </div>
                         </div>
-                    )}
-                </div>
-            );
-        };
+                    </div>
+                );
 
-        const ContentOverlay = ({ activeSection, onClose }) => {
-            const [isClosing, setIsClosing] = useState(false);
-            const handleClose = () => {
-                setIsClosing(true);
-                setTimeout(() => { setIsClosing(false); onClose(); }, 500);
-            };
+            case 'projects':
+                return (
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mt-2 mb-6">
+                        {DATA.projects.map((p, i) => (
+                            <div key={i} className="border border-gray-800 p-4 hover:border-green-600 transition-colors group">
+                                <h3 className="font-bold text-white group-hover:text-green-400 transition-colors">{p.title}</h3>
+                                <p className="text-xs text-gray-400 my-2 h-12 overflow-hidden">{p.desc}</p>
+                                <a href={p.git} target="_blank" className="text-xs text-blue-400 hover:underline flex items-center gap-1">
+                                    git clone {p.title.toLowerCase().replace(/\s/g,'-')} <ChevronRight className="w-3 h-3"/>
+                                </a>
+                            </div>
+                        ))}
+                    </div>
+                );
 
-            if (!activeSection) return null;
+            case 'education':
+                return (
+                    <div className="mt-2 mb-6">
+                        <table className="w-full text-left border-collapse">
+                            <thead>
+                            <tr className="border-b border-green-800 text-green-500">
+                                <th className="py-2 w-1/4">Period</th>
+                                <th className="py-2 w-1/3">Institution</th>
+                                <th className="py-2">Details</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            {DATA.education.map((edu, i) => (
+                                <tr key={i} className="border-b border-gray-900 hover:bg-white/5 text-sm">
+                                    <td className="py-3 text-gray-500 align-top">{edu.start} - {edu.end}</td>
+                                    <td className="py-3 text-white align-top font-bold">{edu.name}
+                                        <div className="text-xs text-gray-600 font-normal">{edu.location}</div>
+                                    </td>
+                                    <td className="py-3 text-gray-400 align-top">{edu.description}</td>
+                                </tr>
+                            ))}
+                            </tbody>
+                        </table>
+                    </div>
+                );
 
-            /* PAGE TITLE ICON COMPONENT */
-            const SectionIcon = getSectionIcon(activeSection);
+            case 'training':
+                return (
+                    <ul className="mt-2 mb-6 list-disc list-inside text-gray-300 space-y-2">
+                        {DATA.training.map((t,i) => (
+                            <li key={i}>
+                                <span className="text-white font-bold">{t.name}</span>
+                                <span className="text-gray-500 text-sm"> — {t.issuer} ({t.date})</span>
+                            </li>
+                        ))}
+                    </ul>
+                );
 
-            const renderContent = () => {
-                switch(activeSection) {
-                    case 'profile': return <ProfileContent />;
-                    case 'skills': return <SkillsContent />;
-                    case 'experience': return <ExperienceContent />;
-                    case 'education': return <EducationContent />;
-                    case 'training': return <TrainingContent />;
-                    case 'languages': return <LanguagesContent />;
-                    case 'projects': return <ProjectsContent />;
-                    case 'hobbies': return <HobbiesContent />;
-                    default: return null;
+            case 'languages':
+                return (
+                    <div className="mt-2 mb-6 flex gap-6">
+                        {DATA.languages.map((l, i) => (
+                            <div key={i} className="bg-white/5 p-3 rounded min-w-[150px]">
+                                <div className="text-green-400 font-bold">{l.name}</div>
+                                <div className="text-white text-sm">{l.level}</div>
+                                <div className="text-gray-500 text-xs">{l.detail}</div>
+                            </div>
+                        ))}
+                    </div>
+                );
+
+            case 'hobbies':
+                return (
+                    <div className="mt-2 mb-6 grid grid-cols-1 md:grid-cols-2 gap-4">
+                        {DATA.hobbies.map((h, i) => (
+                            <div key={i} className="border border-green-900 p-4">
+                                <div className="flex items-center gap-2 mb-2">
+                                    <Heart className="w-4 h-4 text-red-500" />
+                                    <h3 className="font-bold text-white">{h.title}</h3>
+                                </div>
+                                <p className="text-sm text-gray-400">{h.desc}</p>
+                            </div>
+                        ))}
+                    </div>
+                );
+
+            default:
+                return <div className="text-red-500">Error: Section not found.</div>;
+        }
+    };
+
+    const TerminalApp = () => {
+        const [history, setHistory] = useState([]);
+        const [input, setInput] = useState("");
+        const [userIP, setUserIP] = useState("guest");
+        const [isScrolled, setIsScrolled] = useState(false);
+        const inputRef = useRef(null);
+        const containerRef = useRef(null);
+        const messagesEndRef = useRef(null);
+
+        // Initial Boot Sequence
+        useEffect(() => {
+            const bootSequence = async () => {
+                // Start fetching IP immediately
+                const ipPromise = fetch('https://api.ipify.org?format=json')
+                    .then(res => res.json())
+                    .then(data => data.ip)
+                    .catch(() => 'guest');
+
+                const lines = [
+                    { type: 'sys', text: 'Initializing kernel...' },
+                    { type: 'sys', text: 'Loading modules: [react, tailwind, lucide]... OK' },
+                    { type: 'sys', text: 'Mounting file system... OK' },
+                    { type: 'sys', text: 'Starting Vittorio Shell v1.0.0...' },
+                ];
+
+                for (const line of lines) {
+                    await new Promise(r => setTimeout(r, 100)); // Typing delay
+                    setHistory(prev => [...prev, line]);
+                }
+
+                // Resolve IP
+                const ip = await ipPromise;
+                setUserIP(ip);
+
+                const postBootLines = [
+                    { type: 'br' },
+                    { type: 'sys', text: `Connection established from ${ip}` },
+                    { type: 'ascii', text: "  _    _ _ _   _             _       \n | |  | (_) | | |           (_)      \n | |  | |_| |_| |_ ___  _ __ _  ___  \n | |/\\| | | __| __/ _ \\| '__| |/ _ \\ \n \\  /\\  / | |_| || (_) | |  | | (_) |\n  \\/  \\/|_|\\__|\\__\\___/|_|  |_|\\___/ " },
+                    { type: 'br' },
+                    { type: 'info', text: 'Welcome to the interactive terminal portfolio.' },
+                    { type: 'info', text: 'Type "help" or CLICK the links below to navigate.' },
+                    { type: 'br' },
+                    { type: 'command-output', cmd: 'ls', output: 'file-list' }, // Auto-run ls
+                ];
+
+                for (const line of postBootLines) {
+                    await new Promise(r => setTimeout(r, 100)); // Typing delay
+                    setHistory(prev => [...prev, line]);
                 }
             };
+            bootSequence();
+        }, []);
 
-            return (
-                <div className={`fixed inset-0 z-20 flex items-end md:items-center justify-center md:p-8 transition-opacity duration-500 ${isClosing ? 'opacity-0' : 'opacity-100'}`}>
-                    <div className="absolute inset-0 bg-black/60 backdrop-blur-xl" onClick={handleClose} />
-                    <div className={`relative w-full max-w-5xl h-[90vh] md:h-auto md:max-h-[90vh] overflow-y-auto bg-[#111111]/95 border-t md:border border-white/10 rounded-t-3xl md:rounded-3xl shadow-2xl transform transition-all duration-700 no-scrollbar ${isClosing ? 'scale-95 translate-y-20 md:translate-y-8 opacity-0' : 'scale-100 translate-y-0 opacity-100'}`}>
-                        <div className="sticky top-0 z-30 flex items-center justify-between px-6 py-4 md:px-8 md:py-6 bg-[#111111]/95 border-b border-white/5 backdrop-blur-md rounded-t-3xl">
-                            {/* PAGE TITLE + ICON */}
-                            <div className="flex items-center gap-3">
-                                {SectionIcon && <SectionIcon className="w-6 h-6 text-blue-400" />}
-                                <h2 className="text-xl md:text-2xl font-bold text-white capitalize tracking-tight">{activeSection}</h2>
-                            </div>
-                            <button onClick={handleClose} className="p-2 rounded-full bg-white/10 hover:bg-white/20 text-white transition-colors">
-                                <X className="w-5 h-5" />
-                            </button>
+        // Auto Scroll
+        useEffect(() => {
+            messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+        }, [history]);
+
+        const handleCommand = (cmdText) => {
+            const cleanCmd = cmdText.trim().toLowerCase();
+            if (!cleanCmd) return;
+
+            const newEntry = { type: 'command', text: cmdText };
+            let outputEntry = null;
+
+            if (cleanCmd === 'clear') {
+                setHistory([]);
+                return;
+            }
+
+            if (cleanCmd === 'help') {
+                outputEntry = { type: 'output', content: (
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm">
+                            {COMMANDS.map((c, i) => (
+                                <div key={i} className="flex gap-4">
+                                    <span className="text-yellow-400 w-24">{c.cmd}</span>
+                                    <span className="text-gray-400">{c.desc}</span>
+                                </div>
+                            ))}
                         </div>
-                        <div className="p-6 md:p-8 overflow-x-hidden">{renderContent()}</div>
-                    </div>
-                </div>
-            );
+                    )};
+            } else if (cleanCmd === 'ls') {
+                outputEntry = { type: 'command-output', cmd: 'ls', output: 'file-list' };
+            } else if (cleanCmd === 'whoami') {
+                outputEntry = { type: 'section', section: 'profile' };
+            } else if (cleanCmd.startsWith('open ')) {
+                const section = cleanCmd.replace('open ', '');
+                if (DATA[section]) {
+                    outputEntry = { type: 'section', section };
+                } else {
+                    outputEntry = { type: 'error', text: `Error: File '${section}' not found.` };
+                }
+            } else if (cleanCmd.startsWith('cat ')) { // Alias for open
+                const section = cleanCmd.replace('cat ', '').replace('.txt','').replace('.md','');
+                if (DATA[section]) {
+                    outputEntry = { type: 'section', section };
+                } else {
+                    outputEntry = { type: 'error', text: `Error: File '${section}' not found.` };
+                }
+            } else {
+                outputEntry = { type: 'error', text: `Command not found: ${cleanCmd}. Type 'help' for list.` };
+            }
+
+            setHistory(prev => [...prev, newEntry, ...(outputEntry ? [outputEntry] : [])]);
         };
 
-        const App = () => {
-            const [activeSection, setActiveSection] = useState(null);
-            return (
-                <div className="relative w-full h-screen bg-black text-white overflow-hidden font-sans selection:bg-blue-500/30">
-                    <Scene3D activeSection={activeSection} onSectionSelect={setActiveSection} />
-                    <div className="relative z-10 pointer-events-none h-full">
-                        <div className={`absolute top-6 md:top-10 left-0 right-0 text-center transition-opacity duration-700 ${activeSection ? 'opacity-0' : 'opacity-100'}`}>
-                            <h1 className="text-sm md:text-xl font-medium tracking-widest text-gray-500 uppercase">Vittorio Picone's Portfolio</h1>
-                        </div>
-                        <Legend activeSection={activeSection} />
-                        <FloatingLabels activeSection={activeSection} />
-                        <div className="pointer-events-auto">
-                            <ContentOverlay activeSection={activeSection} onClose={() => setActiveSection(null)} />
-                        </div>
-                    </div>
-                </div>
-            );
+        const onKeyDown = (e) => {
+            if (e.key === 'Enter') {
+                handleCommand(input);
+                setInput("");
+            }
         };
 
-        const root = createRoot(document.getElementById('root'));
-        root.render(<App />);
-    </script>
+        // Clickable File List Component
+        const FileList = () => (
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-2 mb-4">
+                {[
+                    { name: 'profile.txt', cmd: 'whoami', icon: User, color: 'text-blue-400' },
+                    { name: 'skills.md', cmd: 'open skills', icon: Zap, color: 'text-yellow-400' },
+                    { name: 'experience.log', cmd: 'open experience', icon: Briefcase, color: 'text-purple-400' },
+                    { name: 'projects.git', cmd: 'open projects', icon: FolderOpen, color: 'text-green-400' },
+                    { name: 'education.doc', cmd: 'open education', icon: GraduationCap, color: 'text-pink-400' },
+                    { name: 'training.crt', cmd: 'open training', icon: Award, color: 'text-orange-400' },
+                    { name: 'languages.json', cmd: 'open languages', icon: Languages, color: 'text-cyan-400' },
+                    { name: 'hobbies.png', cmd: 'open hobbies', icon: Heart, color: 'text-red-400' },
+                ].map((file, i) => (
+                    <button
+                        key={i}
+                        onClick={() => handleCommand(file.cmd)}
+                        className="flex items-center gap-2 p-2 hover:bg-white/10 rounded text-left group transition-all"
+                    >
+                        <file.icon className={`w-4 h-4 ${file.color}`} />
+                        <span className={`${file.color} group-hover:underline`}>{file.name}</span>
+                    </button>
+                ))}
+            </div>
+        );
+
+        // Focus management
+        const handleContainerClick = () => {
+            // Only focus input if user didn't select text
+            if (window.getSelection().toString().length === 0) {
+                inputRef.current?.focus();
+            }
+        };
+
+        return (
+            <div className="fixed inset-0 flex flex-col z-0" onClick={handleContainerClick}>
+                {/* Visual Effects */}
+                <div className="scanlines"></div>
+                <div className="crt-flicker"></div>
+
+                {/* Header Bar */}
+                <div className="bg-[#1a1a1a] text-gray-500 px-4 py-2 text-xs flex justify-between items-center border-b border-green-900/30 shrink-0 z-50">
+                    <div className="flex gap-2">
+                        <div className="w-3 h-3 rounded-full bg-red-500/50"></div>
+                        <div className="w-3 h-3 rounded-full bg-yellow-500/50"></div>
+                        <div className="w-3 h-3 rounded-full bg-green-500/50"></div>
+                    </div>
+                    <div className="font-mono">vittorio_picone_portfolio — bash — 80x24</div>
+                    <div className="md:hidden text-[10px] text-green-600 animate-pulse">TOUCH ENABLED</div>
+                </div>
+
+                {/* Main Terminal Area */}
+                <div className="flex-1 overflow-y-auto p-4 md:p-8 font-mono text-sm md:text-base pb-20 scroll-smooth" ref={containerRef}>
+                    {history.map((entry, idx) => (
+                        <div key={idx} className="mb-1 break-words">
+                            {entry.type === 'command' && (
+                                <div className="mt-4 mb-1">
+                                    <Prompt user={userIP} />
+                                    <span className="text-white">{entry.text}</span>
+                                </div>
+                            )}
+                            {entry.type === 'sys' && <div className="text-gray-500 text-xs">[{new Date().toLocaleTimeString()}] {entry.text}</div>}
+                            {entry.type === 'ascii' && <pre className="text-green-500 font-bold text-[10px] md:text-xs leading-none my-4 whitespace-pre overflow-x-hidden">{entry.text}</pre>}
+                            {entry.type === 'info' && <div className="text-blue-300">{entry.text}</div>}
+                            {entry.type === 'error' && <div className="text-red-500 bg-red-900/10 inline-block px-2 py-1 rounded"><AlertCircle className="w-3 h-3 inline mr-1"/>{entry.text}</div>}
+                            {entry.type === 'br' && <div className="h-2"></div>}
+
+                            {entry.type === 'command-output' && entry.output === 'file-list' && (
+                                <div className="my-2">
+                                    <div className="text-gray-500 mb-2">Directory listing of ~/portfolio:</div>
+                                    <FileList />
+                                    <div className="text-gray-600 text-xs italic">Tip: Click files to open them.</div>
+                                </div>
+                            )}
+
+                            {entry.type === 'section' && <SectionRenderer section={entry.section} />}
+                            {entry.type === 'output' && entry.content}
+                        </div>
+                    ))}
+
+                    {/* Active Input Line */}
+                    <div className="flex items-center mt-2 group">
+                        <Prompt user={userIP} />
+                        <input
+                            ref={inputRef}
+                            type="text"
+                            value={input}
+                            onChange={(e) => setInput(e.target.value)}
+                            onKeyDown={onKeyDown}
+                            className="flex-1 ml-2 bg-transparent border-none outline-none text-white typing-cursor"
+                            autoFocus
+                            autoComplete="off"
+                            autoCorrect="off"
+                            spellCheck="false"
+                        />
+                    </div>
+                    <div ref={messagesEndRef} />
+                </div>
+
+                {/* Mobile Quick Actions (Sticky Bottom) */}
+                <div className="md:hidden border-t border-green-900/30 bg-[#0a0a0a] p-2 grid grid-cols-4 gap-2 shrink-0 z-50">
+                    {['ls', 'whoami', 'clear', 'help'].map(cmd => (
+                        <button
+                            key={cmd}
+                            onClick={() => handleCommand(cmd)}
+                            className="bg-green-900/20 text-green-400 border border-green-900/50 rounded py-2 text-xs uppercase font-bold active:bg-green-500 active:text-black transition-colors"
+                        >
+                            {cmd}
+                        </button>
+                    ))}
+                </div>
+            </div>
+        );
+    };
+
+    const root = createRoot(document.getElementById('root'));
+    root.render(<TerminalApp />);
+</script>
 </body>
 </html>
