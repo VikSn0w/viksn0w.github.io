@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>EV Efficiency - viksn0w</title>
+    
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/3104/3104619.png">
+    
+    <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap" rel="stylesheet">
+
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background: radial-gradient(circle at top right, #1e1b4b, #0f172a, #020617);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            margin: 0;
+            padding: 20px;
+        }
+        .glass {
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(25px);
+            -webkit-backdrop-filter: blur(25px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 32px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7);
+        }
+        input {
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: white;
+            transition: all 0.2s ease;
+            text-align: center;
+        }
+        input:focus {
+            outline: none;
+            border-color: #3b82f6;
+            background: rgba(0, 0, 0, 0.5);
+        }
+        .btn-active {
+            background: #3b82f6;
+            box-shadow: 0 4px 15px rgba(59, 130, 246, 0.4);
+        }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState } = React;
+
+        const translations = {
+            en: {
+                wallPower: "Wall (kW)",
+                batteryPower: "Battery (kW)",
+                costPerKwh: "Price (€/kWh)",
+                manualInput: "Target kWh",
+                methodManual: "Direct kWh",
+                methodBattery: "Battery %",
+                cap: "Cap (kWh)",
+                start: "Start %",
+                end: "End %",
+                wallPull: "Wall Pull",
+                battReceived: "To Battery",
+                efficiency: "Efficiency",
+                loss: "Energy Lost",
+                totalCost: "Total Cost"
+            },
+            it: {
+                wallPower: "Presa (kW)",
+                batteryPower: "Batteria (kW)",
+                costPerKwh: "Prezzo (€/kWh)",
+                manualInput: "kWh Target",
+                methodManual: "kWh Diretti",
+                methodBattery: "Percentuale",
+                cap: "Cap. (kWh)",
+                start: "Inizio %",
+                end: "Fine %",
+                wallPull: "Dalla Presa",
+                battReceived: "Alla Batteria",
+                efficiency: "Efficienza",
+                loss: "En. Persa",
+                totalCost: "Costo Tot."
+            }
+        };
+
+        function App() {
+            const [lang, setLang] = useState('it');
+            const [method, setMethod] = useState('battery');
+            const [wallKW, setWallKW] = useState(2.2);
+            const [battKW, setBattKW] = useState(1.7);
+            const [price, setPrice] = useState("");
+            const [targetKWH, setTargetKWH] = useState(31);
+            const [capacity, setCapacity] = useState(38.8);
+            const [startPct, setStartPct] = useState(20);
+            const [endPct, setEndPct] = useState(80);
+
+            const t = translations[lang];
+
+            const neededKWH = method === 'manual' ? parseFloat(targetKWH) || 0 : (parseFloat(capacity) * (parseFloat(endPct) - parseFloat(startPct))) / 100;
+            const efficiency = (parseFloat(battKW) / parseFloat(wallKW)) || 0;
+            const actualPull = efficiency > 0 ? (neededKWH / efficiency) : 0;
+            const lostKWH = actualPull - neededKWH;
+            const totalCost = price ? (actualPull * parseFloat(price)).toFixed(2) : null;
+
+            return (
+                <div className="w-full max-w-lg">
+                    {/* Header with Signature and Socials */}
+                    <div className="flex flex-col items-center mb-8 space-y-4">
+                        <div className="text-[10px] tracking-[0.2em] uppercase font-black opacity-60">
+                            Made with <i className="fas fa-heart text-red-500 mx-1"></i> by <span className="text-white">Vittorio Picone</span>
+                        </div>
+                        <div className="flex items-center gap-8">
+                            <a href="https://github.com/VikSn0w" target="_blank" className="text-2xl hover:text-blue-400 transition-all active:scale-90">
+                                <i className="fab fa-github"></i>
+                            </a>
+                            <button onClick={() => setLang(lang === 'en' ? 'it' : 'en')} className="glass px-5 py-1 text-[10px] font-bold rounded-full border-white/20 uppercase tracking-widest">
+                                {lang === 'en' ? 'Italiano' : 'English'}
+                            </button>
+                            <a href="https://instagram.com/vik.desmo" target="_blank" className="text-2xl hover:text-pink-400 transition-all active:scale-90">
+                                <i className="fab fa-instagram"></i>
+                            </a>
+                        </div>
+                    </div>
+
+                    <div className="glass p-8 relative overflow-hidden">
+                        <div className="grid grid-cols-3 gap-3 mb-8">
+                            <div>
+                                <label className="block text-[9px] font-black uppercase tracking-widest mb-2 text-blue-400">{t.wallPower}</label>
+                                <input type="number" step="0.1" value={wallKW} onChange={e => setWallKW(e.target.value)} className="w-full p-4 rounded-2xl font-bold" />
+                            </div>
+                            <div>
+                                <label className="block text-[9px] font-black uppercase tracking-widest mb-2 text-emerald-400">{t.batteryPower}</label>
+                                <input type="number" step="0.1" value={battKW} onChange={e => setBattKW(e.target.value)} className="w-full p-4 rounded-2xl font-bold" />
+                            </div>
+                            <div>
+                                <label className="block text-[9px] font-black uppercase tracking-widest mb-2 text-yellow-400">{t.costPerKwh}</label>
+                                <input type="number" placeholder="0.25" value={price} onChange={e => setPrice(e.target.value)} className="w-full p-4 rounded-2xl font-bold" />
+                            </div>
+                        </div>
+
+                        <div className="mb-8">
+                            <div className="flex p-1 bg-black/30 rounded-2xl mb-6">
+                                <button onClick={() => setMethod('manual')} className={`flex-1 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${method === 'manual' ? 'btn-active' : 'opacity-30'}`}>{t.methodManual}</button>
+                                <button onClick={() => setMethod('battery')} className={`flex-1 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${method === 'battery' ? 'btn-active' : 'opacity-30'}`}>{t.methodBattery}</button>
+                            </div>
+
+                            {method === 'manual' ? (
+                                <div>
+                                    <label className="block text-[9px] font-black uppercase tracking-widest mb-2 opacity-40 text-center">{t.manualInput}</label>
+                                    <input type="number" value={targetKWH} onChange={e => setTargetKWH(e.target.value)} className="w-full p-6 rounded-3xl text-4xl font-black" />
+                                </div>
+                            ) : (
+                                <div className="grid grid-cols-3 gap-3">
+                                    <div>
+                                        <label className="block text-[9px] font-black uppercase tracking-widest mb-2 opacity-40 text-center">{t.cap}</label>
+                                        <input type="number" value={capacity} onChange={e => setCapacity(e.target.value)} className="w-full p-4 rounded-2xl font-bold" />
+                                    </div>
+                                    <div>
+                                        <label className="block text-[9px] font-black uppercase tracking-widest mb-2 opacity-40 text-center">{t.start}</label>
+                                        <input type="number" value={startPct} onChange={e => setStartPct(e.target.value)} className="w-full p-4 rounded-2xl font-bold" />
+                                    </div>
+                                    <div>
+                                        <label className="block text-[9px] font-black uppercase tracking-widest mb-2 opacity-40 text-center">{t.end}</label>
+                                        <input type="number" value={endPct} onChange={e => setEndPct(e.target.value)} className="w-full p-4 rounded-2xl font-bold" />
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+
+                        <div className="pt-8 border-t border-white/10">
+                            <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                                <div className="p-4 rounded-3xl bg-blue-500/10 border border-blue-500/20 text-center">
+                                    <div className="text-xl font-black text-blue-400">{actualPull.toFixed(2)}</div>
+                                    <div className="text-[9px] uppercase font-bold opacity-40 tracking-tighter">{t.wallPull} (kWh)</div>
+                                </div>
+                                <div className="p-4 rounded-3xl bg-emerald-500/10 border border-emerald-500/20 text-center">
+                                    <div className="text-xl font-black text-emerald-400">{neededKWH.toFixed(2)}</div>
+                                    <div className="text-[9px] uppercase font-bold opacity-40 tracking-tighter">{t.battReceived} (kWh)</div>
+                                </div>
+                                <div className="p-4 rounded-3xl bg-white/5 border border-white/10 text-center">
+                                    <div className="text-xl font-black text-white">{(efficiency * 100).toFixed(1)}%</div>
+                                    <div className="text-[9px] uppercase font-bold opacity-40 tracking-tighter">{t.efficiency}</div>
+                                </div>
+                                <div className="p-4 rounded-3xl bg-red-500/10 border border-red-500/20 text-center">
+                                    <div className="text-xl font-black text-red-400">{lostKWH.toFixed(2)}</div>
+                                    <div className="text-[9px] uppercase font-bold opacity-40 tracking-tighter">{t.loss} (kWh)</div>
+                                </div>
+                                <div className="p-4 rounded-3xl bg-yellow-500/10 border border-yellow-500/20 text-center col-span-2">
+                                    <div className="text-xl font-black text-yellow-400">{totalCost ? `€${totalCost}` : '--'}</div>
+                                    <div className="text-[9px] uppercase font-bold opacity-40 tracking-tighter">{t.totalCost}</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            );
+        }
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>
