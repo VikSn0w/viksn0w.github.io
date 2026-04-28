@@ -1,0 +1,475 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TAO-AViX: Interactive Presentation</title>
+    
+    <!-- Tailwind CSS for styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- React & ReactDOM -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    
+    <!-- Babel for JSX compilation in the browser -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    
+    <!-- Three.js for 3D graphics -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    
+    <!-- GSAP for smooth 3D animations -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+
+    <style>
+        body { margin: 0; overflow: hidden; background-color: #0f172a; font-family: 'Inter', sans-serif; }
+        #canvas-container { position: absolute; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 0; }
+        #ui-layer { position: absolute; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 10; pointer-events: none; }
+        .pointer-events-auto { pointer-events: auto; }
+        .glass-panel { background: rgba(15, 23, 42, 0.7); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.1); }
+    </style>
+</head>
+<body>
+
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect, useRef } = React;
+
+        const translations = {
+            en: {
+                slides: [
+                    { title: "TAO-AViX MVP", subtitle: "Workshop Manuals to Smart Data", content: "Bridging the gap between static PDF diagrams and tabular Illustrated Parts Lists (IPL). Engineered to digitize and connect complex technical documentation." },
+                    { title: "1. Ricerca (Researcher)", subtitle: "Scanning the PDF & IPL", content: "AI-driven OCR scans 2D exploded views within workshop manuals, extracts part numbers, and cross-references them directly with tabular IPL databases." },
+                    { title: "2. Monitoraggio (Editor)", subtitle: "Mapping to the IPL Database", content: "Editors verify digital bounding boxes on the 2D schematic and ensure accurate mapping to the corresponding rows in the tabular IPL." },
+                    { title: "3. Data Model Viewer", subtitle: "The Interactive Digital Twin", content: "The static 2D drawing is transformed into an interactive layer. (Click the glowing regions directly on the flat drawing to see their extracted IPL data!)" },
+                    { title: "Backward & Forward Scalability", subtitle: "Universal Industry Standard", content: "From aerospace to automotive and heavy machinery. Scale compute power to instantly turn massive libraries of legacy PDFs into intelligent, searchable networks." }
+                ],
+                ui: { step: "Step 0", prev: "Previous", next: "Next Step", dataTitle: "Data Model Extracted", partNo: "Part Number:", nom: "Nomenclature:", eff: "Effectivity:" },
+                db: {
+                    "Shaft": { partNumber: "TX-902-A", nomenclature: "Main Drive Shaft", replacement: "2023-08-12" },
+                    "Gear": { partNumber: "GR-104-B", nomenclature: "Planetary Gear", replacement: "2024-01-05" },
+                    "Bearing": { partNumber: "BR-550-C", nomenclature: "Roller Bearing", replacement: "2025-11-20" }
+                }
+            },
+            it: {
+                slides: [
+                    { title: "TAO-AViX MVP", subtitle: "Dai Manuali d'Officina ai Dati Intelligenti", content: "Colmare il divario tra diagrammi PDF statici e cataloghi parti illustrati (IPL) tabellari. Progettato per digitalizzare e connettere documentazione tecnica complessa." },
+                    { title: "1. Ricerca (Researcher)", subtitle: "Scansione di PDF e IPL", content: "L'OCR guidato dall'intelligenza artificiale analizza le viste esplose 2D nei manuali d'officina, estrae i numeri di parte e li incrocia direttamente con i database IPL tabellari." },
+                    { title: "2. Monitoraggio (Editor)", subtitle: "Mappatura sul Database IPL", content: "Gli editor verificano i bounding box digitali sullo schema 2D e garantiscono una mappatura accurata con le righe corrispondenti nell'IPL tabellare." },
+                    { title: "3. Modello Dati (Viewer)", subtitle: "Il Digital Twin Interattivo", content: "Il disegno 2D statico viene trasformato in un livello interattivo. (Clicca le regioni luminose direttamente sul disegno piatto per vedere i dati IPL estratti!)" },
+                    { title: "Scalabilità Backward & Forward", subtitle: "Standard Industriale Universale", content: "Dall'aerospaziale all'automotive e ai macchinari pesanti. Scala la potenza di calcolo per trasformare istantaneamente enormi librerie di PDF legacy in reti intelligenti e ricercabili." }
+                ],
+                ui: { step: "Passo 0", prev: "Precedente", next: "Passo Successivo", dataTitle: "Modello Dati Estratto", partNo: "Numero Parte:", nom: "Nomenclatura:", eff: "Effettività:" },
+                db: {
+                    "Shaft": { partNumber: "TX-902-A", nomenclature: "Albero di Trasmissione", replacement: "2023-08-12" },
+                    "Gear": { partNumber: "GR-104-B", nomenclature: "Ingranaggio Planetario", replacement: "2024-01-05" },
+                    "Bearing": { partNumber: "BR-550-C", nomenclature: "Cuscinetto a Rulli", replacement: "2025-11-20" }
+                }
+            }
+        };
+
+        const App = () => {
+            const [currentStep, setCurrentStep] = useState(0);
+            const [selectedPart, setSelectedPart] = useState(null);
+            const [lang, setLang] = useState('en');
+            const [isFading, setIsFading] = useState(false);
+            const sceneObjects = useRef({});
+            
+            const t = translations[lang];
+
+            const handleLanguageChange = (newLang) => {
+                if (newLang === lang) return;
+                setIsFading(true);
+                setTimeout(() => {
+                    setLang(newLang);
+                    setIsFading(false);
+                }, 300); // 300ms matches the CSS transition duration
+            };
+
+            // Initialize Three.js
+            useEffect(() => {
+                const container = document.getElementById('canvas-container');
+                
+                // Scene setup
+                const scene = new THREE.Scene();
+                scene.fog = new THREE.FogExp2(0x0f172a, 0.02);
+                
+                const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+                camera.position.set(0, 0, 15);
+                
+                const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+                renderer.setSize(window.innerWidth, window.innerHeight);
+                renderer.setPixelRatio(window.devicePixelRatio);
+                container.appendChild(renderer.domElement);
+
+                // Lighting
+                const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+                scene.add(ambientLight);
+
+                // --- SCENE OBJECTS ---
+
+                // 1. Document Plane (Represents the 2D PDF Manual)
+                const docGroup = new THREE.Group();
+                docGroup.position.x = 2; 
+                const docGeo = new THREE.PlaneGeometry(8, 11);
+                const docMat = new THREE.MeshBasicMaterial({ color: 0xe2e8f0, transparent: true, opacity: 0, side: THREE.DoubleSide });
+                const docMesh = new THREE.Mesh(docGeo, docMat);
+                docGroup.add(docMesh);
+
+                // 2D Schematic Wireframes (Flat blueprint lines drawn on the PDF)
+                const schematicGroup = new THREE.Group();
+                schematicGroup.position.z = 0.05;
+                const lineMat = new THREE.LineBasicMaterial({ color: 0x0f172a, transparent: true, opacity: 0 });
+                
+                const shaftEdge = new THREE.LineSegments(new THREE.EdgesGeometry(new THREE.PlaneGeometry(1.6, 6)), lineMat);
+                const gearEdge = new THREE.LineSegments(new THREE.EdgesGeometry(new THREE.RingGeometry(1.5, 2.2, 32)), lineMat);
+                const bearingEdge = new THREE.LineSegments(new THREE.EdgesGeometry(new THREE.PlaneGeometry(2.4, 1.2)), lineMat);
+                bearingEdge.position.y = -3.6;
+                
+                schematicGroup.add(shaftEdge, gearEdge, bearingEdge);
+                docGroup.add(schematicGroup);
+
+                // Flat Interactive Zones (Data Model Layer - replaces the 3D parts)
+                const interactiveZonesGroup = new THREE.Group();
+                interactiveZonesGroup.position.z = 0.1; // Slightly above lines to be clickable
+                const zoneMat = new THREE.MeshBasicMaterial({ color: 0x0ea5e9, transparent: true, opacity: 0 });
+                
+                const zoneShaft = new THREE.Mesh(new THREE.PlaneGeometry(1.6, 6), zoneMat.clone());
+                zoneShaft.userData = { id: "Shaft" };
+                
+                const zoneGear = new THREE.Mesh(new THREE.RingGeometry(1.5, 2.2, 32), zoneMat.clone());
+                zoneGear.userData = { id: "Gear" };
+                
+                const zoneBearing = new THREE.Mesh(new THREE.PlaneGeometry(2.4, 1.2), zoneMat.clone());
+                zoneBearing.position.y = -3.6;
+                zoneBearing.userData = { id: "Bearing" };
+                
+                interactiveZonesGroup.add(zoneShaft, zoneGear, zoneBearing);
+                docGroup.add(interactiveZonesGroup);
+                
+                // Laser line for OCR
+                const laserGeo = new THREE.BoxGeometry(8.5, 0.1, 0.1);
+                const laserMat = new THREE.MeshBasicMaterial({ color: 0x06b6d4, transparent: true, opacity: 0 });
+                const laser = new THREE.Mesh(laserGeo, laserMat);
+                laser.position.z = 0.15;
+                docGroup.add(laser);
+                
+                scene.add(docGroup);
+
+                // 3. Tabular IPL Database Representation
+                const iplGroup = new THREE.Group();
+                iplGroup.position.set(8, 0, 0);
+                
+                const tableGeo = new THREE.PlaneGeometry(5, 8);
+                const tableMat = new THREE.MeshBasicMaterial({ color: 0x1e293b, transparent: true, opacity: 0 });
+                const tableMesh = new THREE.Mesh(tableGeo, tableMat);
+                iplGroup.add(tableMesh);
+
+                const rowMat = new THREE.MeshBasicMaterial({ color: 0x334155, transparent: true, opacity: 0 });
+                const rowMeshes = [];
+                for(let i=0; i<6; i++) {
+                    const row = new THREE.Mesh(new THREE.PlaneGeometry(4.6, 0.8), rowMat);
+                    row.position.set(0, 3 - i * 1.2, 0.1);
+                    iplGroup.add(row);
+                    rowMeshes.push(row);
+                }
+                scene.add(iplGroup);
+
+                // 4. Bounding Boxes (Monitoraggio outlines)
+                const boxesGroup = new THREE.Group();
+                boxesGroup.position.z = 0.2;
+                const boxMaterial = new THREE.LineBasicMaterial({ color: 0x10b981, transparent: true, opacity: 0 });
+                
+                const box1 = new THREE.LineSegments(new THREE.EdgesGeometry(new THREE.PlaneGeometry(2, 6.5)), boxMaterial);
+                const box2 = new THREE.LineSegments(new THREE.EdgesGeometry(new THREE.PlaneGeometry(4.8, 4.8)), boxMaterial);
+                const box3 = new THREE.LineSegments(new THREE.EdgesGeometry(new THREE.PlaneGeometry(2.8, 1.5)), boxMaterial);
+                box3.position.y = -3.6;
+                boxesGroup.add(box1, box2, box3);
+                docGroup.add(boxesGroup);
+
+                // 5. Network Particles & Server Grid (Scalability)
+                const particlesGeo = new THREE.BufferGeometry();
+                const particleCount = 200;
+                const posArray = new Float32Array(particleCount * 3);
+                for(let i = 0; i < particleCount * 3; i++) posArray[i] = (Math.random() - 0.5) * 15;
+                particlesGeo.setAttribute('position', new THREE.BufferAttribute(posArray, 3));
+                const particleMat = new THREE.PointsMaterial({ size: 0.1, color: 0x38bdf8, transparent: true, opacity: 0 });
+                const particles = new THREE.Points(particlesGeo, particleMat);
+                particles.position.x = 5;
+                scene.add(particles);
+
+                const gridHelper = new THREE.GridHelper(30, 30, 0x0ea5e9, 0x0284c7);
+                gridHelper.position.y = -6;
+                gridHelper.material.transparent = true;
+                gridHelper.material.opacity = 0;
+                scene.add(gridHelper);
+
+                // 6. Additional "Smart Documents" for Scalability Step (Flat)
+                const otherDocMat = new THREE.MeshBasicMaterial({ color: 0xe2e8f0, transparent: true, opacity: 0, side: THREE.DoubleSide });
+                const otherLineMat = new THREE.LineBasicMaterial({ color: 0x0f172a, transparent: true, opacity: 0 });
+                
+                // Auto Blueprint Document
+                const autoDocGroup = new THREE.Group();
+                const autoDocMesh = new THREE.Mesh(docGeo, otherDocMat);
+                const autoSchematic = new THREE.Group();
+                autoSchematic.position.z = 0.05;
+                autoSchematic.add(new THREE.LineSegments(new THREE.EdgesGeometry(new THREE.CircleGeometry(2.5, 32)), otherLineMat));
+                autoSchematic.add(new THREE.LineSegments(new THREE.EdgesGeometry(new THREE.CircleGeometry(1.2, 32)), otherLineMat));
+                autoDocGroup.add(autoDocMesh, autoSchematic);
+                scene.add(autoDocGroup);
+
+                // Machinery Blueprint Document
+                const machDocGroup = new THREE.Group();
+                const machDocMesh = new THREE.Mesh(docGeo, otherDocMat);
+                const machSchematic = new THREE.Group();
+                machSchematic.position.z = 0.05;
+                machSchematic.add(new THREE.LineSegments(new THREE.EdgesGeometry(new THREE.PlaneGeometry(1.5, 5)), otherLineMat));
+                const gearDecor = new THREE.LineSegments(new THREE.EdgesGeometry(new THREE.CircleGeometry(1.8, 8)), otherLineMat);
+                gearDecor.position.y = 2.5;
+                machSchematic.add(gearDecor);
+                machDocGroup.add(machDocMesh, machSchematic);
+                scene.add(machDocGroup);
+
+
+                // Save references for animation
+                sceneObjects.current = { 
+                    docGroup, docMesh, lineMat, laser, 
+                    iplGroup, tableMat, rowMat, rowMeshes, 
+                    boxesGroup, boxMaterial, interactiveZonesGroup,
+                    particles, particleMat, gridHelper,
+                    autoDocGroup, machDocGroup, otherDocMat, otherLineMat
+                };
+
+                // Raycaster for clicking flat interactive zones
+                const raycaster = new THREE.Raycaster();
+                const mouse = new THREE.Vector2();
+
+                const onClick = (event) => {
+                    mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+                    mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+                    raycaster.setFromCamera(mouse, camera);
+
+                    const currentSlide = document.body.getAttribute('data-step');
+                    if (currentSlide === "3") {
+                        const intersects = raycaster.intersectObjects(interactiveZonesGroup.children);
+                        
+                        // Reset all to base visibility
+                        interactiveZonesGroup.children.forEach(c => c.material.opacity = 0.15);
+                        
+                        if (intersects.length > 0) {
+                            // Highlight clicked flat zone
+                            intersects[0].object.material.opacity = 0.6;
+                            setSelectedPart(intersects[0].object.userData.id);
+                        } else {
+                            setSelectedPart(null);
+                        }
+                    }
+                };
+                window.addEventListener('click', onClick);
+
+                // Animation loop
+                const animate = () => {
+                    requestAnimationFrame(animate);
+                    
+                    if (laser.material.opacity > 0) {
+                        laser.position.y = Math.sin(Date.now() * 0.002) * 5;
+                    }
+
+                    particles.rotation.y += 0.002;
+                    particles.rotation.x += 0.001;
+
+                    // Hover floating effect for the flat documents in step 4
+                    if (document.body.getAttribute('data-step') === "4") {
+                        const floatY = Math.sin(Date.now() * 0.001) * 0.2;
+                        docGroup.position.y = floatY;
+                        autoDocGroup.position.y = -floatY;
+                        machDocGroup.position.y = floatY;
+                    } else {
+                        docGroup.position.y = 0;
+                    }
+
+                    renderer.render(scene, camera);
+                };
+                animate();
+
+                // Handle resize
+                const onResize = () => {
+                    camera.aspect = window.innerWidth / window.innerHeight;
+                    camera.updateProjectionMatrix();
+                    renderer.setSize(window.innerWidth, window.innerHeight);
+                };
+                window.addEventListener('resize', onResize);
+
+                return () => {
+                    window.removeEventListener('click', onClick);
+                    window.removeEventListener('resize', onResize);
+                    container.removeChild(renderer.domElement);
+                };
+            }, []);
+
+            // Handle Step Transitions with GSAP
+            useEffect(() => {
+                document.body.setAttribute('data-step', currentStep);
+                setSelectedPart(null);
+                
+                const { 
+                    docGroup, docMesh, lineMat, laser, 
+                    iplGroup, tableMat, rowMat, 
+                    boxesGroup, boxMaterial, interactiveZonesGroup,
+                    particles, particleMat, gridHelper,
+                    autoDocGroup, machDocGroup, otherDocMat, otherLineMat
+                } = sceneObjects.current;
+
+                if (!docGroup) return;
+
+                // Reset all opacities first
+                gsap.to([
+                    docMesh.material, lineMat, laser.material, 
+                    tableMat, rowMat, boxMaterial, particleMat, gridHelper.material,
+                    otherDocMat, otherLineMat, ...interactiveZonesGroup.children.map(c => c.material)
+                ], { opacity: 0, duration: 0.5 });
+                
+                // Reset positions & scales
+                gsap.to(docGroup.scale, { x: 1, y: 1, z: 1, duration: 0.5 });
+                gsap.to(iplGroup.position, { x: 8, duration: 0.5 });
+                autoDocGroup.position.set(0, 0, 0);
+                machDocGroup.position.set(0, 0, 0);
+                autoDocGroup.scale.set(0.6, 0.6, 0.6);
+                machDocGroup.scale.set(0.6, 0.6, 0.6);
+
+                switch(currentStep) {
+                    case 0: // Intro
+                        gsap.to(docGroup.position, { x: 5, duration: 0.5 });
+                        gsap.to(docMesh.material, { opacity: 1, duration: 1, delay: 0.5 });
+                        gsap.to(lineMat, { opacity: 1, duration: 1, delay: 0.5 });
+                        break;
+                    case 1: // Ricerca (2D PDF Manual + Laser)
+                        gsap.to(docGroup.position, { x: 5, duration: 1 }); // Center the manual
+                        gsap.to(docMesh.material, { opacity: 1, duration: 1, delay: 0.2 });
+                        gsap.to(lineMat, { opacity: 1, duration: 1, delay: 0.2 }); // Show 2D schematic lines
+                        gsap.to(laser.material, { opacity: 1, duration: 1, delay: 0.5 });
+                        break;
+                    case 2: // Monitoraggio (Manual moves left + IPL Table + Bounding Boxes)
+                        gsap.to(docGroup.position, { x: 2, duration: 1 }); // Move manual left
+                        gsap.to(docMesh.material, { opacity: 1, duration: 1 });
+                        gsap.to(lineMat, { opacity: 1, duration: 1 });
+                        
+                        gsap.to(tableMat, { opacity: 0.8, duration: 1, delay: 0.5 }); // Show IPL table
+                        gsap.to(rowMat, { opacity: 1, duration: 1, delay: 0.7 });
+                        gsap.to(boxMaterial, { opacity: 1, duration: 1, delay: 1 }); // Show QA bounding boxes
+                        break;
+                    case 3: // Data Model Viewer (Flat Interactive PDF)
+                        gsap.to(docGroup.position, { x: 5, duration: 1 }); // Move manual back to center
+                        gsap.to(docMesh.material, { opacity: 1, duration: 1 });
+                        gsap.to(lineMat, { opacity: 1, duration: 1 });
+                        
+                        // Show the interactive flat zones (faintly glowing) overlaying the lines
+                        gsap.to(interactiveZonesGroup.children.map(c => c.material), { opacity: 0.15, duration: 1, delay: 0.8 });
+                        break;
+                    case 4: // Scalability (Multiple Smart Documents)
+                        gsap.to(particleMat, { opacity: 1, duration: 1.5, delay: 0.5 });
+                        gsap.to(gridHelper.material, { opacity: 0.4, duration: 1, delay: 0.5 });
+                        
+                        // Keep current doc visible, scale it down, move it left
+                        gsap.to([docMesh.material, lineMat], { opacity: 1, duration: 0.5 });
+                        gsap.to(docGroup.position, { x: 1, duration: 1, ease: "power2.out" });
+                        gsap.to(docGroup.scale, { x: 0.6, y: 0.6, z: 0.6, duration: 1 });
+                        
+                        // Fade in the other industry documents
+                        gsap.to([otherDocMat, otherLineMat], { opacity: 1, duration: 1, delay: 0.5 });
+                        
+                        // Move Auto Doc to center
+                        gsap.to(autoDocGroup.position, { x: 5, duration: 1, ease: "power2.out" });
+                        
+                        // Move Machinery Doc to right
+                        gsap.to(machDocGroup.position, { x: 9, duration: 1, ease: "power2.out", delay: 0.1 });
+                        break;
+                }
+            }, [currentStep]);
+
+            const nextStep = () => setCurrentStep(p => Math.min(p + 1, t.slides.length - 1));
+            const prevStep = () => setCurrentStep(p => Math.max(p - 1, 0));
+
+            return (
+                <div id="ui-layer" className="flex flex-col justify-center text-white">
+                    {/* Header */}
+                    <div className="absolute top-0 left-0 w-full p-8 flex justify-between items-center z-50 pointer-events-auto">
+                        <h1 className="text-2xl font-bold tracking-wider text-cyan-400">TAO-AViX</h1>
+                        <div className="flex items-center gap-6">
+                            <div className="flex gap-2">
+                                {t.slides.map((_, i) => (
+                                    <div key={i} className={`w-3 h-3 rounded-full ${i === currentStep ? 'bg-cyan-400' : 'bg-gray-600'} transition-colors duration-300`}></div>
+                                ))}
+                            </div>
+                            <div className="flex gap-2 text-sm font-semibold bg-gray-800/50 p-1 rounded-lg border border-gray-700 backdrop-blur-md">
+                                <button onClick={() => handleLanguageChange('en')} className={`px-2 py-1 rounded transition-colors ${lang === 'en' ? 'bg-cyan-600 text-white' : 'text-gray-400 hover:text-white'}`}>EN</button>
+                                <button onClick={() => handleLanguageChange('it')} className={`px-2 py-1 rounded transition-colors ${lang === 'it' ? 'bg-cyan-600 text-white' : 'text-gray-400 hover:text-white'}`}>IT</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Main Content Panel */}
+                    <div className="w-full md:w-1/3 lg:w-1/4 p-8 md:ml-16 glass-panel rounded-xl shadow-2xl pointer-events-auto z-20 mt-20 relative overflow-hidden">
+                        <div className={`transition-opacity duration-300 ${isFading ? 'opacity-0' : 'opacity-100'}`}>
+                            <div className="mb-8 min-h-[250px]">
+                                <h3 className="text-sm uppercase tracking-widest text-cyan-500 mb-2 font-semibold">{t.ui.step}{currentStep + 1}</h3>
+                                <h2 className="text-3xl font-bold mb-2">{t.slides[currentStep].title}</h2>
+                                <h4 className="text-lg text-gray-300 mb-6 font-medium">{t.slides[currentStep].subtitle}</h4>
+                                <p className="text-gray-400 leading-relaxed text-sm">{t.slides[currentStep].content}</p>
+                            </div>
+                            
+                            <div className="flex justify-between mt-8 border-t border-gray-700 pt-6">
+                                <button 
+                                    onClick={prevStep} 
+                                    disabled={currentStep === 0}
+                                    className={`px-4 py-2 rounded font-medium transition-all ${currentStep === 0 ? 'opacity-30 cursor-not-allowed' : 'bg-gray-800 hover:bg-gray-700 text-white'}`}
+                                >
+                                    {t.ui.prev}
+                                </button>
+                                <button 
+                                    onClick={nextStep} 
+                                    disabled={currentStep === t.slides.length - 1}
+                                    className={`px-4 py-2 rounded font-medium transition-all ${currentStep === t.slides.length - 1 ? 'opacity-30 cursor-not-allowed' : 'bg-cyan-600 hover:bg-cyan-500 text-white shadow-[0_0_15px_rgba(6,182,212,0.5)]'}`}
+                                >
+                                    {t.ui.next}
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Interactive Data Panel (Visible only on Step 3 when a flat zone is clicked) */}
+                    <div className={`absolute bottom-12 right-12 w-80 glass-panel rounded-xl p-6 transition-all duration-500 transform ${currentStep === 3 && selectedPart ? 'translate-x-0 opacity-100' : 'translate-x-10 opacity-0'}`}>
+                        {selectedPart && (
+                            <div className={`transition-opacity duration-300 ${isFading ? 'opacity-0' : 'opacity-100'}`}>
+                                <h3 className="text-cyan-400 font-bold mb-4 flex items-center gap-2">
+                                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                    {t.ui.dataTitle}
+                                </h3>
+                                <div className="space-y-3 text-sm">
+                                    <div className="flex justify-between border-b border-gray-700 pb-2">
+                                        <span className="text-gray-400">{t.ui.partNo}</span>
+                                        <span className="font-mono text-white">{t.db[selectedPart].partNumber}</span>
+                                    </div>
+                                    <div className="flex justify-between border-b border-gray-700 pb-2">
+                                        <span className="text-gray-400">{t.ui.nom}</span>
+                                        <span className="text-white">{t.db[selectedPart].nomenclature}</span>
+                                    </div>
+                                    <div className="flex justify-between pb-1">
+                                        <span className="text-gray-400">{t.ui.eff}</span>
+                                        <span className="text-white">{t.db[selectedPart].replacement}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+                    </div>
+                </div>
+            );
+        };
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+    <div id="canvas-container"></div>
+</body>
+</html>
