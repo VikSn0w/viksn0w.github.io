@@ -1,11 +1,11 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="it">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dublin 2026: The Definitive Lads Guide</title>
+    <title>Dublino 2026: La Guida Definitiva per i Ragazzi</title>
 
-    <!-- Leaflet CSS for the map -->
+    <!-- Leaflet CSS per la mappa -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 
     <style>
@@ -32,7 +32,7 @@
             overflow: hidden;
         }
 
-        /* Split Screen Layout */
+        /* Layout Schermo Diviso */
         #map-container {
             flex: 6;
             height: 100%;
@@ -49,7 +49,7 @@
             perspective: 1500px;
         }
 
-        /* Map Dark Mode Hack */
+        /* Hack Mappa in Modalità Scura */
         .leaflet-layer,
         .leaflet-control-zoom-in,
         .leaflet-control-zoom-out,
@@ -57,7 +57,7 @@
             filter: invert(100%) hue-rotate(180deg) brightness(85%) contrast(100%);
         }
 
-        /* Diary Header */
+        /* Intestazione Diario */
         .diary-header {
             padding: 30px;
             border-bottom: 1px solid var(--border);
@@ -100,7 +100,7 @@
             box-shadow: 0 0 15px rgba(46, 204, 113, 0.4);
         }
 
-        /* Scrollable Timeline */
+        /* Timeline Scorrevole */
         .timeline {
             flex: 1;
             overflow-y: auto;
@@ -112,7 +112,7 @@
         .timeline::-webkit-scrollbar-track { background: var(--surface); }
         .timeline::-webkit-scrollbar-thumb { background: #444; border-radius: 5px; }
 
-        /* 3D CARD FLIP STRUCTURE */
+        /* STRUTTURA FLIP CARD 3D */
         .flip-card {
             background-color: transparent;
             width: var(--card-width);
@@ -159,7 +159,7 @@
         }
 
         .flip-card-front::after {
-            content: '>> Hover for Details >>';
+            content: '>> Clicca o Passa il mouse per i Dettagli >>';
             position: absolute;
             bottom: 10px;
             right: 15px;
@@ -191,7 +191,7 @@
         .highlight-pub { color: #f1c40f; font-weight: bold; }
 
         /* =========================================
-           CUSTOM ENUMERATED MAP PINS
+           PIN DELLA MAPPA NUMERATI PERSONALIZZATI
            ========================================= */
         .custom-pin-container {
             display: flex;
@@ -247,7 +247,7 @@
         }
 
         /* =========================================
-           BUDGET MODAL STYLING
+           STILE MODALE BUDGET
            ========================================= */
         .modal-overlay {
             position: fixed;
@@ -340,53 +340,57 @@
 <div id="diary-container">
     <div class="diary-header">
         <div class="header-titles">
-            <h1>The Dudes in <span>Dublin</span></h1>
-            <p>Aug 5th – Aug 13th, 2026. Guide: Trip #7 Veteran.</p>
+            <h1>I Ragazzi a <span>Dublino</span></h1>
+            <p>5 - 13 Agosto 2026. Guida: Veterano (Viaggio #7).</p>
         </div>
-        <button class="btn-budget" id="openBudgetBtn">View Estimated Costs</button>
+        <button class="btn-budget" id="openBudgetBtn">Vedi Costi Stimati</button>
     </div>
 
     <div class="timeline" id="timeline">
-        <!-- Content gets injected by JS -->
+        <!-- Il contenuto viene inserito da JS -->
     </div>
 </div>
 
-<!-- Budget Modal Overlay -->
+<!-- Modale Budget -->
 <div class="modal-overlay" id="budgetModalOverlay">
     <div class="budget-modal">
         <div class="budget-header">
-            <h2>Trip Budget Estimate (8 Days)</h2>
+            <h2>Stima Budget del Viaggio (8 Giorni)</h2>
             <button class="close-btn" id="closeBudgetBtn">&times;</button>
         </div>
 
         <table class="budget-table">
             <thead>
             <tr>
-                <th>Category (For 4 Guys)</th>
-                <th style="text-align: right;">Group Total</th>
+                <th>Categoria (Per 4 Persone)</th>
+                <th style="text-align: right;">Totale Gruppo</th>
             </tr>
             </thead>
             <tbody>
             <tr>
-                <td><strong>Transport & Tours</strong><br><span style="font-size:0.8rem; color:#aaa;">Aircoach, DARTs, Cliffs of Moher Bus Tour</span></td>
+                <td><strong>Trasporti & Tour</strong><br><span style="font-size:0.8rem; color:#aaa;">Aircoach, treni DART, pullman per le Cliffs of Moher</span></td>
                 <td class="cost">€460</td>
             </tr>
             <tr>
-                <td><strong>Activities</strong><br><span style="font-size:0.8rem; color:#aaa;">Guinness Storehouse, Roe & Co, Axe Throwing</span></td>
+                <td><strong>Attività</strong><br><span style="font-size:0.8rem; color:#aaa;">Guinness Storehouse, Roe & Co, Lancio dell'Ascia</span></td>
                 <td class="cost">€550</td>
             </tr>
             <tr>
-                <td><strong>Food & Pints</strong><br><span style="font-size:0.8rem; color:#aaa;">Est. €100/day per person (Pints are ~€7 now)</span></td>
-                <td class="cost">€3,200</td>
+                <td><strong>Fondo Casinò</strong><br><span style="font-size:0.8rem; color:#aaa;">Stima min. 100€/persona per i tavoli da gioco</span></td>
+                <td class="cost">€400</td>
+            </tr>
+            <tr>
+                <td><strong>Cibo & Pinte</strong><br><span style="font-size:0.8rem; color:#aaa;">Stima 100€/giorno a testa (Le pinte ora stanno sui ~7€)</span></td>
+                <td class="cost">€3.200</td>
             </tr>
             </tbody>
         </table>
 
         <div class="budget-total">
-            <h3>Total Cost Per Person:</h3>
+            <h3>Costo Totale Per Persona:</h3>
             <div class="amounts">
-                <div class="per-person">€1,052.50</div>
-                <div class="group">Total Group Spend: €4,210.00</div>
+                <div class="per-person">€1.152,50</div>
+                <div class="group">Spesa Totale del Gruppo: €4.610,00</div>
             </div>
         </div>
     </div>
@@ -397,80 +401,80 @@
 <script>
     const itinerary = [
         {
-            date: "Aug 5 (Wed)",
-            title: "Arrival in D8",
-            summary: "Landing at 14:00. Check-in on Bonham St, immediately secure necessary supplies (pints/stew).",
-            details: "<h4>The Action Plan:</h4><ul><li><strong>Airport Transfer:</strong> Aircoach 747 or 782 right outside Terminal 1. Quickest route to the city center.</li><li><strong>Basecamp:</strong> Drop bags at Bonham St rental.</li><li><strong>First Pint & Food:</strong> <span class='highlight-pub'>The Brazen Head</span>. Officially the oldest pub in Dublin (est. 1198). Order beef & Guinness stews.</li></ul>",
+            date: "5 Ago (Mer)",
+            title: "Arrivo a D8",
+            summary: "Atterraggio alle 14:00. Check-in a Bonham St, poi subito a caccia di beni di prima necessità (pinte e stufato).",
+            details: "<h4>Il Piano d'Azione:</h4><ul><li><strong>Trasferimento:</strong> Aircoach 747 o 782 appena fuori dal Terminal 1. Il modo più veloce per arrivare in centro.</li><li><strong>Alloggio:</strong> Mollare i bagagli nell'appartamento in Bonham St.</li><li><strong>Prima Pinta & Cibo:</strong> <span class='highlight-pub'>The Brazen Head</span>. Ufficialmente il pub più antico di Dublino (est. 1198). Ordiniamo stufato di manzo e Guinness.</li></ul>",
             coords: [53.3448, -6.2755],
             zoom: 16
         },
         {
-            date: "Aug 6 (Thu)",
-            title: "The Mandatory Rookie Tax",
-            summary: "Guinness Storehouse, Temple Bar walkthrough, Bunsen burgers, and Palace Bar pints.",
-            details: "<h4>The Action Plan:</h4><ul><li><strong>Guinness Storehouse:</strong> Booked for the *first slot* (e.g., 09:30 AM). Secure the best window view at the Gravity Bar.</li><li><strong>Temple Bar & Bunsen:</strong> Mandatory picture in front of 'The' Temple Bar. Hear one fiddle song, then pivot straight into <span class='highlight-pub'>Bunsen</span> on Essex St. The menu fits on a business card. We crush double cheeseburgers here to line the stomach.</li><li><strong>The Palace Bar:</strong> Where we actually drink. High ceilings, Victorian aesthetic, frequented by locals.</li></ul>",
+            date: "6 Ago (Gio)",
+            title: "La Tassa Obbligatoria per Novellini",
+            summary: "Guinness Storehouse, vasca a Temple Bar, hamburger da Bunsen e pinte al Palace Bar.",
+            details: "<h4>Il Piano d'Azione:</h4><ul><li><strong>Guinness Storehouse:</strong> Prenotato per il *primo turno* (es. 09:30). Così è vuoto e ci assicuriamo il posto migliore alla finestra del Gravity Bar.</li><li><strong>Temple Bar & Bunsen:</strong> Foto di rito d'obbligo davanti al 'The Temple Bar'. Ascoltiamo una canzone col violino e filiamo dritti da <span class='highlight-pub'>Bunsen</span> in Essex St. Il menù sta su un bigliettino da visita. Divoriamo un double cheeseburger per fare fondo.</li><li><strong>The Palace Bar:</strong> Qui si beve sul serio. Soffitti alti, estetica vittoriana, pieno di gente del posto.</li></ul>",
             coords: [53.3453, -6.2640],
             zoom: 16
         },
         {
-            date: "Aug 7 (Fri)",
-            title: "Retro Games & D8 Whiskey",
-            summary: "A short geographical loop. Vintage shopping and high-concept whiskey cocktail masterclasses.",
-            details: "<h4>The Action Plan:</h4><ul><li><strong>George's Street Arcade:</strong> A funky indoor Victorian market. Hit <span class='highlight-pub'>Spindizzy Records</span> to flip through vinyl.</li><li><strong>Roe & Co Distillery:</strong> Do their 'Flavour Experience'—a hands-on cocktail class to blend and shake our own drinks.</li><li><strong>Token Arcade Bar:</strong> Vintage cabinets (Time Crisis, Mario Kart), interactive darts, and excellent junk food.</li></ul>",
+            date: "7 Ago (Ven)",
+            title: "Giochi Retro & Whiskey a D8",
+            summary: "Breve giro in zona. Shopping vintage e masterclass sui cocktail a base di whiskey.",
+            details: "<h4>Il Piano d'Azione:</h4><ul><li><strong>George's Street Arcade:</strong> Un eccentrico mercato coperto vittoriano. Passiamo da <span class='highlight-pub'>Spindizzy Records</span> a spulciare vinili.</li><li><strong>Roe & Co Distillery:</strong> Facciamo la loro 'Flavour Experience', un corso super pratico dove misceliamo e shakeriamo i nostri drink. Molto meglio della solita visita guidata noiosa.</li><li><strong>Token Arcade Bar:</strong> Cabinati vintage (Time Crisis, Mario Kart), freccette interattive e ottimo cibo spazzatura. Serata interattiva perfetta.</li></ul>",
             coords: [53.3460, -6.2636],
             zoom: 16
         },
         {
-            date: "Aug 8 (Sat)",
-            title: "North Escape: Howth Cliff",
-            summary: "Blowing off the cobwebs. DART train north, a rugged coastal hike, and massive sea food.",
-            details: "<h4>The Action Plan:</h4><ul><li><strong>The DART:</strong> Head to Tara Street station, take the coastal train north to Howth.</li><li><strong>The Hike:</strong> We do the <span class='highlight-pub'>Howth Cliff Path Loop</span>. About 2 hours, offers stunning views.</li><li><strong>Howth Harbour:</strong> Beshoffs for massive takeout fish & chips eaten on the wall.</li><li><strong>Recovery Pint:</strong> At <span class='highlight-pub'>The Bloody Stream</span> pub.</li></ul>",
-            coords: [53.3858, -6.0645],
-            zoom: 13
+            date: "8 Ago (Sab)",
+            title: "Fuga a Nord & Casinò in Centro",
+            summary: "Treno DART verso nord per un'escursione costiera, mangiata di pesce e serata col botto al miglior casinò d'Irlanda.",
+            details: "<h4>Il Piano d'Azione:</h4><ul><li><strong>L'Escursione:</strong> Prendiamo la DART sulla costa nord fino a Howth per percorrere il Cliff Path Loop. Subito dopo, mega porzione di fish & chips da Beshoffs.</li><li><strong>La Serata Casinò:</strong> Dopo esserci riposati all'appartamento, ci mettiamo la camicia e andiamo allo <span class='highlight-pub'>Sporting Emporium</span> vicino a Grafton St. È il casinò più esclusivo di Dublino (aperto fino alle 6 del mattino).<br><br><em>*OBBLIGATORIO: Funziona come club privato. Tutti devono avere la Carta d'Identità fisica o il Passaporto per registrarsi all'ingresso. Senza documento non si entra.</em> Puntiamo ai tavoli di Blackjack e Roulette.</li></ul>",
+            coords: [53.3409, -6.2592],
+            zoom: 16
         },
         {
-            date: "Aug 9 (Sun)",
-            title: "Pints of Plain: Purest List",
-            summary: "A curated list of pubs where conversation is king. Fry-ups and proper pints.",
-            details: "<h4>The Action Plan:</h4><ul><li><strong>Recovery:</strong> 'Full Irish' at Two Pups Coffee (D8).</li><li><strong><span class='highlight-pub'>Grogan's</span>:</strong> An institution. No music, no TVs, just conversation, pints, and legendary toasties.</li><li><strong><span class='highlight-pub'>Mulligan's</span> (Poolbeg St):</strong> If any are skeptical about Guinness, this is the cure. Pours the best pint in the country.</li><li><strong>Live Music:</strong> Drop by <span class='highlight-pub'>O'Donoghue's</span> for a trad session.</li></ul>",
+            date: "9 Ago (Dom)",
+            title: "Pinte Perfette: La Lista dei Puristi",
+            summary: "Un tour mirato nei pub dove si fa conversazione. Fry-up (colazione irlandese) e pinte di qualità.",
+            details: "<h4>Il Piano d'Azione:</h4><ul><li><strong>Recupero:</strong> 'Full Irish' (Colazione completa) da Two Pups Coffee (D8) per smaltire l'hangover da casinò.</li><li><strong><span class='highlight-pub'>Grogan's</span>:</strong> Un'istituzione. Niente musica, niente TV, solo chiacchiere, pinte e toast prosciutto e formaggio leggendari. Se c'è sole lottiamo per un tavolo fuori.</li><li><strong><span class='highlight-pub'>Mulligan's</span> (Poolbeg St):</strong> Se qualcuno è ancora scettico sulla Guinness, questa è la cura. Molti puristi ritengono servano la pinta migliore del paese.</li><li><strong>Musica dal Vivo:</strong> La sera passiamo da <span class='highlight-pub'>O'Donoghue's</span> per una sessione di musica tradizionale irlandese.</li></ul>",
             coords: [53.3415, -6.2642],
             zoom: 16
         },
         {
-            date: "Aug 10 (Mon)",
-            title: "Axes & D8 History",
-            summary: "A slightly quieter Monday in the local neighborhood, plus some mild violence.",
-            details: "<h4>The Action Plan:</h4><ul><li><strong>Kilmainham Gaol:</strong> *BOOK IN ADVANCE.* Intense look at Irish history.</li><li><strong>Axe Club Dublin:</strong> We rent a lane, drink a few, and hurl axes at wooden targets.</li><li><strong>Evening Pints in D8:</strong> <span class='highlight-pub'>Arthur's</span> on Thomas St. Proper neighborhood local.</li></ul>",
+            date: "10 Ago (Lun)",
+            title: "Asce & Storia di D8",
+            summary: "Un lunedì leggermente più tranquillo nel quartiere, con un pizzico di sana violenza.",
+            details: "<h4>Il Piano d'Azione:</h4><ul><li><strong>Kilmainham Gaol:</strong> *DA PRENOTARE IN ANTICIPO.* Un tuffo intenso e affascinante nella storia rivoluzionaria irlandese. Un must.</li><li><strong>Axe Club Dublin:</strong> Proprio quello che sembra. Affittiamo una corsia, beviamo una birra e lanciamo asce contro bersagli di legno. Ottimo per risolvere le dispute del weekend.</li><li><strong>Pinte serali a D8:</strong> <span class='highlight-pub'>Arthur's</span> in Thomas St. Un pub locale vero, staff eccellente.</li></ul>",
             coords: [53.3432, -6.2847],
             zoom: 16
         },
         {
-            date: "Aug 11 (Tue)",
-            title: "West Coast Mission: Cliffs of Moher",
-            summary: "A massive, full-day cross-country expedition to the Atlantic edge. 700ft drops and wild views.",
-            details: "<h4>The Action Plan:</h4><ul><li><strong>The Logistics:</strong> Book a premium day-tour coach departing around 7:00 AM. Sleep on the 3.5-hour journey west.</li><li><strong>The Cliffs:</strong> 2 hours to walk the edge of the 700-foot vertical drops.</li><li><strong>The Pitstop:</strong> Route through Galway City or Doolin for seafood chowder and a pint.</li><li><strong>Return:</strong> Back in Dublin by 8:00 PM.</li></ul>",
+            date: "11 Ago (Mar)",
+            title: "Missione Costa Ovest: Cliffs of Moher",
+            summary: "Una massiccia spedizione coast-to-coast verso l'Oceano Atlantico. Scogliere di 200 metri e panorami mozzafiato.",
+            details: "<h4>Il Piano d'Azione:</h4><ul><li><strong>Logistica:</strong> Nessuno guida. Prenotiamo un tour in pullman premium con partenza alle 7:00 dal centro. Così smaltiamo e dormiamo durante le 3 ore e mezza di viaggio verso ovest.</li><li><strong>Le Scogliere:</strong> 2 ore per camminare sul bordo delle scogliere a strapiombo sull'Atlantico. Portatevi le giacche a vento, c'è un vento brutale.</li><li><strong>Pausa:</strong> Fermata a Galway City o Doolin per una zuppa di pesce (chowder) e una pinta veloce prima di ripartire.</li><li><strong>Ritorno:</strong> Di nuovo a Dublino per le 20:00. Ceniamo in zona e pub tranquillo.</li></ul>",
             coords: [52.9720, -9.4265],
             zoom: 10
         },
         {
-            date: "Aug 12 (Wed)",
-            title: "Rugby Heritage & Dudes Free Roam",
-            summary: "Specific history stop, then they are loose to explore before the final dinner.",
-            details: "<h4>The Action Plan:</h4><ul><li><strong><span class='highlight-pub'>The Swan Bar</span>:</strong> Victorian pub with deep rugby history. Owned by former Ireland player Sean Lynch.</li><li><strong>Free Roam:</strong> 3 hours of 'free roam' for shopping. I wait at <span class='highlight-pub'>Hogan's</span>.</li><li><strong>Last Supper:</strong> Fade Street Social. Lively atmosphere, great food.</li></ul>",
+            date: "12 Ago (Mer)",
+            title: "Eredità del Rugby & Tempo Libero",
+            summary: "Tappa storica per il rugby, poi liberi tutti prima della cena finale di livello.",
+            details: "<h4>Il Piano d'Azione:</h4><ul><li><strong><span class='highlight-pub'>The Swan Bar</span>:</strong> Bellissimo pub vittoriano immerso nella storia del rugby. Di proprietà dell'ex giocatore irlandese Sean Lynch. Ammiriamo i cimeli e la sua medaglia dei Lions del '71. Ottima pinta qui.</li><li><strong>Tempo Libero:</strong> Hanno 3 ore di 'free roam' per fare shopping o tornare nel loro pub preferito. Io vi aspetto da <span class='highlight-pub'>Hogan's</span>.</li><li><strong>L'Ultima Cena:</strong> Fade Street Social. Atmosfera vivace, tapas/piatti irlandesi moderni. Perfetto per chiudere la vacanza come si deve.</li></ul>",
             coords: [53.3396, -6.2655],
             zoom: 16
         },
         {
-            date: "Aug 13 (Thu)",
-            title: "Departure",
-            summary: "Pack up, final massive breakfast, and head to the airport for the 18:00 flight.",
-            details: "<h4>The Action Plan:</h4><ul><li><strong>Morning Logistics:</strong> Group clean up of the Bonham St Basecamp.</li><li><strong>Final Fry-Up:</strong> <span class='highlight-pub'>Del Rio's Café</span> on Francis St for no-nonsense fry-ups.</li><li><strong>Final Pints:</strong> Quick one at <span class='highlight-pub'>Francis Swift's</span> before heading to the Aircoach. Leave center by 15:30.</li></ul>",
+            date: "13 Ago (Gio)",
+            title: "Partenza",
+            summary: "Facciamo i bagagli, ultima colazione ignorante e via verso l'aeroporto per il volo delle 18:00.",
+            details: "<h4>Il Piano d'Azione:</h4><ul><li><strong>Logistica Mattutina:</strong> Pulizia di gruppo dell'appartamento e prepariamo le valigie.</li><li><strong>Ultimo Fry-Up:</strong> Andiamo da <span class='highlight-pub'>Del Rio's Café</span> in Francis St per una colazione massiccia e senza fronzoli. Prezzi onesti.</li><li><strong>Ultime Pinte:</strong> Forse una rapida da <span class='highlight-pub'>Francis Swift's</span> prima di andare a prendere l'Aircoach. Dobbiamo lasciare il centro tassativamente entro le 15:30.</li></ul>",
             coords: [53.3435, -6.2825],
             zoom: 16
         }
     ];
 
-    // Map Init
+    // Inizializzazione Mappa
     const map = L.map('map-container', {zoomControl: false}).setView([53.3448, -6.2755], 13);
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         maxZoom: 19, attribution: '© OpenStreetMap'
@@ -479,7 +483,7 @@
     const cardElements = [];
     const timeline = document.getElementById('timeline');
 
-    // Render Cards & Map Pins
+    // Rendering Cards & Map Pins
     itinerary.forEach((day, index) => {
         const dayNumber = index + 1;
 
@@ -504,7 +508,7 @@
         cardDiv.innerHTML = `
                 <div class="flip-card-inner">
                     <div class="flip-card-front">
-                        <div class="day-date">DAY ${dayNumber} • ${day.date}</div>
+                        <div class="day-date">GIORNO ${dayNumber} • ${day.date}</div>
                         <h3 class="day-title">${day.title}</h3>
                         <p class="day-summary">${day.summary}</p>
                     </div>
@@ -530,7 +534,7 @@
         timeline.appendChild(cardDiv);
     });
 
-    // Basecamp Marker
+    // Pin dell'Alloggio (Base)
     const basecampHTML = `
             <div class="custom-pin-container">
                 <div class="pulse-ring"></div>
@@ -542,11 +546,11 @@
 
     const basecampMarker = L.marker([53.3435, -6.2825], {icon: basecampIcon, zIndexOffset: 1000})
         .addTo(map)
-        .bindPopup("<b style='color:#e67e22'>Basecamp</b><br>Bonham Street");
+        .bindPopup("<b style='color:#e67e22'>Alloggio / Base</b><br>Bonham Street");
 
     basecampMarker.on('click', () => map.flyTo([53.3435, -6.2825], 16, { duration: 1.2 }));
 
-    // Budget Modal Logic
+    // Logica Modale Budget
     const modalOverlay = document.getElementById('budgetModalOverlay');
     const openBtn = document.getElementById('openBudgetBtn');
     const closeBtn = document.getElementById('closeBudgetBtn');
