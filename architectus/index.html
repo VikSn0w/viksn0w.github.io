@@ -1,0 +1,947 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Architectus — 27 B.C., a Playable Prototype</title>
+<meta name="description" content="Architectus: you are a modern engineer, two thousand years early, at the founding of Rome's empire. A playable prototype from Vittorio Picone, start to finish — ask for the build.">
+<link rel="alternate" hreflang="en" href="index.html">
+<link rel="alternate" hreflang="it" href="it/index.html">
+<link rel="alternate" hreflang="x-default" href="index.html">
+
+<style>
+/* ============================================================
+   FONTS — self-hosted, no runtime Google Fonts request
+   ============================================================ */
+@font-face{
+  font-family:'Piazzolla Var';
+  font-style:normal;
+  font-weight:300 800;
+  font-display:swap;
+  src:url('assets/fonts/piazzolla-normal.woff2') format('woff2-variations'),
+      url('assets/fonts/piazzolla-normal.woff2') format('woff2');
+}
+@font-face{
+  font-family:'Piazzolla Var';
+  font-style:italic;
+  font-weight:300 800;
+  font-display:swap;
+  src:url('assets/fonts/piazzolla-italic.woff2') format('woff2-variations'),
+      url('assets/fonts/piazzolla-italic.woff2') format('woff2');
+}
+@font-face{
+  font-family:'Lora';
+  font-style:normal;
+  font-weight:400 600;
+  font-display:swap;
+  src:url('assets/fonts/lora-regular.woff2') format('woff2');
+}
+@font-face{
+  font-family:'Lora';
+  font-style:italic;
+  font-weight:400;
+  font-display:swap;
+  src:url('assets/fonts/lora-italic.woff2') format('woff2');
+}
+@font-face{
+  font-family:'IBM Plex Mono';
+  font-style:normal;
+  font-weight:400;
+  font-display:swap;
+  src:url('assets/fonts/plexmono-400.woff2') format('woff2');
+}
+@font-face{
+  font-family:'IBM Plex Mono';
+  font-style:normal;
+  font-weight:500;
+  font-display:swap;
+  src:url('assets/fonts/plexmono-500.woff2') format('woff2');
+}
+@font-face{
+  font-family:'IBM Plex Mono';
+  font-style:normal;
+  font-weight:600;
+  font-display:swap;
+  src:url('assets/fonts/plexmono-600.woff2') format('woff2');
+}
+
+/* ============================================================
+   TOKENS
+   ============================================================ */
+:root{
+  --vellum:        #efe6d3;
+  --vellum-deep:   #e6dabd;
+  --vellum-shadow: #d8c8a0;
+  --ink:           #2a2015;
+  --ink-soft:      #4a3f2f;
+  --seal:          #7a2530;
+  --seal-dark:     #591a22;
+  --seal-ink:      #f3ead8;
+  --brass:         #a9793c;
+  --brass-bright:  #c9a15a;
+  --rule:          rgba(42,32,21,0.24);
+  --rule-soft:     rgba(42,32,21,0.12);
+
+  --display:  'Piazzolla Var', 'Iowan Old Style', ui-serif, Georgia, serif;
+  --body:     'Lora', 'Iowan Old Style', Georgia, serif;
+  --mono:     'IBM Plex Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+
+  --measure: 68ch;
+}
+
+*, *::before, *::after{ box-sizing:border-box; }
+
+html{
+  background:var(--vellum);
+  color-scheme: light;
+}
+
+/* the game's own cursor, cropped from Assets/Resources/cursor-std.png and
+   cursor-hover.png — hotspot at the blade tip (6,0 on the 64px export) */
+html, body{
+  cursor: url('assets/cursors/cursor-std.png') 6 0, auto;
+}
+a, button, input, label, [role="button"]{
+  cursor: url('assets/cursors/cursor-hover.png') 6 0, pointer;
+}
+input{
+  cursor: url('assets/cursors/cursor-hover.png') 6 0, text;
+}
+
+body{
+  margin:0;
+  background:var(--vellum);
+  color:var(--ink);
+  font-family:var(--body);
+  font-size:17px;
+  line-height:1.6;
+  -webkit-font-smoothing:antialiased;
+  text-rendering:optimizeLegibility;
+  overflow-x:hidden;
+}
+
+/* paper grain, authored once, applied everywhere via fixed overlay */
+body::before{
+  content:"";
+  position:fixed;
+  inset:0;
+  z-index:2000;
+  pointer-events:none;
+  opacity:0.05;
+  mix-blend-mode:multiply;
+  background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='240' height='240'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/><feColorMatrix type='matrix' values='0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 0.9 0'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");
+  background-size:240px 240px;
+}
+
+img{ max-width:100%; display:block; }
+a{ color:inherit; }
+
+::selection{ background:var(--seal); color:var(--seal-ink); }
+
+/* custom scrollbar, webkit */
+::-webkit-scrollbar{ width:14px; height:14px; }
+::-webkit-scrollbar-track{ background:var(--vellum-deep); }
+::-webkit-scrollbar-thumb{
+  background:var(--brass);
+  border:3px solid var(--vellum-deep);
+  border-radius:0;
+}
+::-webkit-scrollbar-thumb:hover{ background:var(--brass-bright); }
+html{ scrollbar-color: var(--brass) var(--vellum-deep); scrollbar-width:thin; }
+
+:focus{ outline:none; }
+:focus-visible{
+  outline: 2px dashed var(--seal);
+  outline-offset: 3px;
+}
+
+input{ caret-color: var(--seal); }
+
+.tnum{ font-variant-numeric: tabular-nums; }
+
+.wrap{
+  max-width:1180px;
+  margin-inline:auto;
+  padding-inline:clamp(20px, 5vw, 64px);
+}
+
+/* ============================================================
+   MASTHEAD
+   ============================================================ */
+.masthead{
+  padding-block: 22px;
+  border-bottom: 1px solid var(--rule);
+}
+.masthead .wrap{
+  display:flex;
+  align-items:baseline;
+  justify-content:space-between;
+  gap:24px;
+}
+.masthead-mark{
+  font-family:var(--mono);
+  font-size:12.5px;
+  font-weight:600;
+  letter-spacing:0.14em;
+  text-transform:uppercase;
+  color:var(--ink-soft);
+}
+.masthead-mark strong{
+  color:var(--seal);
+  font-weight:600;
+}
+.masthead-date{
+  font-family:var(--mono);
+  font-size:12px;
+  letter-spacing:0.06em;
+  color:var(--ink-soft);
+  white-space:nowrap;
+}
+.masthead-right{
+  display:flex;
+  align-items:baseline;
+  gap:16px;
+}
+.lang-switch{
+  font-family:var(--mono);
+  font-size:11px;
+  letter-spacing:0.08em;
+  color:var(--ink-soft);
+  text-decoration:none;
+  border-bottom:1px solid var(--rule);
+  padding-bottom:1px;
+  white-space:nowrap;
+}
+.lang-switch:hover{ color:var(--seal); border-bottom-color:var(--seal); }
+
+/* ============================================================
+   HERO — the two-page ledger spread
+   ============================================================ */
+.charter{
+  position:relative;
+  padding-block: clamp(28px, 6vw, 56px) clamp(40px, 7vw, 72px);
+}
+.charter .wrap{
+  position:relative;
+}
+.spread{
+  position:relative;
+  display:grid;
+  grid-template-columns: 1fr 1fr;
+  gap:0;
+  background:
+    linear-gradient(180deg, rgba(0,0,0,0.05), transparent 40px),
+    var(--vellum);
+  box-shadow:
+    0 1px 0 rgba(255,255,255,0.4) inset,
+    0 30px 60px -30px rgba(42,26,10,0.45),
+    0 2px 0 rgba(42,26,10,0.06);
+  border:1px solid var(--vellum-shadow);
+}
+.page{
+  padding: clamp(28px, 4.5vw, 56px) clamp(24px, 4vw, 48px);
+  position:relative;
+}
+.page--left{ border-right: 1px solid transparent; }
+.page--right{ background:var(--vellum-deep); }
+
+/* ribbon spine at the gutter */
+.spine{
+  position:absolute;
+  top:-14px;
+  left:50%;
+  transform:translateX(-50%);
+  width:34px;
+  height:calc(100% + 28px);
+  z-index:5;
+  pointer-events:none;
+}
+.spine::before{
+  content:"";
+  position:absolute;
+  inset:0;
+  background:linear-gradient(90deg, var(--brass) 0%, var(--brass-bright) 45%, var(--brass) 100%);
+  box-shadow: 0 6px 18px -6px rgba(42,26,10,0.55);
+}
+.spine::after{
+  content:"";
+  position:absolute;
+  left:0; right:0; bottom:-16px;
+  height:20px;
+  background:linear-gradient(90deg, var(--brass) 0%, var(--brass-bright) 45%, var(--brass) 100%);
+  clip-path: polygon(0 0, 100% 0, 100% 40%, 50% 100%, 0 40%);
+}
+
+.charter-title{
+  font-family:var(--display);
+  font-variation-settings:'opsz' 16,'wght' 500;
+  font-style:normal;
+  letter-spacing:0.01em;
+  color:var(--ink);
+  margin:0 0 0.15em;
+}
+.charter-title .super{
+  display:block;
+  font-size:clamp(13px, 1.4vw, 16px);
+  font-variation-settings:'opsz' 10,'wght' 560;
+  letter-spacing:0.16em;
+  text-transform:uppercase;
+  color:var(--ink-soft);
+  margin-bottom:0.5em;
+}
+.charter-title .name{
+  display:block;
+  font-size:clamp(46px, 8.4vw, 92px);
+  line-height:0.96;
+  font-variation-settings:'opsz' 30,'wght' 630;
+}
+.charter-motto{
+  font-family:var(--body);
+  font-style:italic;
+  font-size:clamp(15px, 1.6vw, 18px);
+  color:var(--ink-soft);
+  margin: 0.9em 0 1.6em;
+  max-width:32ch;
+}
+
+.reg{
+  font-family:var(--mono);
+  font-size:11.5px;
+  letter-spacing:0.08em;
+  color:var(--seal);
+  text-transform:uppercase;
+}
+
+.entry{
+  padding-block:18px;
+  border-top:1px solid var(--rule-soft);
+}
+.entry:first-of-type{ border-top:1px solid var(--rule); margin-top:8px; }
+.entry-head{
+  display:flex;
+  align-items:baseline;
+  gap:10px;
+  margin-bottom:6px;
+}
+.entry-no{ font-family:var(--mono); font-size:12px; color:var(--seal); }
+.entry-title{
+  font-family:var(--display);
+  font-variation-settings:'opsz' 18,'wght' 570;
+  font-size:clamp(19px, 2vw, 22px);
+}
+.entry p{
+  margin:0;
+  max-width:var(--measure);
+  color:var(--ink-soft);
+}
+
+/* pinned photographic exhibits — real captures, ledger-plate treatment */
+.exhibit{ margin: 22px 0 26px; }
+.exhibit img{
+  width:100%;
+  height:auto;
+  display:block;
+  border:1px solid var(--vellum-shadow);
+  box-shadow: 0 20px 36px -24px rgba(42,26,10,0.55);
+}
+.exhibit-cap{
+  font-family:var(--mono);
+  font-size:11px;
+  letter-spacing:0.03em;
+  color:var(--ink-soft);
+  margin-top:10px;
+}
+.exhibit-cap .tag{ color:var(--seal); }
+.exhibit-pair{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:clamp(14px, 3vw, 24px);
+}
+.memory-pair{ margin-top:20px; }
+@media (max-width:600px){
+  .memory-pair{ grid-template-columns:1fr; }
+}
+
+/* right page — the petition */
+.petition-head{
+  display:flex;
+  align-items:center;
+  gap:12px;
+  margin-bottom:6px;
+}
+.seal-glyph{
+  width:30px; height:30px; flex:none;
+  border-radius:50%;
+  background:radial-gradient(circle at 32% 28%, var(--brass-bright), var(--seal) 62%, var(--seal-dark) 100%);
+  box-shadow:0 2px 4px rgba(42,26,10,0.4) inset, 0 1px 0 rgba(255,255,255,0.15);
+}
+.petition-title{
+  font-family:var(--display);
+  font-variation-settings:'opsz' 24,'wght' 570;
+  font-size:clamp(24px, 2.6vw, 30px);
+  margin:0;
+}
+.petition-sub{
+  font-family:var(--body);
+  font-style:italic;
+  color:var(--ink-soft);
+  margin:0 0 1.6em;
+  max-width:38ch;
+}
+
+.field{
+  margin-bottom:1.4em;
+}
+.field label{
+  display:block;
+  font-family:var(--mono);
+  font-size:11px;
+  letter-spacing:0.1em;
+  text-transform:uppercase;
+  color:var(--ink-soft);
+  margin-bottom:0.55em;
+}
+.field input{
+  width:100%;
+  border:none;
+  border-bottom:1px solid var(--rule);
+  background:transparent;
+  padding:0.5em 0.1em;
+  font-family:var(--body);
+  font-size:17px;
+  color:var(--ink);
+}
+.field input::placeholder{ color:rgba(42,32,21,0.35); font-style:italic; }
+.field input:focus-visible{ outline:none; border-bottom-color:var(--seal); box-shadow:0 1px 0 var(--seal); }
+.field input:user-invalid{ border-bottom-color:var(--seal); }
+
+.petition-actions{
+  margin-top:2em;
+  display:flex;
+  align-items:center;
+  gap:22px;
+  flex-wrap:wrap;
+}
+
+.wax-button{
+  position:relative;
+  appearance:none;
+  border:none;
+  cursor: url('assets/cursors/cursor-hover.png') 6 0, pointer;
+  width:132px; height:132px;
+  border-radius:50%;
+  flex:none;
+  background:
+    radial-gradient(circle at 34% 26%, var(--brass-bright) 0%, var(--seal) 46%, var(--seal-dark) 100%);
+  box-shadow:
+    0 10px 20px -8px rgba(42,20,16,0.55),
+    0 2px 0 rgba(255,255,255,0.12) inset,
+    0 -10px 18px -6px rgba(0,0,0,0.35) inset;
+  color:var(--seal-ink);
+  transition: transform 160ms cubic-bezier(.2,.9,.3,1), box-shadow 160ms ease;
+}
+.wax-button::before{ /* rim texture ring */
+  content:"";
+  position:absolute; inset:8px;
+  border-radius:50%;
+  border:1px solid rgba(243,234,216,0.28);
+}
+.wax-monogram{
+  font-family:var(--display);
+  font-style:italic;
+  font-variation-settings:'opsz' 24,'wght' 540;
+  font-size:44px;
+  line-height:1;
+  display:block;
+}
+.wax-label{
+  display:block;
+  font-family:var(--mono);
+  font-size:9.5px;
+  letter-spacing:0.12em;
+  text-transform:uppercase;
+  margin-top:4px;
+  opacity:0.85;
+}
+.wax-button:hover{ transform:translateY(-2px); }
+.wax-button:active{
+  transform:translateY(1px) scale(0.96);
+  box-shadow:
+    0 3px 8px -4px rgba(42,20,16,0.5),
+    0 -6px 14px -4px rgba(0,0,0,0.4) inset;
+}
+.wax-button:disabled{ cursor: url('assets/cursors/cursor-std.png') 6 0, default; }
+
+.petition-note{
+  font-family:var(--mono);
+  font-size:11.5px;
+  color:var(--ink-soft);
+  max-width:24ch;
+  line-height:1.5;
+}
+
+.stamp-result{
+  margin-top:1.4em;
+  display:flex;
+  align-items:center;
+  gap:12px;
+  font-family:var(--mono);
+  font-size:12.5px;
+  letter-spacing:0.04em;
+  color:var(--seal-dark);
+  opacity:0;
+  transform:translateY(6px) scale(0.98);
+}
+.stamp-result.is-visible{
+  animation: stampIn 520ms cubic-bezier(0.16,1,0.3,1) forwards;
+}
+.stamp-result .stamp-ring{
+  width:20px; height:20px;
+  border-radius:50%;
+  border:2px solid var(--seal);
+  flex:none;
+  position:relative;
+}
+.stamp-result .stamp-ring::after{
+  content:"";
+  position:absolute; inset:4px;
+  border-radius:50%;
+  background:var(--seal);
+}
+@keyframes stampIn{
+  0%{ opacity:0; transform:translateY(6px) scale(1.35) rotate(-6deg); }
+  100%{ opacity:1; transform:translateY(0) scale(1) rotate(0deg); }
+}
+
+/* ============================================================
+   LEDGER — the remaining entries, full-width ruled rows
+   ============================================================ */
+.ledger{ padding-block: clamp(8px, 4vw, 24px) clamp(40px, 6vw, 72px); }
+.ledger-row{
+  display:grid;
+  grid-template-columns: minmax(160px, 260px) 1fr;
+  gap: clamp(20px, 5vw, 56px);
+  padding-block: clamp(28px, 4vw, 40px);
+  border-top:1px solid var(--rule);
+}
+.ledger-row:last-child{ border-bottom:1px solid var(--rule); }
+
+.ledger-row .stamp{
+  font-family:var(--mono);
+  font-size:11.5px;
+  color:var(--ink-soft);
+}
+.ledger-row .stamp .no{ color:var(--seal); display:block; font-size:12.5px; margin-bottom:6px; }
+
+.ledger-row h3{
+  font-family:var(--display);
+  font-variation-settings:'opsz' 28,'wght' 590;
+  font-size:clamp(24px, 3vw, 34px);
+  margin:0 0 0.4em;
+}
+.ledger-row p{
+  margin:0;
+  max-width:var(--measure);
+  color:var(--ink-soft);
+  font-size:17px;
+}
+.ledger-row .content{
+  display:grid;
+  grid-template-columns: 1.05fr 1fr;
+  gap: clamp(24px, 4vw, 48px);
+  align-items:center;
+}
+.ledger-row:nth-child(even) .content{ direction:rtl; }
+.ledger-row:nth-child(even) .content > *{ direction:ltr; }
+.ledger-row .content .exhibit{ margin:0; }
+.ledger-row .content .exhibit-cap{ margin-top:8px; }
+@media (max-width:760px){
+  .ledger-row .content{ grid-template-columns:1fr; }
+}
+
+/* reveal-on-scroll: one authored moment */
+.reveal{
+  opacity:0;
+  transform:translateY(18px);
+  transition: opacity 700ms cubic-bezier(.2,.7,.2,1), transform 700ms cubic-bezier(.2,.7,.2,1);
+}
+.reveal.is-visible{ opacity:1; transform:translateY(0); }
+@media (prefers-reduced-motion: reduce){
+  .reveal{ opacity:1; transform:none; transition:none; }
+  .stamp-result.is-visible{ animation:none; opacity:1; transform:none; }
+  .wax-button{ transition:none; }
+}
+
+/* ============================================================
+   CLOSING SEAL BAND
+   ============================================================ */
+.close-band{
+  background:var(--ink);
+  color:var(--vellum);
+  padding-block: clamp(48px, 8vw, 84px);
+}
+.close-band .wrap{
+  display:grid;
+  grid-template-columns: 1.2fr 0.8fr;
+  gap: clamp(28px, 6vw, 64px);
+  align-items:center;
+}
+.close-band h2{
+  font-family:var(--display);
+  font-variation-settings:'opsz' 30,'wght' 560;
+  font-size:clamp(30px, 4.6vw, 50px);
+  line-height:1.08;
+  margin:0 0 0.4em;
+  color:var(--vellum);
+}
+.close-band p{
+  font-family:var(--body);
+  color:rgba(239,230,211,0.72);
+  max-width:46ch;
+  margin:0;
+}
+.close-band .witness{
+  font-family:var(--mono);
+  font-size:12px;
+  letter-spacing:0.06em;
+  color:rgba(239,230,211,0.55);
+  margin-top:1.4em;
+}
+.close-form{
+  display:flex;
+  flex-direction:column;
+  gap:14px;
+  background:rgba(239,230,211,0.06);
+  border:1px solid rgba(239,230,211,0.18);
+  padding:clamp(20px, 3vw, 28px);
+}
+.close-form .field label{ color:rgba(239,230,211,0.6); }
+.close-form .field input{
+  color:var(--vellum);
+  border-bottom-color:rgba(239,230,211,0.3);
+}
+.close-form .field input::placeholder{ color:rgba(239,230,211,0.35); }
+.close-form .wax-button{ align-self:flex-start; }
+
+.close-exhibit{ margin: 1.6em 0 0; max-width:36ch; }
+.close-exhibit .exhibit-cap{ color:rgba(239,230,211,0.55); }
+.close-exhibit .exhibit-cap .tag{ color:var(--brass-bright); }
+
+/* ============================================================
+   FOOTER
+   ============================================================ */
+footer{
+  padding-block:26px;
+  border-top:1px solid var(--rule);
+}
+footer .wrap{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  flex-wrap:wrap;
+  gap:10px;
+  font-family:var(--mono);
+  font-size:11.5px;
+  color:var(--ink-soft);
+  letter-spacing:0.04em;
+}
+
+/* ============================================================
+   RESPONSIVE
+   ============================================================ */
+@media (max-width: 860px){
+  .spread{ grid-template-columns: 1fr; }
+  .page--right{ border-top:1px solid var(--vellum-shadow); }
+  .spine{ display:none; }
+  .close-band .wrap{ grid-template-columns: 1fr; }
+  .ledger-row{ grid-template-columns: 1fr; gap:10px; }
+}
+@media (max-width: 600px){
+  .masthead .wrap{ flex-direction:column; align-items:flex-start; gap:4px; }
+  .masthead-date{ white-space:normal; }
+}
+@media (max-width: 480px){
+  .wax-button{ width:112px; height:112px; }
+  .wax-monogram{ font-size:38px; }
+}
+</style>
+</head>
+<body>
+
+<header class="masthead">
+  <div class="wrap">
+    <div class="masthead-mark">Vittorio Picone presents <strong>Architectus</strong></div>
+    <div class="masthead-right">
+      <div class="masthead-date tnum" id="ledger-date">Registered this day</div>
+      <a class="lang-switch" href="it/index.html" hreflang="it" rel="alternate">IT</a>
+    </div>
+  </div>
+</header>
+
+<main>
+
+  <!-- ============================================================
+       THE FOUNDING CHARTER — hero / two-page ledger spread
+       ============================================================ -->
+  <section class="charter">
+    <div class="wrap">
+      <div class="spread">
+        <div class="spine" aria-hidden="true"></div>
+
+        <div class="page page--left">
+          <p class="reg">Vol. I &nbsp;·&nbsp; Register of the Augustan Experiment</p>
+          <h1 class="charter-title">
+            <span class="super">The Founding Charter of</span>
+            <span class="name">Architectus</span>
+          </h1>
+          <p class="charter-motto">27 B.C. A modern engineer, two thousand years early, at the founding of an empire that hasn't earned what it's about to be given.</p>
+
+          <figure class="exhibit reveal">
+            <img src="assets/screenshots/menu.webp" alt="Architectus title screen: the game's premise stated in one line over a map of the Roman world, with Nuova Campagna, Come Si Gioca, Impostazioni and Esci as the menu options." width="1400" height="788" loading="eager">
+            <figcaption class="exhibit-cap"><span class="tag">Exhibit A</span> · the actual title screen, captured from this build</figcaption>
+          </figure>
+
+          <div class="entry reveal">
+            <div class="entry-head">
+              <span class="entry-no tnum">No. 001</span>
+            </div>
+            <h2 class="entry-title">Of the Experiment</h2>
+            <p>Octavian has just become Augustus. You arrive with two thousand years of hindsight — not to save Rome, which doesn't need saving, but to run an experiment: what actually happens when a pre-industrial empire is handed things it hasn't earned and isn't yet able to hold.</p>
+          </div>
+
+          <div class="entry reveal">
+            <div class="entry-head">
+              <span class="entry-no tnum">No. 002</span>
+            </div>
+            <h2 class="entry-title">Of the Thesis</h2>
+            <p>At the end of the first year you declare what you're trying to prove — four technologies at once, a successor who can explain eight of them, a trade monopoly held five years, or your own silence bought with a dossier no one ever opens. The ending judges that claim, not a score.</p>
+          </div>
+        </div>
+
+        <div class="page page--right">
+          <div class="petition-head">
+            <span class="seal-glyph" aria-hidden="true"></span>
+            <h2 class="petition-title">Ask for the Build</h2>
+          </div>
+          <p class="petition-sub">Architectus already runs start to finish — twenty-one years, one sitting, nothing to install. Register your correspondence and it's yours to try, along with the questions I'm actually stuck on.</p>
+
+          <form id="petition-form" novalidate>
+            <div class="field">
+              <label for="petitioner-name">Name of petitioner</label>
+              <input type="text" id="petitioner-name" name="name" autocomplete="name" placeholder="e.g. Vittorio Picone" required>
+            </div>
+            <div class="field">
+              <label for="petitioner-mail">Correspondence (email)</label>
+              <input type="email" id="petitioner-mail" name="email" autocomplete="email" placeholder="you@example.com" required>
+            </div>
+
+            <!--
+              TODO(backend): this form is intentionally front-end only for now.
+              Wire the submit handler in wireForm() below to a real endpoint
+              or form service (Formspree, a Mailchimp/ConvertKit signup API,
+              or a custom API route) before this ships publicly.
+            -->
+
+            <div class="petition-actions">
+              <button type="submit" class="wax-button" id="wax-button" aria-describedby="petition-note">
+                <span class="wax-monogram" aria-hidden="true">A</span>
+                <span class="wax-label">Seal &amp; Submit</span>
+              </button>
+              <p class="petition-note" id="petition-note">No payment. No spam. Just the build, and ten real questions.</p>
+            </div>
+
+            <p class="stamp-result" id="stamp-result" role="status" aria-live="polite">
+              <span class="stamp-ring" aria-hidden="true"></span>
+              <span id="stamp-result-text">Request No. 000 sealed &amp; recorded.</span>
+            </p>
+          </form>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================================
+       THE LEDGER — remaining entries
+       ============================================================ -->
+  <section class="ledger">
+    <div class="wrap">
+
+      <div class="ledger-row reveal">
+        <div class="stamp"><span class="no tnum">No. 003</span>Register of the Memory</div>
+        <div>
+          <h3>Of the Memory</h3>
+          <p>You arrive knowing the whole future. Memory is the true clock, not the calendar in the corner — every year you spend rewriting history burns a little of it. What you're shown stops being reliable long before the number hits zero, and nothing on screen tells you which readings have already started lying.</p>
+          <div class="exhibit-pair memory-pair">
+            <figure class="exhibit">
+              <img src="assets/screenshots/map-full.webp" alt="The world map at 100% Memory: an accurate modern coastline of the Mediterranean and the Red Sea, cream and navy." width="1400" height="788" loading="lazy">
+              <figcaption class="exhibit-cap"><span class="tag">Exhibit B</span> · 100% Memory</figcaption>
+            </figure>
+            <figure class="exhibit">
+              <img src="assets/screenshots/map-empty.webp" alt="The same map at 0% Memory: the coastline has warped into a hand-inked, Ptolemaic-distorted chart in sepia and gold." width="1400" height="788" loading="lazy">
+              <figcaption class="exhibit-cap"><span class="tag">Exhibit C</span> · the same map, 0% Memory</figcaption>
+            </figure>
+          </div>
+        </div>
+      </div>
+
+      <div class="ledger-row reveal">
+        <div class="stamp"><span class="no tnum">No. 004</span>Register of the Senate</div>
+        <div class="content">
+          <div>
+            <h3>Of the Senate</h3>
+            <p>Every patron has a name, a price, and a death date pulled from the record — Agrippa in 12 B.C., Maecenas in 8. Your standing in Rome is spent on people who will actually die on schedule, not a reputation meter that resets.</p>
+          </div>
+          <figure class="exhibit">
+            <img src="assets/screenshots/senate.webp" alt="The Senate screen: political actions available through an agent, patron exposure and alignment tracked by name on the right." width="1400" height="788" loading="lazy">
+            <figcaption class="exhibit-cap"><span class="tag">Exhibit D</span> · the Senate, year one</figcaption>
+          </figure>
+        </div>
+      </div>
+
+      <div class="ledger-row reveal">
+        <div class="stamp"><span class="no tnum">No. 005</span>Register of the Route</div>
+        <div class="content">
+          <div>
+            <h3>Of the Route</h3>
+            <p>A sea lane around the Silk Road, Alexandria to Muziris, four real stages long — Roman trade with India actually did explode under Augustus. You aren't inventing the shortcut, only arriving early enough to take it before anyone else can.</p>
+          </div>
+          <figure class="exhibit">
+            <img src="assets/screenshots/registro.webp" alt="The Registro screen: the four-stage Alexandria-to-Muziris sea route, each stage with its required technology and an annual forecast panel." width="1400" height="788" loading="lazy">
+            <figcaption class="exhibit-cap"><span class="tag">Exhibit E</span> · the Eastern route, in progress</figcaption>
+          </figure>
+        </div>
+      </div>
+
+      <div class="ledger-row reveal">
+        <div class="stamp"><span class="no tnum">No. 006</span>Register of Interruption</div>
+        <div class="content">
+          <div>
+            <h3>Of the Interruption</h3>
+            <p>Two or three knocks a year, each answered with incomplete information and a real cost either way. A page in your own hand has been copied by someone else's — accurately, and they understood none of it, which is worse: someone who understood would know what to leave out.</p>
+          </div>
+          <figure class="exhibit">
+            <img src="assets/screenshots/interrupt.webp" alt="An interruption event: 'The Copied Page' — a page you wrote has been copied by another hand, with three response choices and their costs." width="1400" height="788" loading="lazy">
+            <figcaption class="exhibit-cap"><span class="tag">Exhibit F</span> · one of roughly a hundred, per campaign</figcaption>
+          </figure>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ============================================================
+       CLOSING SEAL BAND
+       ============================================================ -->
+  <section class="close-band">
+    <div class="wrap">
+      <div>
+        <h2>Not a demo on rails. A prototype, start to finish.</h2>
+        <p>Every system on this page already runs: the thesis, the Memory, the map that forgets, the Senate, the route, the interruptions. What's missing is testing against an actual human being — forty campaigns run against automated players so far, and not one against someone who reads. That's what the letter below is for.</p>
+        <figure class="exhibit close-exhibit">
+          <img src="assets/screenshots/ending.webp" alt="An ending screen: 'You didn't see it finish' — died at 57 having abandoned the declared thesis, with the Memory spent shown as a percentage." width="1400" height="788" loading="lazy">
+          <figcaption class="exhibit-cap"><span class="tag">Exhibit G</span> · there's no game-over screen, only a closed file</figcaption>
+        </figure>
+        <p class="witness">— Vittorio Picone, maker of Architectus</p>
+      </div>
+      <form class="close-form" id="petition-form-2" novalidate>
+        <div class="field">
+          <label for="petitioner-name-2">Name of petitioner</label>
+          <input type="text" id="petitioner-name-2" name="name" autocomplete="name" placeholder="e.g. Vittorio Picone" required>
+        </div>
+        <div class="field">
+          <label for="petitioner-mail-2">Correspondence (email)</label>
+          <input type="email" id="petitioner-mail-2" name="email" autocomplete="email" placeholder="you@example.com" required>
+        </div>
+        <button type="submit" class="wax-button" id="wax-button-2">
+          <span class="wax-monogram" aria-hidden="true">A</span>
+          <span class="wax-label">Seal &amp; Submit</span>
+        </button>
+        <p class="stamp-result" id="stamp-result-2" role="status" aria-live="polite">
+          <span class="stamp-ring" aria-hidden="true"></span>
+          <span id="stamp-result-text-2">Request No. 000 sealed &amp; recorded.</span>
+        </p>
+      </form>
+    </div>
+  </section>
+
+</main>
+
+<footer>
+  <div class="wrap">
+    <span>© <span id="year">2026</span> Vittorio Picone</span>
+    <span>Architectus — a playable prototype, in development</span>
+  </div>
+</footer>
+
+<script>
+(function(){
+  "use strict";
+
+  // ---- masthead date, ledger-style ----
+  var now = new Date();
+  var days = ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
+  var months = ["January","February","March","April","May","June","July","August","September","October","November","December"];
+  function ordinal(n){
+    var s = ["th","st","nd","rd"], v = n % 100;
+    return n + (s[(v-20)%10] || s[v] || s[0]);
+  }
+  var dateEl = document.getElementById('ledger-date');
+  if (dateEl) {
+    dateEl.textContent = "Registered " + days[now.getDay()] + ", the " + ordinal(now.getDate()) + " of " + months[now.getMonth()] + ", " + now.getFullYear();
+  }
+  var yearEl = document.getElementById('year');
+  if (yearEl) yearEl.textContent = String(now.getFullYear());
+
+  // ---- reveal on scroll: one authored moment ----
+  var reduceMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var revealEls = document.querySelectorAll('.reveal');
+  if (!reduceMotion && 'IntersectionObserver' in window) {
+    var io = new IntersectionObserver(function(entries){
+      entries.forEach(function(entry){
+        if (entry.isIntersecting) {
+          entry.target.classList.add('is-visible');
+          io.unobserve(entry.target);
+        }
+      });
+    }, { threshold: 0.18, rootMargin: '0px 0px -8% 0px' });
+    revealEls.forEach(function(el){ io.observe(el); });
+  } else {
+    revealEls.forEach(function(el){ el.classList.add('is-visible'); });
+  }
+
+  // ---- request form: seal & submit (front-end only, see TODO in HTML) ----
+  var petitionCounter = 118; // register opens mid-count, as a founding document would
+
+  function wireForm(formId, buttonId, resultId, resultTextId){
+    var form = document.getElementById(formId);
+    if (!form) return;
+    form.addEventListener('submit', function(e){
+      e.preventDefault();
+      var nameInput = form.querySelector('input[type="text"]');
+      var mailInput = form.querySelector('input[type="email"]');
+      if (!nameInput.value.trim() || !mailInput.checkValidity()) {
+        (mailInput.value.trim() ? nameInput : mailInput).focus();
+        return;
+      }
+      var button = document.getElementById(buttonId);
+      var result = document.getElementById(resultId);
+      var resultText = document.getElementById(resultTextId);
+
+      petitionCounter += 1;
+      button.disabled = true;
+      button.querySelector('.wax-label').textContent = 'Sealed';
+      resultText.textContent = 'Request No. ' + String(petitionCounter).padStart(3,'0') + ' sealed & recorded.';
+      result.classList.add('is-visible');
+      nameInput.disabled = true;
+      mailInput.disabled = true;
+    });
+  }
+
+  wireForm('petition-form', 'wax-button', 'stamp-result', 'stamp-result-text');
+  wireForm('petition-form-2', 'wax-button-2', 'stamp-result-2', 'stamp-result-text-2');
+})();
+</script>
+
+</body>
+</html>

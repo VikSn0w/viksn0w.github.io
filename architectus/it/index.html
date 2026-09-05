@@ -1,0 +1,946 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Architectus — 27 a.C., un Prototipo Giocabile</title>
+<meta name="description" content="Architectus: sei un ingegnere moderno, con duemila anni di anticipo, alla fondazione dell'Impero di Roma. Un prototipo giocabile di Vittorio Picone, dall'inizio alla fine — richiedi la build.">
+<link rel="alternate" hreflang="en" href="../index.html">
+<link rel="alternate" hreflang="it" href="index.html">
+<link rel="alternate" hreflang="x-default" href="../index.html">
+
+<style>
+/* ============================================================
+   FONTS — self-hosted, no runtime Google Fonts request
+   ============================================================ */
+@font-face{
+  font-family:'Piazzolla Var';
+  font-style:normal;
+  font-weight:300 800;
+  font-display:swap;
+  src:url('../assets/fonts/piazzolla-normal.woff2') format('woff2-variations'),
+      url('../assets/fonts/piazzolla-normal.woff2') format('woff2');
+}
+@font-face{
+  font-family:'Piazzolla Var';
+  font-style:italic;
+  font-weight:300 800;
+  font-display:swap;
+  src:url('../assets/fonts/piazzolla-italic.woff2') format('woff2-variations'),
+      url('../assets/fonts/piazzolla-italic.woff2') format('woff2');
+}
+@font-face{
+  font-family:'Lora';
+  font-style:normal;
+  font-weight:400 600;
+  font-display:swap;
+  src:url('../assets/fonts/lora-regular.woff2') format('woff2');
+}
+@font-face{
+  font-family:'Lora';
+  font-style:italic;
+  font-weight:400;
+  font-display:swap;
+  src:url('../assets/fonts/lora-italic.woff2') format('woff2');
+}
+@font-face{
+  font-family:'IBM Plex Mono';
+  font-style:normal;
+  font-weight:400;
+  font-display:swap;
+  src:url('../assets/fonts/plexmono-400.woff2') format('woff2');
+}
+@font-face{
+  font-family:'IBM Plex Mono';
+  font-style:normal;
+  font-weight:500;
+  font-display:swap;
+  src:url('../assets/fonts/plexmono-500.woff2') format('woff2');
+}
+@font-face{
+  font-family:'IBM Plex Mono';
+  font-style:normal;
+  font-weight:600;
+  font-display:swap;
+  src:url('../assets/fonts/plexmono-600.woff2') format('woff2');
+}
+
+/* ============================================================
+   TOKENS
+   ============================================================ */
+:root{
+  --vellum:        #efe6d3;
+  --vellum-deep:   #e6dabd;
+  --vellum-shadow: #d8c8a0;
+  --ink:           #2a2015;
+  --ink-soft:      #4a3f2f;
+  --seal:          #7a2530;
+  --seal-dark:     #591a22;
+  --seal-ink:      #f3ead8;
+  --brass:         #a9793c;
+  --brass-bright:  #c9a15a;
+  --rule:          rgba(42,32,21,0.24);
+  --rule-soft:     rgba(42,32,21,0.12);
+
+  --display:  'Piazzolla Var', 'Iowan Old Style', ui-serif, Georgia, serif;
+  --body:     'Lora', 'Iowan Old Style', Georgia, serif;
+  --mono:     'IBM Plex Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+
+  --measure: 68ch;
+}
+
+*, *::before, *::after{ box-sizing:border-box; }
+
+html{
+  background:var(--vellum);
+  color-scheme: light;
+}
+
+/* the game's own cursor, cropped from Assets/Resources/cursor-std.png and
+   cursor-hover.png — hotspot at the blade tip (6,0 on the 64px export) */
+html, body{
+  cursor: url('../assets/cursors/cursor-std.png') 6 0, auto;
+}
+a, button, input, label, [role="button"]{
+  cursor: url('../assets/cursors/cursor-hover.png') 6 0, pointer;
+}
+input{
+  cursor: url('../assets/cursors/cursor-hover.png') 6 0, text;
+}
+
+body{
+  margin:0;
+  background:var(--vellum);
+  color:var(--ink);
+  font-family:var(--body);
+  font-size:17px;
+  line-height:1.6;
+  -webkit-font-smoothing:antialiased;
+  text-rendering:optimizeLegibility;
+  overflow-x:hidden;
+}
+
+/* paper grain, authored once, applied everywhere via fixed overlay */
+body::before{
+  content:"";
+  position:fixed;
+  inset:0;
+  z-index:2000;
+  pointer-events:none;
+  opacity:0.05;
+  mix-blend-mode:multiply;
+  background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='240' height='240'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/><feColorMatrix type='matrix' values='0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 0.9 0'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");
+  background-size:240px 240px;
+}
+
+img{ max-width:100%; display:block; }
+a{ color:inherit; }
+
+::selection{ background:var(--seal); color:var(--seal-ink); }
+
+/* custom scrollbar, webkit */
+::-webkit-scrollbar{ width:14px; height:14px; }
+::-webkit-scrollbar-track{ background:var(--vellum-deep); }
+::-webkit-scrollbar-thumb{
+  background:var(--brass);
+  border:3px solid var(--vellum-deep);
+  border-radius:0;
+}
+::-webkit-scrollbar-thumb:hover{ background:var(--brass-bright); }
+html{ scrollbar-color: var(--brass) var(--vellum-deep); scrollbar-width:thin; }
+
+:focus{ outline:none; }
+:focus-visible{
+  outline: 2px dashed var(--seal);
+  outline-offset: 3px;
+}
+
+input{ caret-color: var(--seal); }
+
+.tnum{ font-variant-numeric: tabular-nums; }
+
+.wrap{
+  max-width:1180px;
+  margin-inline:auto;
+  padding-inline:clamp(20px, 5vw, 64px);
+}
+
+/* ============================================================
+   MASTHEAD
+   ============================================================ */
+.masthead{
+  padding-block: 22px;
+  border-bottom: 1px solid var(--rule);
+}
+.masthead .wrap{
+  display:flex;
+  align-items:baseline;
+  justify-content:space-between;
+  gap:24px;
+}
+.masthead-mark{
+  font-family:var(--mono);
+  font-size:12.5px;
+  font-weight:600;
+  letter-spacing:0.14em;
+  text-transform:uppercase;
+  color:var(--ink-soft);
+}
+.masthead-mark strong{
+  color:var(--seal);
+  font-weight:600;
+}
+.masthead-date{
+  font-family:var(--mono);
+  font-size:12px;
+  letter-spacing:0.06em;
+  color:var(--ink-soft);
+  white-space:nowrap;
+}
+.masthead-right{
+  display:flex;
+  align-items:baseline;
+  gap:16px;
+}
+.lang-switch{
+  font-family:var(--mono);
+  font-size:11px;
+  letter-spacing:0.08em;
+  color:var(--ink-soft);
+  text-decoration:none;
+  border-bottom:1px solid var(--rule);
+  padding-bottom:1px;
+  white-space:nowrap;
+}
+.lang-switch:hover{ color:var(--seal); border-bottom-color:var(--seal); }
+
+/* ============================================================
+   HERO — the two-page ledger spread
+   ============================================================ */
+.charter{
+  position:relative;
+  padding-block: clamp(28px, 6vw, 56px) clamp(40px, 7vw, 72px);
+}
+.charter .wrap{
+  position:relative;
+}
+.spread{
+  position:relative;
+  display:grid;
+  grid-template-columns: 1fr 1fr;
+  gap:0;
+  background:
+    linear-gradient(180deg, rgba(0,0,0,0.05), transparent 40px),
+    var(--vellum);
+  box-shadow:
+    0 1px 0 rgba(255,255,255,0.4) inset,
+    0 30px 60px -30px rgba(42,26,10,0.45),
+    0 2px 0 rgba(42,26,10,0.06);
+  border:1px solid var(--vellum-shadow);
+}
+.page{
+  padding: clamp(28px, 4.5vw, 56px) clamp(24px, 4vw, 48px);
+  position:relative;
+}
+.page--left{ border-right: 1px solid transparent; }
+.page--right{ background:var(--vellum-deep); }
+
+/* ribbon spine at the gutter */
+.spine{
+  position:absolute;
+  top:-14px;
+  left:50%;
+  transform:translateX(-50%);
+  width:34px;
+  height:calc(100% + 28px);
+  z-index:5;
+  pointer-events:none;
+}
+.spine::before{
+  content:"";
+  position:absolute;
+  inset:0;
+  background:linear-gradient(90deg, var(--brass) 0%, var(--brass-bright) 45%, var(--brass) 100%);
+  box-shadow: 0 6px 18px -6px rgba(42,26,10,0.55);
+}
+.spine::after{
+  content:"";
+  position:absolute;
+  left:0; right:0; bottom:-16px;
+  height:20px;
+  background:linear-gradient(90deg, var(--brass) 0%, var(--brass-bright) 45%, var(--brass) 100%);
+  clip-path: polygon(0 0, 100% 0, 100% 40%, 50% 100%, 0 40%);
+}
+
+.charter-title{
+  font-family:var(--display);
+  font-variation-settings:'opsz' 16,'wght' 500;
+  font-style:normal;
+  letter-spacing:0.01em;
+  color:var(--ink);
+  margin:0 0 0.15em;
+}
+.charter-title .super{
+  display:block;
+  font-size:clamp(13px, 1.4vw, 16px);
+  font-variation-settings:'opsz' 10,'wght' 560;
+  letter-spacing:0.16em;
+  text-transform:uppercase;
+  color:var(--ink-soft);
+  margin-bottom:0.5em;
+}
+.charter-title .name{
+  display:block;
+  font-size:clamp(46px, 8.4vw, 92px);
+  line-height:0.96;
+  font-variation-settings:'opsz' 30,'wght' 630;
+}
+.charter-motto{
+  font-family:var(--body);
+  font-style:italic;
+  font-size:clamp(15px, 1.6vw, 18px);
+  color:var(--ink-soft);
+  margin: 0.9em 0 1.6em;
+  max-width:32ch;
+}
+
+.reg{
+  font-family:var(--mono);
+  font-size:11.5px;
+  letter-spacing:0.08em;
+  color:var(--seal);
+  text-transform:uppercase;
+}
+
+.entry{
+  padding-block:18px;
+  border-top:1px solid var(--rule-soft);
+}
+.entry:first-of-type{ border-top:1px solid var(--rule); margin-top:8px; }
+.entry-head{
+  display:flex;
+  align-items:baseline;
+  gap:10px;
+  margin-bottom:6px;
+}
+.entry-no{ font-family:var(--mono); font-size:12px; color:var(--seal); }
+.entry-title{
+  font-family:var(--display);
+  font-variation-settings:'opsz' 18,'wght' 570;
+  font-size:clamp(19px, 2vw, 22px);
+}
+.entry p{
+  margin:0;
+  max-width:var(--measure);
+  color:var(--ink-soft);
+}
+
+/* pinned photographic exhibits — real captures, ledger-plate treatment */
+.exhibit{ margin: 22px 0 26px; }
+.exhibit img{
+  width:100%;
+  height:auto;
+  display:block;
+  border:1px solid var(--vellum-shadow);
+  box-shadow: 0 20px 36px -24px rgba(42,26,10,0.55);
+}
+.exhibit-cap{
+  font-family:var(--mono);
+  font-size:11px;
+  letter-spacing:0.03em;
+  color:var(--ink-soft);
+  margin-top:10px;
+}
+.exhibit-cap .tag{ color:var(--seal); }
+.exhibit-pair{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:clamp(14px, 3vw, 24px);
+}
+.memory-pair{ margin-top:20px; }
+@media (max-width:600px){
+  .memory-pair{ grid-template-columns:1fr; }
+}
+
+/* right page — the petition */
+.petition-head{
+  display:flex;
+  align-items:center;
+  gap:12px;
+  margin-bottom:6px;
+}
+.seal-glyph{
+  width:30px; height:30px; flex:none;
+  border-radius:50%;
+  background:radial-gradient(circle at 32% 28%, var(--brass-bright), var(--seal) 62%, var(--seal-dark) 100%);
+  box-shadow:0 2px 4px rgba(42,26,10,0.4) inset, 0 1px 0 rgba(255,255,255,0.15);
+}
+.petition-title{
+  font-family:var(--display);
+  font-variation-settings:'opsz' 24,'wght' 570;
+  font-size:clamp(24px, 2.6vw, 30px);
+  margin:0;
+}
+.petition-sub{
+  font-family:var(--body);
+  font-style:italic;
+  color:var(--ink-soft);
+  margin:0 0 1.6em;
+  max-width:38ch;
+}
+
+.field{
+  margin-bottom:1.4em;
+}
+.field label{
+  display:block;
+  font-family:var(--mono);
+  font-size:11px;
+  letter-spacing:0.1em;
+  text-transform:uppercase;
+  color:var(--ink-soft);
+  margin-bottom:0.55em;
+}
+.field input{
+  width:100%;
+  border:none;
+  border-bottom:1px solid var(--rule);
+  background:transparent;
+  padding:0.5em 0.1em;
+  font-family:var(--body);
+  font-size:17px;
+  color:var(--ink);
+}
+.field input::placeholder{ color:rgba(42,32,21,0.35); font-style:italic; }
+.field input:focus-visible{ outline:none; border-bottom-color:var(--seal); box-shadow:0 1px 0 var(--seal); }
+.field input:user-invalid{ border-bottom-color:var(--seal); }
+
+.petition-actions{
+  margin-top:2em;
+  display:flex;
+  align-items:center;
+  gap:22px;
+  flex-wrap:wrap;
+}
+
+.wax-button{
+  position:relative;
+  appearance:none;
+  border:none;
+  cursor: url('../assets/cursors/cursor-hover.png') 6 0, pointer;
+  width:132px; height:132px;
+  border-radius:50%;
+  flex:none;
+  background:
+    radial-gradient(circle at 34% 26%, var(--brass-bright) 0%, var(--seal) 46%, var(--seal-dark) 100%);
+  box-shadow:
+    0 10px 20px -8px rgba(42,20,16,0.55),
+    0 2px 0 rgba(255,255,255,0.12) inset,
+    0 -10px 18px -6px rgba(0,0,0,0.35) inset;
+  color:var(--seal-ink);
+  transition: transform 160ms cubic-bezier(.2,.9,.3,1), box-shadow 160ms ease;
+}
+.wax-button::before{ /* rim texture ring */
+  content:"";
+  position:absolute; inset:8px;
+  border-radius:50%;
+  border:1px solid rgba(243,234,216,0.28);
+}
+.wax-monogram{
+  font-family:var(--display);
+  font-style:italic;
+  font-variation-settings:'opsz' 24,'wght' 540;
+  font-size:44px;
+  line-height:1;
+  display:block;
+}
+.wax-label{
+  display:block;
+  font-family:var(--mono);
+  font-size:9.5px;
+  letter-spacing:0.12em;
+  text-transform:uppercase;
+  margin-top:4px;
+  opacity:0.85;
+}
+.wax-button:hover{ transform:translateY(-2px); }
+.wax-button:active{
+  transform:translateY(1px) scale(0.96);
+  box-shadow:
+    0 3px 8px -4px rgba(42,20,16,0.5),
+    0 -6px 14px -4px rgba(0,0,0,0.4) inset;
+}
+.wax-button:disabled{ cursor: url('../assets/cursors/cursor-std.png') 6 0, default; }
+
+.petition-note{
+  font-family:var(--mono);
+  font-size:11.5px;
+  color:var(--ink-soft);
+  max-width:24ch;
+  line-height:1.5;
+}
+
+.stamp-result{
+  margin-top:1.4em;
+  display:flex;
+  align-items:center;
+  gap:12px;
+  font-family:var(--mono);
+  font-size:12.5px;
+  letter-spacing:0.04em;
+  color:var(--seal-dark);
+  opacity:0;
+  transform:translateY(6px) scale(0.98);
+}
+.stamp-result.is-visible{
+  animation: stampIn 520ms cubic-bezier(0.16,1,0.3,1) forwards;
+}
+.stamp-result .stamp-ring{
+  width:20px; height:20px;
+  border-radius:50%;
+  border:2px solid var(--seal);
+  flex:none;
+  position:relative;
+}
+.stamp-result .stamp-ring::after{
+  content:"";
+  position:absolute; inset:4px;
+  border-radius:50%;
+  background:var(--seal);
+}
+@keyframes stampIn{
+  0%{ opacity:0; transform:translateY(6px) scale(1.35) rotate(-6deg); }
+  100%{ opacity:1; transform:translateY(0) scale(1) rotate(0deg); }
+}
+
+/* ============================================================
+   LEDGER — the remaining entries, full-width ruled rows
+   ============================================================ */
+.ledger{ padding-block: clamp(8px, 4vw, 24px) clamp(40px, 6vw, 72px); }
+.ledger-row{
+  display:grid;
+  grid-template-columns: minmax(160px, 260px) 1fr;
+  gap: clamp(20px, 5vw, 56px);
+  padding-block: clamp(28px, 4vw, 40px);
+  border-top:1px solid var(--rule);
+}
+.ledger-row:last-child{ border-bottom:1px solid var(--rule); }
+
+.ledger-row .stamp{
+  font-family:var(--mono);
+  font-size:11.5px;
+  color:var(--ink-soft);
+}
+.ledger-row .stamp .no{ color:var(--seal); display:block; font-size:12.5px; margin-bottom:6px; }
+
+.ledger-row h3{
+  font-family:var(--display);
+  font-variation-settings:'opsz' 28,'wght' 590;
+  font-size:clamp(24px, 3vw, 34px);
+  margin:0 0 0.4em;
+}
+.ledger-row p{
+  margin:0;
+  max-width:var(--measure);
+  color:var(--ink-soft);
+  font-size:17px;
+}
+.ledger-row .content{
+  display:grid;
+  grid-template-columns: 1.05fr 1fr;
+  gap: clamp(24px, 4vw, 48px);
+  align-items:center;
+}
+.ledger-row:nth-child(even) .content{ direction:rtl; }
+.ledger-row:nth-child(even) .content > *{ direction:ltr; }
+.ledger-row .content .exhibit{ margin:0; }
+.ledger-row .content .exhibit-cap{ margin-top:8px; }
+@media (max-width:760px){
+  .ledger-row .content{ grid-template-columns:1fr; }
+}
+
+/* reveal-on-scroll: one authored moment */
+.reveal{
+  opacity:0;
+  transform:translateY(18px);
+  transition: opacity 700ms cubic-bezier(.2,.7,.2,1), transform 700ms cubic-bezier(.2,.7,.2,1);
+}
+.reveal.is-visible{ opacity:1; transform:translateY(0); }
+@media (prefers-reduced-motion: reduce){
+  .reveal{ opacity:1; transform:none; transition:none; }
+  .stamp-result.is-visible{ animation:none; opacity:1; transform:none; }
+  .wax-button{ transition:none; }
+}
+
+/* ============================================================
+   CLOSING SEAL BAND
+   ============================================================ */
+.close-band{
+  background:var(--ink);
+  color:var(--vellum);
+  padding-block: clamp(48px, 8vw, 84px);
+}
+.close-band .wrap{
+  display:grid;
+  grid-template-columns: 1.2fr 0.8fr;
+  gap: clamp(28px, 6vw, 64px);
+  align-items:center;
+}
+.close-band h2{
+  font-family:var(--display);
+  font-variation-settings:'opsz' 30,'wght' 560;
+  font-size:clamp(30px, 4.6vw, 50px);
+  line-height:1.08;
+  margin:0 0 0.4em;
+  color:var(--vellum);
+}
+.close-band p{
+  font-family:var(--body);
+  color:rgba(239,230,211,0.72);
+  max-width:46ch;
+  margin:0;
+}
+.close-band .witness{
+  font-family:var(--mono);
+  font-size:12px;
+  letter-spacing:0.06em;
+  color:rgba(239,230,211,0.55);
+  margin-top:1.4em;
+}
+.close-form{
+  display:flex;
+  flex-direction:column;
+  gap:14px;
+  background:rgba(239,230,211,0.06);
+  border:1px solid rgba(239,230,211,0.18);
+  padding:clamp(20px, 3vw, 28px);
+}
+.close-form .field label{ color:rgba(239,230,211,0.6); }
+.close-form .field input{
+  color:var(--vellum);
+  border-bottom-color:rgba(239,230,211,0.3);
+}
+.close-form .field input::placeholder{ color:rgba(239,230,211,0.35); }
+.close-form .wax-button{ align-self:flex-start; }
+
+.close-exhibit{ margin: 1.6em 0 0; max-width:36ch; }
+.close-exhibit .exhibit-cap{ color:rgba(239,230,211,0.55); }
+.close-exhibit .exhibit-cap .tag{ color:var(--brass-bright); }
+
+/* ============================================================
+   FOOTER
+   ============================================================ */
+footer{
+  padding-block:26px;
+  border-top:1px solid var(--rule);
+}
+footer .wrap{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  flex-wrap:wrap;
+  gap:10px;
+  font-family:var(--mono);
+  font-size:11.5px;
+  color:var(--ink-soft);
+  letter-spacing:0.04em;
+}
+
+/* ============================================================
+   RESPONSIVE
+   ============================================================ */
+@media (max-width: 860px){
+  .spread{ grid-template-columns: 1fr; }
+  .page--right{ border-top:1px solid var(--vellum-shadow); }
+  .spine{ display:none; }
+  .close-band .wrap{ grid-template-columns: 1fr; }
+  .ledger-row{ grid-template-columns: 1fr; gap:10px; }
+}
+@media (max-width: 600px){
+  .masthead .wrap{ flex-direction:column; align-items:flex-start; gap:4px; }
+  .masthead-date{ white-space:normal; }
+}
+@media (max-width: 480px){
+  .wax-button{ width:112px; height:112px; }
+  .wax-monogram{ font-size:38px; }
+}
+</style>
+</head>
+<body>
+
+<header class="masthead">
+  <div class="wrap">
+    <div class="masthead-mark">Vittorio Picone presenta <strong>Architectus</strong></div>
+    <div class="masthead-right">
+      <div class="masthead-date tnum" id="ledger-date">Registrato oggi</div>
+      <a class="lang-switch" href="../index.html" hreflang="en" rel="alternate">EN</a>
+    </div>
+  </div>
+</header>
+
+<main>
+
+  <!-- ============================================================
+       LA CARTA FONDATIVA — hero / due pagine di registro
+       ============================================================ -->
+  <section class="charter">
+    <div class="wrap">
+      <div class="spread">
+        <div class="spine" aria-hidden="true"></div>
+
+        <div class="page page--left">
+          <p class="reg">Vol. I &nbsp;·&nbsp; Registro dell'Esperimento Augusteo</p>
+          <h1 class="charter-title">
+            <span class="super">La Carta Fondativa di</span>
+            <span class="name">Architectus</span>
+          </h1>
+          <p class="charter-motto">27 a.C. Un ingegnere moderno, con duemila anni di anticipo, alla fondazione di un impero che non si è guadagnato ciò che sta per ricevere.</p>
+
+          <figure class="exhibit reveal">
+            <img src="../assets/screenshots/menu.webp" alt="Schermata del titolo di Architectus: la premessa del gioco in una riga, sopra una mappa del mondo romano, con Nuova Campagna, Come Si Gioca, Impostazioni ed Esci come voci di menu." width="1400" height="788" loading="eager">
+            <figcaption class="exhibit-cap"><span class="tag">Reperto A</span> · la vera schermata del titolo, catturata da questa build</figcaption>
+          </figure>
+
+          <div class="entry reveal">
+            <div class="entry-head">
+              <span class="entry-no tnum">N. 001</span>
+            </div>
+            <h2 class="entry-title">Dell'Esperimento</h2>
+            <p>Ottaviano è appena diventato Augusto. Arrivi con duemila anni di vantaggio — non per salvare Roma, che non ha bisogno di essere salvata, ma per condurre un esperimento: cosa succede davvero quando un impero preindustriale riceve cose che non si è guadagnato e non è ancora in grado di reggere.</p>
+          </div>
+
+          <div class="entry reveal">
+            <div class="entry-head">
+              <span class="entry-no tnum">N. 002</span>
+            </div>
+            <h2 class="entry-title">Della Tesi</h2>
+            <p>Alla fine del primo anno dichiari cosa vuoi dimostrare — quattro tecnologie insieme, un successore capace di spiegarne otto, un monopolio commerciale tenuto cinque anni, o il tuo stesso silenzio comprato con un fascicolo che nessuno apre mai. Il finale giudica quella dichiarazione, non un punteggio.</p>
+          </div>
+        </div>
+
+        <div class="page page--right">
+          <div class="petition-head">
+            <span class="seal-glyph" aria-hidden="true"></span>
+            <h2 class="petition-title">Richiedi la Build</h2>
+          </div>
+          <p class="petition-sub">Architectus funziona già dall'inizio alla fine — ventun anni, una sola sessione, niente da installare. Lascia il tuo nome e un recapito, ed è tua da provare, insieme alle domande su cui sono davvero bloccato.</p>
+
+          <form id="petition-form" novalidate>
+            <div class="field">
+              <label for="petitioner-name">Nome del richiedente</label>
+              <input type="text" id="petitioner-name" name="name" autocomplete="name" placeholder="es. Vittorio Picone" required>
+            </div>
+            <div class="field">
+              <label for="petitioner-mail">Corrispondenza (email)</label>
+              <input type="email" id="petitioner-mail" name="email" autocomplete="email" placeholder="tu@esempio.com" required>
+            </div>
+
+            <!--
+              TODO(backend): questo modulo è intenzionalmente solo front-end
+              per ora. Collegare il gestore in wireForm() qui sotto a un
+              endpoint reale o a un servizio (Formspree, un'API di
+              Mailchimp/ConvertKit, o una rotta API personalizzata) prima
+              di pubblicare questa pagina.
+            -->
+
+            <div class="petition-actions">
+              <button type="submit" class="wax-button" id="wax-button" aria-describedby="petition-note">
+                <span class="wax-monogram" aria-hidden="true">A</span>
+                <span class="wax-label">Sigilla e Invia</span>
+              </button>
+              <p class="petition-note" id="petition-note">Nessun pagamento. Nessuno spam. Solo la build, e dieci domande vere.</p>
+            </div>
+
+            <p class="stamp-result" id="stamp-result" role="status" aria-live="polite">
+              <span class="stamp-ring" aria-hidden="true"></span>
+              <span id="stamp-result-text">Richiesta n. 000 sigillata e registrata.</span>
+            </p>
+          </form>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================================
+       IL REGISTRO — le voci restanti
+       ============================================================ -->
+  <section class="ledger">
+    <div class="wrap">
+
+      <div class="ledger-row reveal">
+        <div class="stamp"><span class="no tnum">N. 003</span>Registro della Memoria</div>
+        <div>
+          <h3>Della Memoria</h3>
+          <p>Arrivi conoscendo tutto il futuro. La Memoria è il vero orologio, non il calendario nell'angolo — ogni anno che spendi riscrivendo la storia ne brucia un po'. Quello che vedi smette di essere affidabile molto prima che il numero arrivi a zero, e nulla sullo schermo ti dice quali letture hanno già iniziato a mentire.</p>
+          <div class="exhibit-pair memory-pair">
+            <figure class="exhibit">
+              <img src="../assets/screenshots/map-full.webp" alt="La mappa del mondo al 100% di Memoria: una costa moderna e accurata del Mediterraneo e del Mar Rosso, crema e blu notte." width="1400" height="788" loading="lazy">
+              <figcaption class="exhibit-cap"><span class="tag">Reperto B</span> · Memoria al 100%</figcaption>
+            </figure>
+            <figure class="exhibit">
+              <img src="../assets/screenshots/map-empty.webp" alt="La stessa mappa allo 0% di Memoria: la costa si è deformata in una carta disegnata a mano, distorta alla Tolomeo, in seppia e oro." width="1400" height="788" loading="lazy">
+              <figcaption class="exhibit-cap"><span class="tag">Reperto C</span> · la stessa mappa, Memoria allo 0%</figcaption>
+            </figure>
+          </div>
+        </div>
+      </div>
+
+      <div class="ledger-row reveal">
+        <div class="stamp"><span class="no tnum">N. 004</span>Registro del Senato</div>
+        <div class="content">
+          <div>
+            <h3>Del Senato</h3>
+            <p>Ogni patrono ha un nome, un prezzo e una data di morte presa dalla storia vera — Agrippa nel 12 a.C., Mecenate nell'8. Il tuo prestigio a Roma si spende su persone che moriranno davvero quando previsto, non su un misuratore di reputazione che si azzera.</p>
+          </div>
+          <figure class="exhibit">
+            <img src="../assets/screenshots/senate.webp" alt="La schermata del Senato: azioni politiche disponibili tramite un agente, esposizione e allineamento dei patroni tracciati per nome sulla destra." width="1400" height="788" loading="lazy">
+            <figcaption class="exhibit-cap"><span class="tag">Reperto D</span> · il Senato, anno uno</figcaption>
+          </figure>
+        </div>
+      </div>
+
+      <div class="ledger-row reveal">
+        <div class="stamp"><span class="no tnum">N. 005</span>Registro della Rotta</div>
+        <div class="content">
+          <div>
+            <h3>Della Rotta</h3>
+            <p>Una rotta marittima che aggira la Via della Seta, da Alessandria a Muziris, quattro tappe vere — sotto Augusto il commercio romano con l'India esplose davvero così in fretta. Non stai inventando la scorciatoia: stai solo arrivando in tempo per prenderla prima di chiunque altro.</p>
+          </div>
+          <figure class="exhibit">
+            <img src="../assets/screenshots/registro.webp" alt="La schermata del Registro: la rotta marittima in quattro tappe da Alessandria a Muziris, ogni tappa con la tecnologia richiesta e un pannello di previsione annuale." width="1400" height="788" loading="lazy">
+            <figcaption class="exhibit-cap"><span class="tag">Reperto E</span> · la rotta d'Oriente, in corso</figcaption>
+          </figure>
+        </div>
+      </div>
+
+      <div class="ledger-row reveal">
+        <div class="stamp"><span class="no tnum">N. 006</span>Registro delle Interruzioni</div>
+        <div class="content">
+          <div>
+            <h3>Dell'Interruzione</h3>
+            <p>Due o tre bussate all'anno, ognuna affrontata con informazioni incomplete e un costo reale in ogni caso. Una pagina scritta di tuo pugno è stata ricopiata da un'altra mano — fedelmente, e chi l'ha copiata non ne ha capito una parola, il che è peggio: chi avesse capito saprebbe cosa omettere.</p>
+          </div>
+          <figure class="exhibit">
+            <img src="../assets/screenshots/interrupt.webp" alt="Un'interruzione: 'La Pagina Copiata' — una pagina che hai scritto è stata ricopiata da un'altra mano, con tre scelte di risposta e i loro costi." width="1400" height="788" loading="lazy">
+            <figcaption class="exhibit-cap"><span class="tag">Reperto F</span> · una delle circa cento, per campagna</figcaption>
+          </figure>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ============================================================
+       FASCIA DI CHIUSURA
+       ============================================================ -->
+  <section class="close-band">
+    <div class="wrap">
+      <div>
+        <h2>Non una demo su binari. Un prototipo, dall'inizio alla fine.</h2>
+        <p>Ogni sistema descritto qui sopra funziona già: la tesi, la Memoria, la mappa che dimentica, il Senato, la rotta, le interruzioni. Quello che manca è metterlo alla prova con un vero essere umano — quaranta campagne giocate contro giocatori automatici finora, e nessuna contro qualcuno che legge davvero. Ed è per questo che esiste la lettera qui sotto.</p>
+        <figure class="exhibit close-exhibit">
+          <img src="../assets/screenshots/ending.webp" alt="Una schermata finale: 'Non l'hai visto finire' — morto a 57 anni avendo abbandonato la tesi dichiarata, con la Memoria spesa mostrata in percentuale." width="1400" height="788" loading="lazy">
+          <figcaption class="exhibit-cap"><span class="tag">Reperto G</span> · non c'è una schermata di game over, solo un fascicolo chiuso</figcaption>
+        </figure>
+        <p class="witness">— Vittorio Picone, autore di Architectus</p>
+      </div>
+      <form class="close-form" id="petition-form-2" novalidate>
+        <div class="field">
+          <label for="petitioner-name-2">Nome del richiedente</label>
+          <input type="text" id="petitioner-name-2" name="name" autocomplete="name" placeholder="es. Vittorio Picone" required>
+        </div>
+        <div class="field">
+          <label for="petitioner-mail-2">Corrispondenza (email)</label>
+          <input type="email" id="petitioner-mail-2" name="email" autocomplete="email" placeholder="tu@esempio.com" required>
+        </div>
+        <button type="submit" class="wax-button" id="wax-button-2">
+          <span class="wax-monogram" aria-hidden="true">A</span>
+          <span class="wax-label">Sigilla e Invia</span>
+        </button>
+        <p class="stamp-result" id="stamp-result-2" role="status" aria-live="polite">
+          <span class="stamp-ring" aria-hidden="true"></span>
+          <span id="stamp-result-text-2">Richiesta n. 000 sigillata e registrata.</span>
+        </p>
+      </form>
+    </div>
+  </section>
+
+</main>
+
+<footer>
+  <div class="wrap">
+    <span>© <span id="year">2026</span> Vittorio Picone</span>
+    <span>Architectus — un prototipo giocabile, in sviluppo</span>
+  </div>
+</footer>
+
+<script>
+(function(){
+  "use strict";
+
+  // ---- data del registro, in stile italiano ----
+  var now = new Date();
+  var giorni = ["domenica","lunedì","martedì","mercoledì","giovedì","venerdì","sabato"];
+  var mesi = ["gennaio","febbraio","marzo","aprile","maggio","giugno","luglio","agosto","settembre","ottobre","novembre","dicembre"];
+  var dateEl = document.getElementById('ledger-date');
+  if (dateEl) {
+    var giorno = now.getDate();
+    var giornoStr = giorno === 1 ? "1°" : String(giorno);
+    dateEl.textContent = "Registrato " + giorni[now.getDay()] + ", " + giornoStr + " " + mesi[now.getMonth()] + " " + now.getFullYear();
+  }
+  var yearEl = document.getElementById('year');
+  if (yearEl) yearEl.textContent = String(now.getFullYear());
+
+  // ---- comparsa allo scroll: un solo momento autoriale ----
+  var reduceMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var revealEls = document.querySelectorAll('.reveal');
+  if (!reduceMotion && 'IntersectionObserver' in window) {
+    var io = new IntersectionObserver(function(entries){
+      entries.forEach(function(entry){
+        if (entry.isIntersecting) {
+          entry.target.classList.add('is-visible');
+          io.unobserve(entry.target);
+        }
+      });
+    }, { threshold: 0.18, rootMargin: '0px 0px -8% 0px' });
+    revealEls.forEach(function(el){ io.observe(el); });
+  } else {
+    revealEls.forEach(function(el){ el.classList.add('is-visible'); });
+  }
+
+  // ---- modulo di richiesta: sigilla e invia (solo front-end, vedi TODO nell'HTML) ----
+  var petitionCounter = 118; // il registro si apre a metà conteggio, come farebbe un documento fondativo
+
+  function wireForm(formId, buttonId, resultId, resultTextId){
+    var form = document.getElementById(formId);
+    if (!form) return;
+    form.addEventListener('submit', function(e){
+      e.preventDefault();
+      var nameInput = form.querySelector('input[type="text"]');
+      var mailInput = form.querySelector('input[type="email"]');
+      if (!nameInput.value.trim() || !mailInput.checkValidity()) {
+        (mailInput.value.trim() ? nameInput : mailInput).focus();
+        return;
+      }
+      var button = document.getElementById(buttonId);
+      var result = document.getElementById(resultId);
+      var resultText = document.getElementById(resultTextId);
+
+      petitionCounter += 1;
+      button.disabled = true;
+      button.querySelector('.wax-label').textContent = 'Sigillata';
+      resultText.textContent = 'Richiesta n. ' + String(petitionCounter).padStart(3,'0') + ' sigillata e registrata.';
+      result.classList.add('is-visible');
+      nameInput.disabled = true;
+      mailInput.disabled = true;
+    });
+  }
+
+  wireForm('petition-form', 'wax-button', 'stamp-result', 'stamp-result-text');
+  wireForm('petition-form-2', 'wax-button-2', 'stamp-result-2', 'stamp-result-text-2');
+})();
+</script>
+
+</body>
+</html>
