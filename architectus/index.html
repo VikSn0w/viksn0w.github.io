@@ -4,30 +4,24 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Architectus — 27 B.C., a Playable Prototype</title>
-<meta name="description" content="Architectus: you are a modern engineer, two thousand years early, at the founding of Rome's empire. A playable prototype from Vittorio Picone, start to finish — ask for the build.">
+<meta name="description" content="Architectus: you are a modern engineer, two thousand years early, at the founding of Rome's empire. A playable prototype from Pikosoft, start to finish — ask for the build.">
 <link rel="alternate" hreflang="en" href="index.html">
 <link rel="alternate" hreflang="it" href="it/index.html">
 <link rel="alternate" hreflang="x-default" href="index.html">
+<link rel="icon" type="image/png" sizes="32x32" href="assets/icon/favicon-32.png">
+<link rel="apple-touch-icon" sizes="180x180" href="assets/icon/apple-touch-icon.png">
 
 <style>
 /* ============================================================
    FONTS — self-hosted, no runtime Google Fonts request
    ============================================================ */
 @font-face{
-  font-family:'Piazzolla Var';
+  font-family:'Cinzel Var';
   font-style:normal;
-  font-weight:300 800;
+  font-weight:400 900;
   font-display:swap;
-  src:url('assets/fonts/piazzolla-normal.woff2') format('woff2-variations'),
-      url('assets/fonts/piazzolla-normal.woff2') format('woff2');
-}
-@font-face{
-  font-family:'Piazzolla Var';
-  font-style:italic;
-  font-weight:300 800;
-  font-display:swap;
-  src:url('assets/fonts/piazzolla-italic.woff2') format('woff2-variations'),
-      url('assets/fonts/piazzolla-italic.woff2') format('woff2');
+  src:url('assets/fonts/cinzel-var.woff2') format('woff2-variations'),
+      url('assets/fonts/cinzel-var.woff2') format('woff2');
 }
 @font-face{
   font-family:'Lora';
@@ -82,7 +76,7 @@
   --rule:          rgba(42,32,21,0.24);
   --rule-soft:     rgba(42,32,21,0.12);
 
-  --display:  'Piazzolla Var', 'Iowan Old Style', ui-serif, Georgia, serif;
+  --display:  'Cinzel Var', 'Iowan Old Style', ui-serif, Georgia, serif;
   --body:     'Lora', 'Iowan Old Style', Georgia, serif;
   --mono:     'IBM Plex Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
 
@@ -179,12 +173,21 @@ input{ caret-color: var(--seal); }
   gap:24px;
 }
 .masthead-mark{
+  display:flex;
+  align-items:center;
+  gap:10px;
   font-family:var(--mono);
   font-size:12.5px;
   font-weight:600;
   letter-spacing:0.14em;
   text-transform:uppercase;
   color:var(--ink-soft);
+}
+.masthead-icon{
+  width:22px;
+  height:22px;
+  flex:none;
+  border-radius:4px;
 }
 .masthead-mark strong{
   color:var(--seal);
@@ -274,7 +277,7 @@ input{ caret-color: var(--seal); }
 
 .charter-title{
   font-family:var(--display);
-  font-variation-settings:'opsz' 16,'wght' 500;
+  font-variation-settings:'wght' 500;
   font-style:normal;
   letter-spacing:0.01em;
   color:var(--ink);
@@ -283,7 +286,7 @@ input{ caret-color: var(--seal); }
 .charter-title .super{
   display:block;
   font-size:clamp(13px, 1.4vw, 16px);
-  font-variation-settings:'opsz' 10,'wght' 560;
+  font-variation-settings:'wght' 560;
   letter-spacing:0.16em;
   text-transform:uppercase;
   color:var(--ink-soft);
@@ -293,7 +296,7 @@ input{ caret-color: var(--seal); }
   display:block;
   font-size:clamp(46px, 8.4vw, 92px);
   line-height:0.96;
-  font-variation-settings:'opsz' 30,'wght' 630;
+  font-variation-settings:'wght' 630;
 }
 .charter-motto{
   font-family:var(--body);
@@ -326,7 +329,7 @@ input{ caret-color: var(--seal); }
 .entry-no{ font-family:var(--mono); font-size:12px; color:var(--seal); }
 .entry-title{
   font-family:var(--display);
-  font-variation-settings:'opsz' 18,'wght' 570;
+  font-variation-settings:'wght' 570;
   font-size:clamp(19px, 2vw, 22px);
 }
 .entry p{
@@ -377,7 +380,7 @@ input{ caret-color: var(--seal); }
 }
 .petition-title{
   font-family:var(--display);
-  font-variation-settings:'opsz' 24,'wght' 570;
+  font-variation-settings:'wght' 570;
   font-size:clamp(24px, 2.6vw, 30px);
   margin:0;
 }
@@ -448,9 +451,8 @@ input{ caret-color: var(--seal); }
 }
 .wax-monogram{
   font-family:var(--display);
-  font-style:italic;
-  font-variation-settings:'opsz' 24,'wght' 540;
-  font-size:44px;
+  font-variation-settings:'wght' 600;
+  font-size:40px;
   line-height:1;
   display:block;
 }
@@ -535,7 +537,7 @@ input{ caret-color: var(--seal); }
 
 .ledger-row h3{
   font-family:var(--display);
-  font-variation-settings:'opsz' 28,'wght' 590;
+  font-variation-settings:'wght' 590;
   font-size:clamp(24px, 3vw, 34px);
   margin:0 0 0.4em;
 }
@@ -588,7 +590,7 @@ input{ caret-color: var(--seal); }
 }
 .close-band h2{
   font-family:var(--display);
-  font-variation-settings:'opsz' 30,'wght' 560;
+  font-variation-settings:'wght' 560;
   font-size:clamp(30px, 4.6vw, 50px);
   line-height:1.08;
   margin:0 0 0.4em;
@@ -670,7 +672,10 @@ footer .wrap{
 
 <header class="masthead">
   <div class="wrap">
-    <div class="masthead-mark">Vittorio Picone presents <strong>Architectus</strong></div>
+    <div class="masthead-mark">
+      <img class="masthead-icon" src="assets/icon/icon-64.png" alt="" width="64" height="64">
+      Pikosoft presents <strong>Architectus</strong>
+    </div>
     <div class="masthead-right">
       <div class="masthead-date tnum" id="ledger-date">Registered this day</div>
       <a class="lang-switch" href="it/index.html" hreflang="it" rel="alternate">IT</a>
@@ -723,7 +728,7 @@ footer .wrap{
             <span class="seal-glyph" aria-hidden="true"></span>
             <h2 class="petition-title">Ask for the Build</h2>
           </div>
-          <p class="petition-sub">Architectus already runs start to finish — twenty-one years, one sitting, nothing to install. Register your correspondence and it's yours to try, along with the questions I'm actually stuck on.</p>
+          <p class="petition-sub">Architectus already runs start to finish — twenty-one years, one sitting, nothing to install. Start below, then continue to the full beta application.</p>
 
           <form id="petition-form" novalidate>
             <div class="field">
@@ -736,10 +741,11 @@ footer .wrap{
             </div>
 
             <!--
-              TODO(backend): this form is intentionally front-end only for now.
-              Wire the submit handler in wireForm() below to a real endpoint
-              or form service (Formspree, a Mailchimp/ConvertKit signup API,
-              or a custom API route) before this ships publicly.
+              This carries name + email into Architectus's real beta-application
+              Google Form (prefilled via its entry.* params) rather than
+              submitting anything itself; the remaining questions live there.
+              See GOOGLE_FORM_BASE / ENTRY_NAME / ENTRY_EMAIL below, and
+              DESIGN.md for the full field map.
             -->
 
             <div class="petition-actions">
@@ -747,12 +753,12 @@ footer .wrap{
                 <span class="wax-monogram" aria-hidden="true">A</span>
                 <span class="wax-label">Seal &amp; Submit</span>
               </button>
-              <p class="petition-note" id="petition-note">No payment. No spam. Just the build, and ten real questions.</p>
+              <p class="petition-note" id="petition-note">No payment. No spam. Continues on Google Forms — six more short questions, in Italian.</p>
             </div>
 
             <p class="stamp-result" id="stamp-result" role="status" aria-live="polite">
               <span class="stamp-ring" aria-hidden="true"></span>
-              <span id="stamp-result-text">Request No. 000 sealed &amp; recorded.</span>
+              <span id="stamp-result-text">Carried over — continuing to the application.</span>
             </p>
           </form>
         </div>
@@ -842,7 +848,7 @@ footer .wrap{
           <img src="assets/screenshots/ending.webp" alt="An ending screen: 'You didn't see it finish' — died at 57 having abandoned the declared thesis, with the Memory spent shown as a percentage." width="1400" height="788" loading="lazy">
           <figcaption class="exhibit-cap"><span class="tag">Exhibit G</span> · there's no game-over screen, only a closed file</figcaption>
         </figure>
-        <p class="witness">— Vittorio Picone, maker of Architectus</p>
+        <p class="witness">— Pikosoft, maker of Architectus</p>
       </div>
       <form class="close-form" id="petition-form-2" novalidate>
         <div class="field">
@@ -859,7 +865,7 @@ footer .wrap{
         </button>
         <p class="stamp-result" id="stamp-result-2" role="status" aria-live="polite">
           <span class="stamp-ring" aria-hidden="true"></span>
-          <span id="stamp-result-text-2">Request No. 000 sealed &amp; recorded.</span>
+          <span id="stamp-result-text-2">Carried over — continuing to the application.</span>
         </p>
       </form>
     </div>
@@ -869,7 +875,7 @@ footer .wrap{
 
 <footer>
   <div class="wrap">
-    <span>© <span id="year">2026</span> Vittorio Picone</span>
+    <span>© <span id="year">2026</span> Pikosoft</span>
     <span>Architectus — a playable prototype, in development</span>
   </div>
 </footer>
@@ -910,8 +916,12 @@ footer .wrap{
     revealEls.forEach(function(el){ el.classList.add('is-visible'); });
   }
 
-  // ---- request form: seal & submit (front-end only, see TODO in HTML) ----
-  var petitionCounter = 118; // register opens mid-count, as a founding document would
+  // ---- request form: carries name+email into the real beta-application ----
+  // Google Form (see docs/img + the form's own FB_PUBLIC_LOAD_DATA_ for the
+  // full 8-question field map; only the two prefillable ones are needed here).
+  var GOOGLE_FORM_BASE = 'https://docs.google.com/forms/d/e/1FAIpQLSe_ArfwZfQFPGhPiKG3U9w_cvHafiIifo94jkbnRrpVZr8QGg/viewform';
+  var ENTRY_NAME = 'entry.525594450';
+  var ENTRY_EMAIL = 'entry.1024746769';
 
   function wireForm(formId, buttonId, resultId, resultTextId){
     var form = document.getElementById(formId);
@@ -926,15 +936,20 @@ footer .wrap{
       }
       var button = document.getElementById(buttonId);
       var result = document.getElementById(resultId);
-      var resultText = document.getElementById(resultTextId);
 
-      petitionCounter += 1;
+      var url = GOOGLE_FORM_BASE + '?usp=pp_url'
+        + '&' + ENTRY_NAME + '=' + encodeURIComponent(nameInput.value.trim())
+        + '&' + ENTRY_EMAIL + '=' + encodeURIComponent(mailInput.value.trim());
+
       button.disabled = true;
-      button.querySelector('.wax-label').textContent = 'Sealed';
-      resultText.textContent = 'Request No. ' + String(petitionCounter).padStart(3,'0') + ' sealed & recorded.';
+      button.querySelector('.wax-label').textContent = 'Continuing…';
       result.classList.add('is-visible');
       nameInput.disabled = true;
       mailInput.disabled = true;
+
+      window.setTimeout(function(){
+        window.open(url, '_blank', 'noopener');
+      }, 650);
     });
   }
 
