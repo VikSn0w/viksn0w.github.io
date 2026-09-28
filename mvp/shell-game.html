@@ -1,0 +1,1713 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<style>html{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}img{max-width:100%}</style>
+<title>Shell Game</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bungee&family=Rubik:wght@400;500;600;700&display=swap">
+<style>
+:root{
+  color-scheme:dark;
+  --table:#0A1612; --felt:#1D5040; --felt-deep:#12372B; --rim:#3B2414;
+  --panel:#10231C; --panel-2:#163027; --panel-line:#2A4A3C;
+  --paper:#F1EADB; --paper-2:#E3D8C2; --paper-edge:#B8AB92; --ink:#1C1A16; --ink-soft:#5E574A;
+  --text:#ECE5D5; --muted:#9DB4A8;
+  --brass:#E3B44B; --brass-deep:#9A7021; --red:#D9483A; --mint:#5CCB8F;
+  --env:#26251F; --env-2:#35332B;
+  --display:'Bungee',Impact,'Arial Black',sans-serif;
+  --sans:'Rubik',system-ui,-apple-system,'Segoe UI',sans-serif;
+}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html,body{background:var(--table)}
+body{color:var(--text);font-family:var(--sans);font-size:14px;line-height:1.45;padding-inline:16px;
+  background:radial-gradient(ellipse at 40% 20%,#15302A 0%,var(--table) 60%) fixed}
+button{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--brass);outline-offset:2px}
+
+/* Top bar */
+.top{display:flex;align-items:center;gap:10px 14px;flex-wrap:wrap;max-width:1440px;margin:0 auto;padding-block:12px 12px}
+.logo{font-family:var(--display);font-size:22px;letter-spacing:.02em;margin:0;line-height:1;color:var(--paper);text-shadow:0 3px 0 var(--brass-deep)}
+.seats{display:flex;gap:8px;flex-wrap:wrap;flex:1;min-width:0}
+.seat{display:flex;align-items:center;gap:8px;background:var(--panel);border:1px solid var(--panel-line);border-radius:40px;padding:4px 14px 4px 4px;position:relative;transition:box-shadow .2s,transform .2s}
+.seat.turn{box-shadow:0 0 0 2px var(--brass),0 0 18px rgba(227,180,75,.35);transform:translateY(-1px)}
+.seat.dead{filter:grayscale(1);opacity:.45}
+.av{width:32px;height:32px;border-radius:50%;background:radial-gradient(circle at 35% 30%,rgba(255,255,255,.45) 0 14%,transparent 42%),var(--pc);display:grid;place-items:center;font-family:var(--display);font-size:14px;color:#fff;border:2px solid #fff;flex:none;text-shadow:0 1px 0 rgba(0,0,0,.35)}
+.seat .nm{font-weight:600;font-size:13px;line-height:1.1}
+.seat .nm small{display:block;font-weight:400;color:var(--muted);font-size:11px}
+.seat .cash{font-family:var(--display);font-size:14px;color:var(--brass);font-variant-numeric:tabular-nums}
+.seat .cash.hid{font-family:var(--sans);font-size:11px;color:var(--muted);font-weight:500}
+.tools{display:flex;gap:6px;flex-wrap:wrap}
+.chip{appearance:none;border:1px solid var(--panel-line);background:var(--panel);color:var(--text);padding:7px 12px;border-radius:30px;font-weight:600;font-size:12.5px;cursor:pointer}
+.chip:hover{border-color:var(--brass)}
+.chip.on{border-color:var(--brass);color:var(--brass)}
+
+/* Layout */
+.layout{display:flex;gap:22px;align-items:flex-start;max-width:1440px;margin:0 auto;padding-block:8px 28px}
+.board-scroll{flex:1 1 auto;min-width:0;max-width:min(100%,calc(100dvh - 110px));overflow-x:auto;padding:12px 10px 16px;margin:-6px -10px 0}
+.board-wrap{width:100%;min-width:620px;container-type:inline-size;position:relative}
+.side{flex:0 0 390px;background:var(--panel);border:1px solid var(--panel-line);border-radius:14px;position:sticky;top:env(safe-area-inset-top,0px);max-height:calc(100dvh - 20px);display:flex;flex-direction:column;overflow:hidden}
+@media (max-width:940px){
+  .layout{flex-direction:column;align-items:stretch}
+  .board-scroll{max-width:none;width:calc(100% + 20px)}
+  .side{flex:none;position:static;max-height:none;width:100%}
+}
+
+/* Board */
+.board{display:grid;grid-template-columns:repeat(10,minmax(0,1fr));grid-template-rows:repeat(10,minmax(0,1fr));aspect-ratio:1;max-width:100%;gap:.5cqi;padding:.8cqi;border-radius:2cqi;
+  background:radial-gradient(circle at 50% 46%,#2A6B55 0%,var(--felt) 38%,var(--felt-deep) 78%);
+  box-shadow:0 0 0 .9cqi var(--rim),0 0 0 1.1cqi #5A3A20,0 3cqi 6cqi rgba(0,0,0,.6)}
+.tile{appearance:none;border:0;padding:0;position:relative;display:flex;flex-direction:column;overflow:hidden;cursor:pointer;text-align:left;border-radius:.9cqi;min-width:0;min-height:0;
+  background:var(--paper);color:var(--ink);box-shadow:0 .35cqi 0 var(--paper-edge),0 .8cqi 1.4cqi rgba(0,0,0,.35);transition:transform .15s}
+.tile:hover{transform:translateY(-.35cqi)}
+.tile.sel{box-shadow:0 0 0 .5cqi var(--brass),0 .35cqi 0 var(--paper-edge),0 .8cqi 1.6cqi rgba(0,0,0,.45);z-index:2}
+.band{height:1.9cqi;position:relative;overflow:hidden;flex:none;display:flex;gap:.5cqi;align-items:center;justify-content:flex-end;padding-inline:.8cqi}
+.house{width:1.05cqi;height:1cqi;background:#fff;clip-path:polygon(50% 0,100% 45%,100% 100%,0 100%,0 45%)}
+.tname{font-size:1.26cqi;line-height:1.08;font-weight:600;padding:.5cqi .6cqi 0;overflow-wrap:break-word}
+.tfoot{margin-top:auto;display:flex;align-items:center;justify-content:space-between;padding:0 .5cqi .5cqi .6cqi;gap:.3cqi}
+.tprice{font-family:var(--display);font-size:1.35cqi;color:var(--ink);font-variant-numeric:tabular-nums}
+.trent{font-size:1.12cqi;line-height:1.1;color:var(--ink-soft);font-weight:600}
+.own{width:2.2cqi;height:2.2cqi;border-radius:50%;background:var(--pc);color:#fff;display:grid;place-items:center;font-family:var(--display);font-size:1.1cqi;border:.22cqi solid #fff;box-shadow:0 .2cqi .4cqi rgba(0,0,0,.3);flex:none}
+.bidpin{width:1.2cqi;height:1.2cqi;border-radius:50%;background:var(--brass);box-shadow:0 0 0 .3cqi rgba(227,180,75,.35)}
+/* shell envelope */
+.tile.env{background:linear-gradient(165deg,var(--env-2),var(--env));color:#EDE4D0;box-shadow:0 .35cqi 0 #0e0d0b,0 .8cqi 1.4cqi rgba(0,0,0,.45)}
+.tile.env::before{content:"";position:absolute;left:0;right:0;top:1.9cqi;height:3.6cqi;background:linear-gradient(165deg,rgba(255,255,255,.07),rgba(255,255,255,.02));clip-path:polygon(0 0,100% 0,50% 100%);pointer-events:none}
+.tile.env .tname{color:#EDE4D0}
+.tile.env .alias{font-size:.98cqi;color:#BDB29A;padding:.15cqi .6cqi 0;line-height:1.1;font-style:italic}
+.seal{width:2.5cqi;height:2.5cqi;border-radius:50%;display:grid;place-items:center;font-family:var(--display);font-size:1.35cqi;color:#3a2808;flex:none;
+  background:radial-gradient(circle at 38% 32%,#F6D98C 0 18%,var(--brass) 45%,var(--brass-deep) 100%);box-shadow:0 .2cqi .5cqi rgba(0,0,0,.5)}
+.seal.mine{background:radial-gradient(circle at 38% 32%,rgba(255,255,255,.5) 0 16%,var(--pc) 50%);color:#fff}
+.tile.env .trent{color:#BDB29A}
+.stamp{position:absolute;left:50%;top:56%;transform:translate(-50%,-50%) rotate(-14deg);font-family:var(--display);font-size:1.02cqi;color:var(--red);border:.22cqi solid var(--red);padding:.1cqi .6cqi;border-radius:.4cqi;opacity:.85;pointer-events:none;letter-spacing:.04em;background:rgba(241,234,219,.6)}
+.stamp.in{animation:stampin .45s cubic-bezier(.2,1.6,.4,1)}
+@keyframes stampin{0%{transform:translate(-50%,-50%) rotate(-30deg) scale(3);opacity:0}100%{transform:translate(-50%,-50%) rotate(-14deg) scale(1);opacity:.85}}
+/* corners */
+.tile.corner,.tile.ticker,.tile.rumor,.tile.tax{background:#0F2B22;color:var(--paper);box-shadow:inset 0 0 0 1px #2E5A48,0 .6cqi 1.2cqi rgba(0,0,0,.35)}
+.tile.corner .tname,.tile.ticker .tname,.tile.rumor .tname,.tile.tax .tname{font-family:var(--display);font-weight:400;font-size:1.65cqi;padding-top:.8cqi;letter-spacing:.02em}
+.tile.ticker .tname,.tile.rumor .tname,.tile.tax .tname{font-size:1.25cqi}
+.tsub{font-size:1.02cqi;line-height:1.1;color:var(--muted);font-weight:500}
+.ico{width:3cqi;height:3cqi;margin:auto auto .4cqi .6cqi;color:var(--brass)}
+.tile.corner .tfoot,.tile.ticker .tfoot,.tile.rumor .tfoot,.tile.tax .tfoot{padding-bottom:.7cqi}
+.tile.corner .ico{width:3.8cqi;height:3.8cqi}
+
+/* Center */
+.center{position:absolute;left:10.69cqi;top:10.69cqi;width:78.62cqi;height:78.62cqi;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1.8cqi;text-align:center;padding:2cqi;pointer-events:none}
+.center > *{pointer-events:auto}
+.wordmark{font-family:var(--display);font-size:7cqi;line-height:.9;margin:0;color:var(--paper);text-shadow:0 .55cqi 0 var(--brass-deep),0 1.2cqi 2cqi rgba(0,0,0,.4);letter-spacing:.01em}
+.wordmark span{color:var(--brass);text-shadow:0 .55cqi 0 #5d4210,0 1.2cqi 2cqi rgba(0,0,0,.4)}
+.roundline{font-size:max(11px,1.55cqi);color:var(--muted);letter-spacing:.14em;text-transform:uppercase;font-weight:600;margin:0}
+.dice{display:flex;gap:3.2cqi;perspective:60cqi;padding-block:.6cqi}
+.cube{width:6.8cqi;height:6.8cqi;position:relative;transform-style:preserve-3d;transition:transform .9s cubic-bezier(.15,.75,.25,1)}
+.face{position:absolute;inset:0;background:#FBF7EE;border-radius:1.3cqi;display:grid;grid-template:repeat(3,1fr)/repeat(3,1fr);padding:1.1cqi;box-shadow:inset 0 0 0 .2cqi #DCD2BE,inset 0 -.6cqi 1cqi rgba(0,0,0,.08)}
+.face b{width:1.2cqi;height:1.2cqi;border-radius:50%;background:var(--ink);place-self:center}
+.face.f1 b{background:var(--red);width:1.7cqi;height:1.7cqi}
+.f1{transform:translateZ(3.4cqi)} .f6{transform:rotateY(180deg) translateZ(3.4cqi)}
+.f3{transform:rotateY(90deg) translateZ(3.4cqi)} .f4{transform:rotateY(-90deg) translateZ(3.4cqi)}
+.f5{transform:rotateX(90deg) translateZ(3.4cqi)} .f2{transform:rotateX(-90deg) translateZ(3.4cqi)}
+.ctrl{display:flex;flex-direction:column;align-items:center;gap:1.4cqi;min-height:14cqi}
+.msg{font-size:max(12.5px,1.85cqi);max-width:60cqi;margin:0;color:var(--text);text-wrap:balance}
+.msg strong{color:var(--brass);font-weight:600}
+.row{display:flex;gap:1.4cqi;flex-wrap:wrap;justify-content:center;align-items:center}
+.big{appearance:none;border:0;cursor:pointer;font-family:var(--display);font-size:max(15px,2.5cqi);padding:1.1cqi 3.6cqi;border-radius:1.2cqi;background:var(--brass);color:#241806;box-shadow:0 .6cqi 0 var(--brass-deep),0 1cqi 2cqi rgba(0,0,0,.35);transition:transform .08s,box-shadow .08s}
+.big:hover{filter:brightness(1.06)}
+.big:active{transform:translateY(.5cqi);box-shadow:0 .1cqi 0 var(--brass-deep)}
+.big:disabled{opacity:.45;cursor:not-allowed}
+.big.ghost{background:#244C3D;color:var(--paper);box-shadow:0 .6cqi 0 #122A21}
+.tipnote{background:var(--paper);color:var(--ink);font-size:max(12px,1.65cqi);padding:1cqi 1.6cqi;border-radius:.6cqi;max-width:58cqi;transform:rotate(-1.2deg);box-shadow:0 .5cqi 1.2cqi rgba(0,0,0,.35);margin:0;text-align:left}
+.tipnote b{font-family:var(--display);font-weight:400;color:var(--brass-deep);margin-right:.4em}
+.thinking{font-size:max(12px,1.7cqi);color:var(--muted)}
+.thinking i{display:inline-block;width:.5em;height:.5em;border-radius:50%;background:var(--muted);margin-left:.25em;animation:blink 1s infinite}
+.thinking i:nth-child(2){animation-delay:.2s}.thinking i:nth-child(3){animation-delay:.4s}
+@keyframes blink{0%,100%{opacity:.2}50%{opacity:1}}
+
+/* Tokens */
+.tokens{position:absolute;inset:0;pointer-events:none}
+.token{position:absolute;width:2.8cqi;height:2.8cqi;margin:-1.4cqi 0 0 -1.4cqi;border-radius:50%;z-index:5;
+  background:radial-gradient(circle at 35% 30%,rgba(255,255,255,.6) 0 14%,transparent 42%),var(--pc);border:.4cqi solid #fff;
+  box-shadow:0 .7cqi 1cqi rgba(0,0,0,.55);transition:left .16s ease-out,top .16s ease-out;display:grid;place-items:center;font-family:var(--display);font-size:1.15cqi;color:#fff}
+.token.h1{animation:hop1 .16s ease-out}.token.h2{animation:hop2 .16s ease-out}
+@keyframes hop1{50%{transform:translateY(-1.3cqi) scale(1.08)}}
+@keyframes hop2{50%{transform:translateY(-1.3cqi) scale(1.08)}}
+.token.active{box-shadow:0 0 0 .5cqi rgba(227,180,75,.55),0 .7cqi 1cqi rgba(0,0,0,.55)}
+
+/* Side panel */
+.tabs{display:flex;gap:2px;padding:8px;border-bottom:1px solid var(--panel-line);flex:none}
+.tab{flex:1;appearance:none;border:0;background:transparent;color:var(--muted);font-weight:600;font-size:13px;padding:8px 6px;border-radius:8px;cursor:pointer}
+.tab.on{background:var(--panel-2);color:var(--text);box-shadow:inset 0 -2px 0 var(--brass)}
+.tab .n{display:inline-block;min-width:16px;padding:0 4px;border-radius:8px;background:var(--brass);color:#241806;font-size:10.5px;margin-left:4px}
+.pane{padding:14px;overflow:auto;flex:1;display:flex;flex-direction:column;gap:12px}
+.pane h3{font-family:var(--display);font-weight:400;font-size:15px;margin:0;letter-spacing:.02em;color:var(--paper)}
+.lede{color:var(--muted);font-size:13px;margin:0}
+.lede strong{color:var(--text);font-weight:600}
+
+/* Deed */
+.deed{background:var(--paper);color:var(--ink);border-radius:10px;overflow:hidden;box-shadow:0 6px 18px rgba(0,0,0,.35)}
+.deed-top{padding:10px 14px 12px;color:#fff;text-align:center}
+.deed-top small{display:block;font-size:10.5px;letter-spacing:.2em;text-transform:uppercase;opacity:.85;font-weight:600}
+.deed-top h4{font-family:var(--display);font-weight:400;font-size:22px;margin:2px 0 0;line-height:1.05}
+.deed-top.envtop{background:linear-gradient(165deg,var(--env-2),var(--env))}
+.deed-body{padding:10px 14px 14px}
+.rl{display:flex;justify-content:space-between;padding:3px 6px;font-size:13px;border-radius:5px}
+.rl span:last-child{font-weight:600;font-variant-numeric:tabular-nums}
+.rl.on{background:var(--ink);color:var(--paper)}
+.deed-meta{display:flex;justify-content:space-between;gap:10px;border-top:1px dashed var(--paper-edge);margin-top:8px;padding-top:8px;font-size:12.5px;color:var(--ink-soft)}
+.deed-meta b{color:var(--ink);font-weight:600}
+.owner-line{display:flex;align-items:center;gap:8px;font-size:13px;margin-top:8px}
+.owner-line .av{width:24px;height:24px;font-size:11px;border-width:1.5px}
+.qmark{width:24px;height:24px;border-radius:50%;display:grid;place-items:center;font-family:var(--display);font-size:12px;color:#3a2808;background:radial-gradient(circle at 38% 32%,#F6D98C 0 18%,var(--brass) 45%,var(--brass-deep) 100%)}
+.badge{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;padding:2px 6px;border-radius:4px;background:var(--paper-2);color:var(--ink-soft)}
+.badge.red{background:var(--red);color:#fff}
+.badge.dark{background:var(--env);color:var(--brass)}
+.act{display:flex;flex-direction:column;gap:8px;background:var(--panel-2);border:1px solid var(--panel-line);border-radius:10px;padding:12px}
+.act h5{margin:0;font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);font-weight:600}
+.act p{margin:0;font-size:12.5px;color:var(--muted)}
+.act p strong{color:var(--text);font-weight:600}
+.btn{appearance:none;border:0;cursor:pointer;font-weight:700;font-size:13.5px;padding:10px 14px;border-radius:9px;background:var(--brass);color:#241806;box-shadow:0 3px 0 var(--brass-deep)}
+.btn:active{transform:translateY(2px);box-shadow:0 1px 0 var(--brass-deep)}
+.btn.sec{background:#2B5646;color:var(--text);box-shadow:0 3px 0 #173229}
+.btn.sm{padding:6px 10px;font-size:12.5px}
+.btn:disabled{opacity:.4;cursor:not-allowed;transform:none}
+.bidrow{display:flex;gap:8px}
+.bidrow input{flex:1;min-width:0;font:600 15px var(--sans);padding:9px 12px;border:1px solid var(--panel-line);border-radius:9px;background:var(--table);color:var(--text)}
+.quick{display:flex;gap:6px;flex-wrap:wrap}
+.flash{font-size:12.5px;color:var(--brass);font-weight:600;margin:0}
+
+/* Certificates */
+.certs{display:grid;grid-template-columns:1fr;gap:10px}
+.cert{background:var(--paper);color:var(--ink);border-radius:10px;overflow:hidden;box-shadow:0 4px 14px rgba(0,0,0,.3);position:relative}
+.cert::after{content:"";position:absolute;inset:5px;border:1px solid rgba(28,26,22,.12);border-radius:7px;pointer-events:none}
+.cert-h{display:flex;align-items:center;gap:10px;padding:8px 12px;color:#fff}
+.cert-h .tk{font-family:var(--display);font-size:15px}
+.cert-h .dn{font-weight:600;font-size:13px;opacity:.95}
+.cert-h .pr{margin-left:auto;font-family:var(--display);font-size:17px}
+.cert-b{padding:10px 12px 12px;display:flex;flex-direction:column;gap:8px}
+.cert-row{display:flex;align-items:center;gap:10px;justify-content:space-between}
+.chg{font-size:12px;font-weight:700}
+.chg.up{color:#1B8A55}.chg.down{color:var(--red)}
+.slots{display:grid;grid-template-columns:repeat(20,1fr);gap:2px}
+.slots i{height:10px;border-radius:2px;background:var(--paper-2);box-shadow:inset 0 0 0 1px rgba(0,0,0,.06)}
+.cert-legend{font-size:12px;color:var(--ink-soft);display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap}
+.cert-legend b{color:var(--ink)}
+.cert .btns{display:flex;gap:6px}
+.cert .btns .btn{flex:1}
+.cert .btn.sec{background:var(--paper-2);color:var(--ink);box-shadow:0 3px 0 var(--paper-edge)}
+.explain{background:var(--panel-2);border:1px solid var(--panel-line);border-radius:10px;padding:12px;font-size:12.5px;color:var(--muted)}
+.explain b{color:var(--brass);font-weight:600}
+.flow{display:flex;align-items:center;gap:6px;margin-top:8px;flex-wrap:wrap;font-size:12px;color:var(--text)}
+.flow span{background:var(--table);padding:4px 8px;border-radius:6px}
+
+/* Empire */
+.stats{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.stat{background:var(--panel-2);border:1px solid var(--panel-line);border-radius:10px;padding:10px 12px}
+.stat span{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;font-weight:600}
+.stat b{display:block;font-family:var(--display);font-weight:400;font-size:20px;color:var(--brass);font-variant-numeric:tabular-nums}
+.items{list-style:none;margin:0;padding:0;font-size:13px}
+.items li{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:7px 0;border-top:1px solid var(--panel-line)}
+.items li:first-child{border-top:0}
+.items .meta{color:var(--muted);font-size:12px}
+.sw{display:inline-block;width:10px;height:10px;border-radius:2px;background:var(--dc);margin-right:6px}
+
+/* Ledger */
+.log{list-style:none;margin:0;padding:0;font-size:12.5px}
+.log li{padding:6px 0;border-top:1px solid var(--panel-line);display:grid;grid-template-columns:28px 1fr;gap:6px}
+.log li:first-child{border-top:0}
+.log li b{font-weight:600;color:var(--muted);font-size:11px;padding-top:1px}
+.log li.round span{font-weight:600;color:var(--brass)}
+.log li.filing span{font-weight:600}
+.log li.bad span{color:#F08A7E}
+.log li.priv span::after{content:"  " attr(data-priv);color:var(--brass);font-size:10.5px;font-weight:600;letter-spacing:.06em;text-transform:uppercase}
+
+/* FX layer */
+.fx{position:fixed;inset:0;pointer-events:none;z-index:40}
+.pop{position:absolute;transform:translate(-50%,0);font-family:var(--display);font-size:17px;white-space:nowrap;animation:rise 1.7s ease-out forwards;text-shadow:0 2px 0 rgba(0,0,0,.5)}
+.pop small{font-family:var(--sans);font-size:11px;font-weight:600;display:block;text-align:center;opacity:.9;text-shadow:none}
+.pop.plus{color:var(--mint)}.pop.minus{color:#FF7A6B}
+@keyframes rise{0%{opacity:0;transform:translate(-50%,6px) scale(.8)}15%{opacity:1;transform:translate(-50%,0) scale(1.1)}100%{opacity:0;transform:translate(-50%,-34px)}}
+.say{position:absolute;transform:translate(-50%,0);background:var(--paper);color:var(--ink);font-size:13px;font-weight:600;padding:6px 11px;border-radius:12px;white-space:nowrap;box-shadow:0 6px 16px rgba(0,0,0,.4);animation:sayin 2.8s ease-out forwards;max-width:240px}
+.say::before{content:"";position:absolute;left:50%;top:-6px;margin-left:-6px;border:6px solid transparent;border-top:0;border-bottom-color:var(--paper)}
+@keyframes sayin{0%{opacity:0;transform:translate(-50%,6px)}10%{opacity:1;transform:translate(-50%,0)}85%{opacity:1}100%{opacity:0}}
+
+/* Overlays */
+.overlay{position:fixed;inset:0;background:rgba(4,10,8,.72);display:grid;place-items:center;padding:16px;z-index:50;backdrop-filter:blur(3px)}
+.overlay.opaque{background:var(--table)}
+.modal{background:var(--panel);border:1px solid var(--panel-line);border-radius:16px;padding:24px;width:100%;max-width:560px;max-height:calc(100dvh - 32px);overflow:auto;box-shadow:0 20px 60px rgba(0,0,0,.6)}
+.modal h2{font-family:var(--display);font-weight:400;font-size:30px;margin:0 0 6px;line-height:1;color:var(--paper);text-shadow:0 3px 0 var(--brass-deep)}
+.modal > p{margin:0 0 16px;color:var(--muted)}
+.modes{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px}
+.mode{appearance:none;cursor:pointer;text-align:left;background:var(--panel-2);border:1px solid var(--panel-line);border-radius:12px;padding:14px;color:var(--text)}
+.mode:hover{border-color:var(--brass)}
+.mode b{display:block;font-family:var(--display);font-weight:400;font-size:15px;color:var(--paper)}
+.mode small{color:var(--muted);font-size:12px}
+.mode.hot{border-color:var(--brass);background:#2A3A22}
+@media (max-width:480px){.modes{grid-template-columns:1fr}}
+.rules{margin:0;padding-left:18px;display:flex;flex-direction:column;gap:8px;font-size:13.5px;color:var(--text)}
+.rules b{color:var(--brass)}
+.res{width:100%;border-collapse:collapse;font-size:13px;margin-bottom:14px}
+.res th{font-size:11px;color:var(--muted);font-weight:600;text-align:right;padding:4px;text-transform:uppercase;letter-spacing:.06em}
+.res th:first-child{text-align:left}
+.res td{padding:8px 4px;border-top:1px solid var(--panel-line);text-align:right;font-variant-numeric:tabular-nums}
+.res td:first-child{text-align:left;display:flex;align-items:center;gap:8px}
+.res td .av{width:24px;height:24px;font-size:11px;border-width:1.5px}
+.res tr.win td{color:var(--brass);font-weight:700}
+.tbl-wrap{overflow-x:auto}
+.pass{text-align:center}
+.pass .av{width:72px;height:72px;font-size:30px;margin:6px auto 16px;border-width:3px}
+/* Gazette */
+.gazette{background:var(--paper);color:var(--ink);border-radius:6px;padding:20px 22px;width:100%;max-width:520px;box-shadow:0 20px 60px rgba(0,0,0,.6);transform:rotate(-.8deg);animation:drop .5s cubic-bezier(.2,1.3,.4,1)}
+@keyframes drop{0%{transform:translateY(-40px) rotate(-6deg);opacity:0}100%{transform:rotate(-.8deg);opacity:1}}
+.mast{text-align:center;border-bottom:3px double var(--ink);padding-bottom:8px;margin-bottom:12px}
+.mast h2{font-family:var(--display);font-weight:400;font-size:28px;margin:0;line-height:1;color:var(--ink);text-shadow:none}
+.mast small{display:flex;justify-content:space-between;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-soft);margin-top:6px;font-weight:600}
+.news{display:flex;flex-direction:column;gap:12px;margin-bottom:16px}
+.news article{border-bottom:1px solid var(--paper-2);padding-bottom:10px}
+.news article:last-child{border-bottom:0}
+.news h3{font-family:var(--display);font-weight:400;font-size:17px;margin:0 0 3px;line-height:1.15;color:var(--ink)}
+.news p{margin:0;font-size:13px;color:var(--ink-soft)}
+.news .yours{display:inline-block;background:var(--brass);color:#241806;font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;padding:1px 6px;border-radius:3px;margin-left:6px;vertical-align:2px}
+.gazette .btn{width:100%}
+
+@media (prefers-reduced-motion:reduce){
+  .cube,.token{transition:none}
+  .token.h1,.token.h2,.stamp.in,.pop,.say,.gazette,.thinking i{animation:none}
+  .pop,.say{opacity:1}
+}
+.chip.lang b{color:var(--brass)}
+.anti{position:absolute;inset:0;background:repeating-linear-gradient(135deg,rgba(0,0,0,.45) 0 .5cqi,transparent .5cqi 1cqi);display:grid;place-items:center;font-family:var(--display);font-size:.85cqi;color:#fff;letter-spacing:.06em}
+.warn{background:#3A2A14;border:1px solid #6B4E1C;color:#F3D38A;border-radius:10px;padding:10px 12px;font-size:12.5px;margin:0}
+.warn.good{background:#16362A;border-color:#2E6A50;color:#9FE3BF}
+.badge.anti-b{background:#3A2A14;color:#F3D38A}
+.chip.lang span{opacity:.5}
+.meta{color:var(--muted);font-size:12px}
+.tick{display:inline-block;font-weight:700;font-size:11px;color:#fff;background:var(--dc);padding:2px 6px;border-radius:4px;letter-spacing:.04em}
+.seat[data-act]{cursor:pointer}
+.seat[data-act]:hover{border-color:var(--brass)}
+.scrut{color:#FF8A7A;font-weight:600}
+.modal.trade{max-width:800px}
+.whos{display:flex;gap:6px;flex-wrap:wrap;margin:4px 0 14px}
+.whob{appearance:none;display:flex;align-items:center;gap:8px;background:var(--panel-2);border:1px solid var(--panel-line);border-radius:30px;padding:4px 14px 4px 4px;cursor:pointer;color:var(--text);font-weight:600;font-size:13px}
+.whob.on{border-color:var(--brass);box-shadow:0 0 0 1px var(--brass)}
+.whob .av,.dealhead .av{width:26px;height:26px;font-size:11px;border-width:1.5px}
+.dealhead{display:flex;align-items:center;gap:12px;margin-bottom:6px}
+.dealhead .av{width:44px;height:44px;font-size:18px;border-width:2px}
+.dealhead h2{margin:0}
+.tcols{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:10px}
+@media (max-width:640px){.tcols{grid-template-columns:1fr}}
+.tcol{background:var(--panel-2);border:1px solid var(--panel-line);border-radius:12px;padding:12px;display:flex;flex-direction:column;gap:8px;min-width:0}
+.tcol h4{margin:0;font-family:var(--display);font-weight:400;font-size:15px;color:var(--paper)}
+.tl{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);display:flex;justify-content:space-between;gap:8px}
+.tcash{font:600 15px var(--sans);padding:8px 10px;border:1px solid var(--panel-line);border-radius:8px;background:var(--table);color:var(--text);width:100%}
+.picks{display:flex;flex-wrap:wrap;gap:6px}
+.pick{appearance:none;display:flex;align-items:center;gap:6px;background:var(--table);border:1px solid var(--panel-line);border-radius:8px;padding:5px 8px;cursor:pointer;color:var(--text);font-size:12.5px;text-align:left;line-height:1.2}
+.pick small{display:block;color:var(--muted);font-size:10.5px;font-style:italic}
+.pick b{font-weight:600;color:var(--muted);font-size:11.5px;margin-left:2px}
+.pick:hover{border-color:var(--muted)}
+.pick.on{border-color:var(--brass);background:#2A3A22;box-shadow:0 0 0 1px var(--brass)}
+.stp{display:flex;align-items:center;gap:8px;font-size:12.5px;flex-wrap:wrap}
+.stp b{min-width:18px;text-align:center}
+.stp .btn{min-width:30px}
+.tsum .items li{justify-content:flex-start}
+.heat{display:flex;flex-direction:column;gap:8px;background:var(--panel-2);border:1px solid var(--panel-line);border-radius:10px;padding:12px}
+.heat-bar{height:10px;border-radius:6px;background:var(--table);overflow:hidden}
+.heat-bar i{display:block;height:100%;border-radius:6px;transition:width .4s}
+.heat-l{display:flex;justify-content:space-between;gap:8px;font-size:12.5px;color:var(--muted)}
+.heat-l b{color:var(--text);font-family:var(--display);font-weight:400;font-size:16px}
+.act .items{margin-top:2px}
+.act .items li{padding:6px 0}
+</style>
+</head>
+<body>
+
+<header class="top">
+  <h1 class="logo">Shell Game</h1>
+  <div class="seats" id="seats"></div>
+  <div class="tools" id="tools"></div>
+</header>
+<main class="layout">
+  <div class="board-scroll"><section class="board-wrap">
+    <div class="board" id="tiles"></div>
+    <div class="center">
+      <p class="wordmark">Shell<br><span>Game</span></p>
+      <p class="roundline" id="roundline"></p>
+      <div class="dice" aria-hidden="true">
+        <div class="cube" id="d0"></div>
+        <div class="cube" id="d1"></div>
+      </div>
+      <div class="ctrl" id="ctrl"></div>
+    </div>
+    <div class="tokens" id="tokens"></div>
+  </section></div>
+  <aside class="side">
+    <nav class="tabs" id="tabs"></nav>
+    <div class="pane" id="pane"></div>
+  </aside>
+</main>
+<div class="fx" id="fx"></div>
+<div class="overlay" id="overlay" hidden></div>
+
+<script>
+(() => {
+const $ = s => document.querySelector(s);
+let LANG = 'en';
+try { LANG = localStorage.getItem('sg-lang') || ((navigator.language || '').toLowerCase().startsWith('it') ? 'it' : 'en'); } catch (e) {}
+const L = (en, it) => LANG === 'it' ? it : en;
+const fmt = n => (n < 0 ? '-' : '') + L('$', '€') + Math.abs(Math.round(n)).toLocaleString(L('en-US', 'it-IT'));
+const r5 = n => Math.round(n / 5) * 5;
+const rnd = a => a[Math.floor(Math.random() * a.length)];
+const clamp = (x, a, b) => Math.max(a, Math.min(b, x));
+const wait = ms => new Promise(r => setTimeout(r, ms));
+const shuffle = a => { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
+function both(f) { if (!f) return null; const s = LANG; LANG = 'en'; const a = f(); LANG = 'it'; const b = f(); LANG = s; return { en: a, it: b }; }
+
+const DIST = [
+  { k: 'HRB', en: 'Harbor',     it: 'Porto',           c: '#1A9C98' },
+  { k: 'MKT', en: 'Old Market', it: 'Mercato Vecchio', c: '#E8742A' },
+  { k: 'STA', en: 'Station',    it: 'Stazione',        c: '#D1487F' },
+  { k: 'FND', en: 'Foundry',    it: 'Fonderia',        c: '#B5412E' },
+  { k: 'CNL', en: 'Canal',      it: 'Canale',          c: '#3469DA' },
+  { k: 'GRD', en: 'Gardens',    it: 'Giardini',        c: '#B39419' },
+  { k: 'HIL', en: 'Hilltop',    it: 'Collina',         c: '#4E9A33' },
+  { k: 'CRN', en: 'Crown',      it: 'Corona',          c: '#8A48CF' },
+];
+const dn = d => L(DIST[d].en, DIST[d].it);
+const ICON = {
+  go: '<svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 12H5M11 6l-6 6 6 6"/></svg>',
+  audit: '<svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 8h8M8 12h8M8 16h5" stroke-linecap="round"/></svg>',
+  tip: '<svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="10.5" cy="10.5" r="6"/><path d="M15 15l5 5"/></svg>',
+  leak: '<svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M3 10v4h3l7 4V6L6 10H3z"/><path d="M17 9c1.5 1.5 1.5 4.5 0 6M19.5 6.5c3 3 3 8 0 11" stroke-linecap="round"/></svg>',
+  rumor: '<svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M4 5h16v11H9l-5 4z"/><path d="M8 9h8M8 12h5" stroke-linecap="round"/></svg>',
+  tax: '<svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><circle cx="12" cy="12" r="8"/><path d="M14.5 9a3 3 0 1 0 0 6M8 11h5M8 13.5h5" stroke-linecap="round"/></svg>',
+  pros: '<svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v16M7 20h10M5 8h14"/><path d="M5 8l-3 6a3 3 0 0 0 6 0zM19 8l-3 6a3 3 0 0 0 6 0z"/></svg>',
+  ticker: '<svg class="ico\" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 17l5-6 4 3 8-9"/><path d="M15 5h5v5"/></svg>',
+};
+const P = (d, en, it, price) => ({ t: 'prop', d, en, it, price });
+const TICK = { t: 'ticker', en: 'Ticker', it: 'Listino', subEn: 'market news', subIt: 'notizie di borsa',
+  descEn: 'Market news: one district\u2019s share price jumps or crashes.', descIt: 'Notizie dalla borsa: le azioni di un quartiere schizzano o crollano.' };
+const RUMOR = { t: 'rumor', en: 'Rumor', it: 'Voci', subEn: 'learn a secret', subIt: 'scopri un segreto',
+  descEn: 'Someone talks. You privately learn who owns one of the secret shells. Nobody else finds out.',
+  descIt: 'Qualcuno parla. Scopri in privato chi possiede una delle societ\u00e0 fantasma. Gli altri non lo sanno.' };
+const TAX = { t: 'tax', en: 'Stamp Duty', it: 'Bollo', subEn: 'pay $75', subIt: 'paga \u20ac75',
+  descEn: 'Pay a flat $75 to the bank.', descIt: 'Paghi \u20ac75 alla banca.' };
+const PROS = { t: 'pros', en: 'Prosecutor', it: 'Procura', subEn: 'bribery probe', subIt: 'indagine corruzione',
+  descEn: 'The prosecutor checks your dealings. The higher your heat, the likelier a bribery scandal.',
+  descIt: 'La procura controlla i tuoi affari. Più è alto il tuo calore, più è probabile uno scandalo per corruzione.' };
+const DEF = [
+  { t: 'go', en: 'Start', it: 'Via!', subEn: 'collect $200', subIt: 'ritira \u20ac200',
+    descEn: 'Collect $200 every time you pass or land here.', descIt: 'Ritira \u20ac200 ogni volta che passi o ti fermi qui.' },
+  P(0, 'Dock Row', 'Via del Molo', 60), P(0, 'Salt Quay', 'Banchina del Sale', 60), { ...TICK }, P(0, 'Ferry Lane', 'Vico del Traghetto', 80),
+  P(1, 'Fish Alley', 'Vicolo del Pesce', 100), { ...RUMOR }, P(1, 'Spice Court', 'Corte delle Spezie', 100), P(1, 'Weigh House', 'Casa del Peso', 120),
+  { t: 'audit', en: 'Audit', it: 'Fisco', subEn: 'tax office', subIt: 'ufficio tasse',
+    descEn: 'Pay 10% of your cash plus 10% of your public property. Secret shells are off the books.',
+    descIt: 'Paghi il 10% dei tuoi contanti pi\u00f9 il 10% delle tue propriet\u00e0 pubbliche. Le societ\u00e0 fantasma non risultano.' },
+  P(2, 'Platform Row', 'Via dei Binari', 140), { ...TAX }, P(2, 'Depot Yard', 'Piazzale Deposito', 140), P(2, 'Signal Box', 'Cabina Segnali', 160),
+  P(3, 'Rivet Street', 'Via dei Chiodi', 180), { ...TICK }, P(3, 'Kiln Yard', 'Corte Fornace', 180), P(3, 'Smelter Road', 'Via della Colata', 200),
+  { t: 'tip', en: 'Tip-off', it: 'Soffiata', subEn: 'free probe', subIt: 'indagine gratis',
+    descEn: 'Pick up a tip-off token. Your next investigation is free.', descIt: 'Raccogli una soffiata: la tua prossima indagine \u00e8 gratis.' },
+  P(4, 'Lock Gate', 'La Chiusa', 220), { ...RUMOR }, P(4, 'Barge Walk', 'Via delle Chiatte', 220), P(4, 'Tollbridge', 'Ponte Dazio', 240),
+  P(5, 'Lemon Grove', 'Limonaia', 260), P(5, 'Rose Walk', 'Viale delle Rose', 260), { ...TICK }, P(5, 'Hothouse', 'La Serra', 280),
+  { t: 'leak', en: 'Leak', it: 'Scoop', subEn: 'press leak', subIt: 'fuga di notizie',
+    descEn: 'A journalist exposes one of your secret shells. No fine, but everyone knows.',
+    descIt: 'Un giornalista smaschera una delle tue societ\u00e0 fantasma. Nessuna multa, ma ora lo sanno tutti.' },
+  P(6, 'Vine Terrace', 'Terrazza Vigne', 300), P(6, 'Belvedere', 'Belvedere', 300), { ...RUMOR }, P(6, 'Lookout', 'La Vedetta', 320),
+  P(7, 'Mint Street', 'Via della Zecca', 350), { ...PROS }, P(7, 'Exchange Sq.', 'Piazza Borsa', 380), P(7, 'Crown Tower', 'Torre Corona', 400),
+];
+const N = DEF.length, ND = DIST.length;
+const nm = s => L(s.en, s.it);
+const ALIASES = ['Vesuvio Holdings','Blue Grotto Ltd','Pallido & Figli','Nerina Trust','Capo Nord SpA','Lanterna Group','Molo 7 LLC','Coral Bay Partners','Arcadia Nominees','Sirocco Capital','Pietra Rossa Co.','Gull Point Ltd','Castellan Trust','Marefino Estates','Tramonto Holdings','Onda Ventures','Faro Nominees','Salina Group','Ancora Ltd','Stella Maris Co.'];
+const PCOL = ['#E0405C', '#2E95DB', '#D07A1C', '#9B59D8'];
+const MULT = [1, 3, 6, 10];
+const FILE_FEE = 25, TAX_FLAT = 75;
+const MAXR = 20, GO_PAY = 200, START_CASH = 1500, SHARE_CAP = 20, INV_COST = 100, DIV = .3;
+const NEWS = {
+  up: { en: ['port expansion approved', 'tourist boom', 'new metro stop announced', 'tech campus rumored', 'council fast-tracks permits'],
+        it: ['approvato l’ampliamento del porto', 'boom turistico', 'annunciata una nuova fermata della metro', 'si vocifera di un polo tecnologico', 'il comune accelera i permessi'] },
+  down: { en: ['streets flooded', 'construction strike', 'council scandal', 'rent freeze proposed', 'bank pulls credit'],
+          it: ['strade allagate', 'sciopero nei cantieri', 'scandalo in comune', 'proposto il blocco degli affitti', 'la banca chiude i rubinetti'] },
+};
+const LINES = {
+  buy: { en: ['Mine now.', 'Lovely spot.', 'Sold. To me.', 'I’ll take it.', 'Location, location.'], it: ['Adesso è mio.', 'Bel posticino.', 'Venduto. A me.', 'Me lo prendo.', 'Posizione, posizione.'] },
+  pass: { en: ['Not for me.', 'Pass.', 'Too rich for me.'], it: ['Non fa per me.', 'Passo.', 'Troppo caro.'] },
+  payShell: { en: ['Who even owns this?!', 'Suspicious...', 'Who’s behind this one?'], it: ['Ma di chi è questo posto?!', 'Sospetto...', 'Chi c’è dietro questa?'] },
+  pay: { en: ['Robbery.', 'Put it on my tab.', 'Every time...', 'Ugh, fine.'], it: ['È una rapina.', 'Segna sul mio conto.', 'Ogni volta...', 'Uff, va bene.'] },
+  file: { en: ['*slides an envelope across the table*', 'Nothing to see here.', 'Just making a phone call.'], it: ['*fa scivolare una busta sul tavolo*', 'Niente da vedere qui.', 'Faccio solo una telefonata.'] },
+  inv: { en: ['Let’s see who’s hiding.', 'Follow the money.', 'I know a guy at the registry.'], it: ['Vediamo chi si nasconde.', 'Seguiamo i soldi.', 'Conosco uno al catasto.'] },
+  exposed: { en: ['That’s slander!', 'No comment.', 'My lawyer will call you.'], it: ['È una calunnia!', 'Nessun commento.', 'Ti chiamerà il mio avvocato.'] },
+  share: { en: ['Buying the dip.', 'Long on this district.', 'Shares, please.'], it: ['Compro sul ribasso.', 'Punto su questo quartiere.', 'Azioni, prego.'] },
+  broke: { en: ['I’ll be back.', 'Bah.'], it: ['Tornerò.', 'Mannaggia.'] },
+  tip: { en: ['A little birdie told me...'], it: ['Me l’ha detto un uccellino...'] },
+  deal: { en: ['Deal.', 'Pleasure doing business.', 'Shake on it.'], it: ['Affare fatto.', 'È un piacere fare affari.', 'Qua la mano.'] },
+  nodeal: { en: ['Not a chance.', 'You must be joking.', 'Sweeten it.'], it: ['Neanche per sogno.', 'Stai scherzando?', 'Addolcisci un po’.'] },
+  spurned: { en: ['Your loss.', 'Suit yourself.'], it: ['Peggio per te.', 'Come vuoi.'] },
+  caught: { en: ['I want my lawyer.', 'It was a gift!', 'Everyone does it.'], it: ['Voglio il mio avvocato.', 'Era un regalo!', 'Lo fanno tutti.'] },
+  blank: { en: ['Missing file? How odd.', 'Someone got to the clerk.'], it: ['Pratica sparita? Strano.', 'Qualcuno ha pagato l’impiegato.'] },
+  settle: { en: ['Consider it settled.', 'Worth every penny.'], it: ['Pratica chiusa.', 'Soldi ben spesi.'] },
+};
+const BRIBE = { guard: { heat: 14 }, audit: { cost: 90, heat: 12 }, press: { cost: 80, heat: 12 }, suspend: { heat: 25 }, lawyer: { cost: 120, heat: -20 } };
+const GUARD_RDS = 4, SUSP_RDS = 3, TRADES_PER_TURN = 3;
+
+let TD = null;
+let G = null, sel = null, tab = 'exchange', SPEED = 1, SOUND = true, spin = 0;
+try { SOUND = localStorage.getItem('sg-sound') !== 'off'; SPEED = +(localStorage.getItem('sg-speed') || 1); } catch (e) {}
+
+/* ---------- sound ---------- */
+let AC = null;
+function tone(f, d, type = 'triangle', v = .06, f2) {
+  if (!SOUND) return;
+  try {
+    AC ??= new (window.AudioContext || window.webkitAudioContext)();
+    const o = AC.createOscillator(), g = AC.createGain(), t = AC.currentTime;
+    o.type = type; o.frequency.setValueAtTime(f, t); if (f2) o.frequency.exponentialRampToValueAtTime(f2, t + d);
+    g.gain.setValueAtTime(v, t); g.gain.exponentialRampToValueAtTime(.0001, t + d);
+    o.connect(g).connect(AC.destination); o.start(t); o.stop(t + d + .02);
+  } catch (e) {}
+}
+const sfx = {
+  dice: () => { for (let k = 0; k < 6; k++) setTimeout(() => tone(180 + Math.random() * 260, .05, 'square', .03), k * 70); },
+  hop: () => tone(620, .06, 'triangle', .05, 780),
+  plus: () => { tone(660, .09, 'triangle', .06); setTimeout(() => tone(990, .14, 'triangle', .06), 80); },
+  minus: () => tone(300, .18, 'sawtooth', .035, 170),
+  stamp: () => tone(110, .25, 'square', .08, 55),
+  seal: () => { tone(440, .08, 'sine', .06); setTimeout(() => tone(330, .12, 'sine', .05), 70); },
+  news: () => { tone(523, .1, 'triangle', .05); setTimeout(() => tone(659, .1, 'triangle', .05), 110); setTimeout(() => tone(784, .2, 'triangle', .05), 220); },
+};
+
+function cellPos(i) {
+  if (i <= 9) return [10, 10 - i];
+  if (i <= 18) return [10 - (i - 9), 1];
+  if (i <= 27) return [1, 1 + (i - 18)];
+  return [1 + (i - 27), 10];
+}
+const CORNERS = [0, 9, 18, 27];
+
+/* ---------- players & state helpers ---------- */
+const pn = p => p.you ? L('You', 'Tu') : p.hot ? L('Player ', 'Giocatore ') + p.hot : p.name;
+const ini = p => p.hot ? String(p.hot) : pn(p)[0];
+const Y = p => !!p.you;
+const obj = p => p.you ? L('you', 'te') : pn(p);          // "... to you" / "... a te"
+const cur = () => G.players[G.cur];
+const aliveP = () => G.players.filter(p => p.alive);
+const props = () => G.board.filter(s => s.t === 'prop');
+function viewer() {
+  const hs = G.players.filter(p => !p.bot);
+  if (hs.length === 1) return hs[0].id;
+  return G.lastHuman ?? hs[0].id;
+}
+const isMyTurn = () => G && !G.over && !G.pass && !G.anim && !G.gazette && !G.incoming && !G.tradeAsk && !cur().bot && cur().id === viewer() && cur().alive;
+const canSeeFor = (s, pid) => !s.shell || s.revealed || s.owner === pid || s.known.includes(pid) || G.over;
+const canSee = s => canSeeFor(s, viewer());
+const isPublic = s => s.owner != null && (!s.shell || s.revealed);
+// A district is under antitrust when everyone can see one player owns all of it.
+function openMonopoly(d) {
+  const ps = props().filter(s => s.d === d), o = ps[0].owner;
+  return o != null && ps.every(s => s.owner === o && isPublic(s)) ? o : null;
+}
+// Antitrust applies unless the owner settled the case or bribed a suspension.
+function publicMonopoly(d) {
+  const o = openMonopoly(d);
+  if (o == null || G.cleared[d] === o) return null;
+  const su = G.susp[d];
+  return su && su.pid === o && su.left > 0 ? null : o;
+}
+const fullRentOf = d => props().filter(s => s.d === d).reduce((a, s) => a + s.base * (s.floors ? MULT[s.floors] : 2), 0);
+function settleParts(d, p) {
+  const rent = fullRentOf(d) * 4, val = props().filter(s => s.d === d).reduce((a, s) => a + propVal(s), 0) * .2;
+  const surPct = 25 * (p.settles || 0), total = r5((rent + val) * (1 + surPct / 100));
+  return { rent: Math.round(rent), val: Math.round(val), surPct, total };
+}
+const bribeCost = (kind, arg) => kind === 'guard' ? r5(40 + G.board[arg].price * .2) : kind === 'suspend' ? r5(settleParts(arg, cur()).total * .3) : BRIBE[kind].cost;
+const scandalRisk = p => Math.round(Math.max(0, p.heat - 15) * .7);
+// What a given player can see: how many of district d does rival q visibly own?
+const seenOwned = (d, q, pid) => props().filter(s => s.d === d && s.owner === q && canSeeFor(s, pid)).length;
+const fullDistrict = (d, o) => props().filter(s => s.d === d).every(s => s.owner === o);
+function rentOf(s) {
+  if (s.owner == null) return 0;
+  const r = s.base * (s.floors ? MULT[s.floors] : (fullDistrict(s.d, s.owner) ? 2 : 1));
+  return publicMonopoly(s.d) != null ? Math.round(r / 2) : r;
+}
+function checkAntitrust() {
+  G.anti ??= [];
+  for (let d = 0; d < ND; d++) {
+    if (openMonopoly(d) == null) { G.cleared[d] = null; G.susp[d] = null; }
+    const o = publicMonopoly(d), had = G.anti[d] ?? null;
+    if (o != null && had !== o) {
+      const p = G.players[o];
+      log(() => L(`Antitrust: ${dn(d)} is openly controlled by ${obj(p)}. Rent there is halved and building is frozen.`, `Antitrust: ${dn(d)} \u00e8 controllato apertamente da ${obj(p)}. Affitti dimezzati e cantieri bloccati.`), 'bad');
+      news(() => L(`Antitrust probe into ${dn(d)}`, `Indagine antitrust su ${dn(d)}`), () => Y(p) ? L('You openly own the whole district. Rent halved, building frozen.', 'Possiedi apertamente tutto il quartiere. Affitti dimezzati, cantieri bloccati.') : L(`${pn(p)} openly owns the whole district. Rent halved, building frozen.`, `${pn(p)} possiede apertamente tutto il quartiere. Affitti dimezzati, cantieri bloccati.`), null);
+      sfx.stamp();
+    }
+    G.anti[d] = o;
+  }
+}
+const buildCost = s => r5(s.price * .5);
+const minBid = s => r5(s.price * 1.25);
+const propVal = s => s.price + s.floors * buildCost(s);
+const sharesOut = d => G.players.reduce((a, p) => a + p.shares[d], 0);
+const bump = (d, x) => { G.prices[d] = clamp(G.prices[d] + x, 10, 600); };
+function netWorth(p) {
+  let v = p.cash + p.shares.reduce((a, n, d) => a + n * G.prices[d], 0);
+  props().forEach(s => { if (s.owner === p.id) v += propVal(s); });
+  G.filings.forEach(f => { if (f.pid === p.id) v += f.amt; });
+  G.builds.forEach(b => { if (b.pid === p.id) v += b.cost; });
+  return v;
+}
+function publicAssets(p) {
+  let v = p.shares.reduce((a, n, d) => a + n * G.prices[d], 0);
+  props().forEach(s => { if (s.owner === p.id && (!s.shell || s.revealed)) v += propVal(s); });
+  return v;
+}
+function log(f, c, priv) { G.log.unshift({ t: both(f), c, r: G.round, p: priv ? { pid: priv.pid, t: both(priv.t) } : null }); if (G.log.length > 300) G.log.pop(); }
+const fx = (pid, amt, label, pub) => G.fx.push({ pid, amt, label: both(label), pub });
+const say = (p, key) => { if (p.bot && p.alive) { const k = Math.floor(Math.random() * LINES[key].en.length); G.fx.push({ type: 'say', pid: p.id, text: { en: LINES[key].en[k], it: LINES[key].it[k] }, pub: true }); } };
+const news = (h, s, pid) => G.news.push({ h: both(h), s: both(s), pid });
+function nextAlias() { return G.aliasPool.length ? G.aliasPool.pop() : 'Holding No. ' + (++G.aliasN); }
+const rivalsTxt = n => n ? L(` over ${n} rival bid${n > 1 ? 's' : ''}`, ` battendo ${n} ${n > 1 ? 'offerte rivali' : 'offerta rivale'}`) : '';
+
+/* ---------- setup ---------- */
+function newGame(humans, bots) {
+  const seats = [];
+  for (let i = 0; i < humans; i++) seats.push(humans === 1 ? { you: true } : { hot: i + 1 });
+  ['Rosa', 'Gennaro', 'Lia'].slice(0, bots).forEach(n => seats.push({ name: n, bot: true }));
+  const players = seats.map((x, id) => ({
+    id, name: x.name || '', you: !!x.you, hot: x.hot || 0, bot: !!x.bot, color: PCOL[id], cash: START_CASH, pos: 0, alive: true,
+    shares: DIST.map(() => 0), divs: DIST.map(() => 0), tips: 0, turns: 0, heat: 0, bribed: 0, auditPass: false, pressPass: false, settles: 0,
+  }));
+  G = {
+    players, board: DEF.map((d, i) => ({ ...d, i, owner: null, shell: false, alias: null, revealed: false, known: [], guard: 0, failed: [], floors: 0, pend: 0, base: d.price ? Math.round(d.price * .16) : 0 })),
+    prices: DIST.map(() => 50), hist: DIST.map(() => [50]), round: 1, cur: 0, phase: 'pre', dice: [3, 4],
+    log: [], fx: [], news: [], filings: [], builds: [], invUsed: false, over: false, pass: false, lastHuman: null, anim: false,
+    aliasPool: shuffle(ALIASES), aliasN: 0, cleared: [], susp: [], anti: [], tradesLeft: TRADES_PER_TURN, incoming: null, tradeAsk: null, flash: null, setup: false, rules: false, showResults: false, gazette: null, stampAt: -1,
+  };
+  sel = null; tab = 'exchange'; TD = null;
+  $('#tokens').innerHTML = '';
+  log(() => L(`New game: ${players.map(pn).join(', ')}. ${MAXR} rounds, ${fmt(START_CASH)} each.`, `Nuova partita: ${players.map(pn).join(', ')}. ${MAXR} round, ${fmt(START_CASH)} a testa.`), 'round');
+  log(() => L('Round 1 begins.', 'Inizia il round 1.'), 'round');
+  startTurn();
+}
+function startTurn() {
+  G.phase = 'pre'; G.invUsed = false; G.flash = null; G.tradesLeft = TRADES_PER_TURN;
+  cur().turns++;
+  checkPass(); render(); runBot();
+}
+
+/* ---------- turn flow ---------- */
+async function doRoll() {
+  if (G.phase !== 'pre' || G.anim) return;
+  const g = G, p = cur();
+  const a = 1 + Math.floor(Math.random() * 6), b = 1 + Math.floor(Math.random() * 6);
+  G.anim = true; G.dice = [a, b]; spinDice(a, b); sfx.dice(); render();
+  await wait(900 * Math.max(.5, SPEED)); if (G !== g) return;
+  log(() => Y(p) ? L(`You rolled ${a} + ${b}.`, `Tiri ${a} + ${b}.`) : L(`${pn(p)} rolled ${a} + ${b}.`, `${pn(p)} tira ${a} + ${b}.`));
+  for (let k = 0; k < a + b; k++) {
+    p.pos = (p.pos + 1) % N;
+    if (p.pos === 0) {
+      p.cash += GO_PAY; fx(p.id, GO_PAY, () => L('passed Start', 'passaggio dal Via'), true);
+      log(() => Y(p) ? L(`You passed Start: +${fmt(GO_PAY)}.`, `Passi dal Via: +${fmt(GO_PAY)}.`) : L(`${pn(p)} passed Start: +${fmt(GO_PAY)}.`, `${pn(p)} passa dal Via: +${fmt(GO_PAY)}.`));
+      flushFx();
+    }
+    renderTokens(true); sfx.hop();
+    await wait(165 * Math.max(.6, SPEED)); if (G !== g) return;
+  }
+  const s = G.board[p.pos];
+  log(() => Y(p) ? L(`You landed on ${nm(s)}.`, `Finisci su ${nm(s)}.`) : L(`${pn(p)} landed on ${nm(s)}.`, `${pn(p)} finisce su ${nm(s)}.`));
+  land(p, s);
+  G.anim = false;
+  if (!p.bot && s.t !== 'go') { sel = p.pos; tab = 'deed'; }
+  render();
+}
+function land(p, s) {
+  G.phase = 'post';
+  if (s.t === 'prop') {
+    if (s.owner == null) G.phase = 'offer';
+    else if (s.owner !== p.id) payRent(p, s);
+  } else if (s.t === 'ticker') ticker();
+  else if (s.t === 'audit') audit(p);
+  else if (s.t === 'tip') {
+    p.tips++; say(p, 'tip');
+    log(() => Y(p) ? L('You picked up a tip-off token.', 'Raccogli una soffiata.') : L(`${pn(p)} picked up a tip-off token.`, `${pn(p)} raccoglie una soffiata.`));
+  }
+  else if (s.t === 'leak') leak(p);
+  else if (s.t === 'rumor') rumor(p);
+  else if (s.t === 'pros') {
+    if (p.heat > 0 && Math.random() * 100 < p.heat) scandal(p);
+    else log(() => Y(p) ? L('Prosecutor: your books look clean. For now.', 'Procura: i tuoi conti sembrano puliti. Per ora.') : L(`Prosecutor: nothing found on ${pn(p)}.`, `Procura: nulla di rilevante su ${pn(p)}.`));
+  }
+  else if (s.t === 'tax') {
+    const paid = charge(p, TAX_FLAT); fx(p.id, -paid, () => L('stamp duty', 'bollo'), true);
+    log(() => Y(p) ? L(`Stamp duty: you paid ${fmt(paid)}.`, `Bollo: paghi ${fmt(paid)}.`) : L(`Stamp duty: ${pn(p)} paid ${fmt(paid)}.`, `Bollo: ${pn(p)} paga ${fmt(paid)}.`));
+  }
+}
+function rumor(p) {
+  const pool = props().filter(s => s.shell && !s.revealed && s.owner !== p.id && !s.known.includes(p.id));
+  if (!pool.length) { log(() => Y(p) ? L('Rumor: nobody is talking today.', 'Voci: oggi nessuno parla.') : L(`${pn(p)} heard nothing worth knowing.`, `${pn(p)} non sente niente di utile.`)); return; }
+  const s = rnd(pool), o = G.players[s.owner], alias = s.alias;
+  s.known.push(p.id);
+  if (p.bot) G.fx.push({ type: 'say', pid: p.id, text: { en: 'Interesting...', it: 'Interessante...' }, pub: true });
+  log(() => Y(p) ? L('You heard a rumor.', 'Senti una voce.') : L(`${pn(p)} heard a rumor.`, `${pn(p)} sente una voce.`), '',
+    { pid: p.id, t: () => L(`Rumor: ${alias} (${nm(s)}) belongs to ${obj(o)}. Only you know.`, `Voci: ${alias} (${nm(s)}) appartiene a ${obj(o)}. Lo sai solo tu.`) });
+}
+function buyLanded() {
+  const p = cur(), s = G.board[p.pos];
+  if (G.phase !== 'offer' || p.cash < s.price) return;
+  p.cash -= s.price; s.owner = p.id; s.shell = false; s.revealed = false;
+  fx(p.id, -s.price, () => nm(s), true); say(p, 'buy');
+  G.phase = 'post'; checkAntitrust();
+  log(() => Y(p) ? L(`You bought ${nm(s)} for ${fmt(s.price)}, on the public record.`, `Compri ${nm(s)} per ${fmt(s.price)}, alla luce del sole.`)
+    : L(`${pn(p)} bought ${nm(s)} for ${fmt(s.price)}, on the public record.`, `${pn(p)} compra ${nm(s)} per ${fmt(s.price)}, alla luce del sole.`));
+}
+function passLanded() {
+  if (G.phase !== 'offer') return;
+  const p = cur(), s = G.board[p.pos];
+  G.phase = 'post'; say(p, 'pass');
+  log(() => Y(p) ? L(`You passed on ${nm(s)}.`, `Rinunci a ${nm(s)}.`) : L(`${pn(p)} passed on ${nm(s)}.`, `${pn(p)} rinuncia a ${nm(s)}.`));
+}
+function payRent(p, s) {
+  const rent = rentOf(s), o = G.players[s.owner], d = s.d, secret = s.shell && !s.revealed, alias = s.alias;
+  const paid = charge(p, rent);
+  const hs = G.players.filter(q => q.alive && q.shares[d] > 0);
+  const S = hs.reduce((a, q) => a + q.shares[d], 0);
+  let dist = 0;
+  if (S && paid > 0) {
+    const pool = Math.round(paid * DIV);
+    hs.forEach(q => { const c = Math.floor(pool * q.shares[d] / S); if (c > 0) { q.cash += c; q.divs[d] += c; dist += c; fx(q.id, c, () => L(DIST[d].k + ' dividend', 'dividendo ' + DIST[d].k), true); } });
+  }
+  o.cash += paid - dist;
+  fx(p.id, -paid, () => L('rent', 'affitto'), true);
+  fx(o.id, paid - dist, () => secret ? L('rent via ', 'affitto tramite ') + alias : L('rent', 'affitto'), !secret);
+  say(p, secret ? 'payShell' : 'pay');
+  bump(d, Math.max(2, Math.round(rent * .1)));
+  const tail = () => dist ? L(` ${DIST[d].k} shareholders got ${fmt(dist)}.`, ` Gli azionisti ${DIST[d].k} ricevono ${fmt(dist)}.`) : '';
+  const head = () => Y(p) ? L(`You paid ${fmt(paid)} rent on ${nm(s)} to`, `Paghi ${fmt(paid)} di affitto su ${nm(s)} a`) : L(`${pn(p)} paid ${fmt(paid)} rent on ${nm(s)} to`, `${pn(p)} paga ${fmt(paid)} di affitto su ${nm(s)} a`);
+  if (secret) log(() => `${head()} ${alias}.${tail()}`, '', { pid: o.id, t: () => `${head()} ${L('your shell', 'la tua società')} ${alias}.${tail()}` });
+  else log(() => `${head()} ${obj(o)}.${tail()}`);
+}
+function ticker() {
+  const d = Math.floor(Math.random() * ND), up = Math.random() < .55;
+  const f = up ? 1.2 + Math.random() * .35 : .6 + Math.random() * .2;
+  const before = G.prices[d];
+  G.prices[d] = clamp(Math.round(before * f), 10, 600);
+  const pct = Math.round((G.prices[d] - before) / before * 100), k = Math.floor(Math.random() * 5), pool = up ? NEWS.up : NEWS.down, price = G.prices[d];
+  log(() => L(`Ticker: ${dn(d)}, ${pool.en[k]}. ${DIST[d].k} ${pct > 0 ? '+' : ''}${pct}% to ${fmt(price)}.`, `Listino: ${dn(d)}, ${pool.it[k]}. ${DIST[d].k} ${pct > 0 ? '+' : ''}${pct}% a ${fmt(price)}.`), up ? '' : 'bad');
+}
+function audit(p) {
+  if (p.auditPass) {
+    p.auditPass = false; p.heat = Math.min(100, p.heat + 5);
+    log(() => L(`Audit: ${Y(p) ? 'your' : pn(p) + '’s'} books were somehow spotless.`, `Fisco: i conti di ${Y(p) ? 'te' : pn(p)} sono stranamente perfetti.`), '',
+      { pid: p.id, t: () => L('Audit: the inspector you paid looked the other way.', 'Fisco: l’ispettore che hai pagato ha chiuso un occhio.') });
+    return;
+  }
+  let onRecord = 0;
+  props().forEach(s => { if (s.owner === p.id && (!s.shell || s.revealed)) onRecord += propVal(s); });
+  const fee = Math.max(25, r5(p.cash * .1 + onRecord * .1));
+  const paid = charge(p, fee);
+  fx(p.id, -paid, () => L('audit', 'fisco'), true); say(p, 'pay');
+  log(() => Y(p) ? L(`Audit: you paid ${fmt(paid)}.`, `Fisco: paghi ${fmt(paid)}.`) : L(`Audit: ${pn(p)} paid ${fmt(paid)}.`, `Fisco: ${pn(p)} paga ${fmt(paid)}.`), 'bad');
+}
+function leak(p) {
+  const sh = props().filter(s => s.owner === p.id && s.shell && !s.revealed);
+  if (sh.length && p.pressPass) {
+    p.pressPass = false;
+    log(() => L(`Leak: a story about ${obj(p)} was spiked at the last minute.`, `Scoop: un articolo su ${Y(p) ? 'di te' : pn(p)} è stato bloccato all’ultimo.`), '',
+      { pid: p.id, t: () => L('Leak: the editor you paid killed the story.', 'Scoop: il direttore che hai pagato ha bloccato l’articolo.') });
+    return;
+  }
+  if (!sh.length) { log(() => L(`Leak: the press found nothing on ${obj(p)}.`, `Scoop: la stampa non trova nulla su ${Y(p) ? 'di te' : pn(p)}.`)); return; }
+  const s = rnd(sh), alias = s.alias; s.revealed = true; G.stampAt = s.i; sfx.stamp(); say(p, 'exposed'); checkAntitrust();
+  log(() => L(`Leak! ${alias}, owner of ${nm(s)}, belongs to ${obj(p)}.`, `Scoop! ${alias}, proprietaria di ${nm(s)}, appartiene a ${obj(p)}.`), 'bad');
+  news(() => L(`${alias} unmasked`, `${alias} smascherata`), () => L(`A press leak ties ${nm(s)} to ${obj(p)}.`, `Una fuga di notizie collega ${nm(s)} a ${obj(p)}.`), null);
+}
+function investigate(i) {
+  const p = cur(), s = G.board[i];
+  if (G.invUsed || s.t !== 'prop' || !s.shell || s.revealed || s.owner === p.id) return;
+  if (p.tips > 0) p.tips--;
+  else if (p.cash >= INV_COST) { p.cash -= INV_COST; fx(p.id, -INV_COST, () => L('investigation', 'indagine'), true); }
+  else return;
+  if (s.guard > 0) {
+    const o = G.players[s.owner], alias = s.alias;
+    G.invUsed = true; s.failed.push(p.id); o.heat = Math.min(100, o.heat + 10); say(p, 'blank');
+    log(() => Y(p) ? L(`Your investigation into ${alias} hit a wall: the registry file has vanished.`, `La tua indagine su ${alias} finisce nel nulla: la pratica al catasto è sparita.`)
+      : L(`${pn(p)}’s investigation into ${alias} came up empty.`, `L’indagine di ${pn(p)} su ${alias} non trova nulla.`), 'bad',
+      { pid: o.id, t: () => L(`Your bribe held: ${pn(p)}’s investigation into ${alias} found nothing. Your heat rose.`, `La mazzetta ha funzionato: l’indagine di ${pn(p)} su ${alias} non trova nulla. Il tuo calore sale.`) });
+    return;
+  }
+  G.invUsed = true; s.revealed = true; s.guard = 0; G.stampAt = i; sfx.stamp();
+  say(p, 'inv');
+  const o = G.players[s.owner], alias = s.alias;
+  const got = charge(o, r5(s.price * .25));
+  p.cash += got; checkAntitrust();
+  fx(o.id, -got, () => L('fine', 'multa'), true); fx(p.id, got, () => L('reward', 'ricompensa'), true);
+  setTimeout(() => { if (G && o.bot) { say(o, 'exposed'); flushFx(); } }, 900);
+  log(() => {
+    if (Y(p)) return L(`You investigated ${alias}: it belongs to ${pn(o)}, who paid you a ${fmt(got)} fine.`, `Indaghi su ${alias}: appartiene a ${pn(o)}, che ti paga una multa di ${fmt(got)}.`);
+    if (Y(o)) return L(`${pn(p)} investigated ${alias}: it belongs to you. You paid ${pn(p)} a ${fmt(got)} fine.`, `${pn(p)} indaga su ${alias}: è tua. Paghi a ${pn(p)} una multa di ${fmt(got)}.`);
+    return L(`${pn(p)} investigated ${alias}: it belongs to ${pn(o)}, who paid ${pn(p)} a ${fmt(got)} fine.`, `${pn(p)} indaga su ${alias}: appartiene a ${pn(o)}, che paga a ${pn(p)} una multa di ${fmt(got)}.`);
+  }, 'bad');
+  news(() => L(`Investigation exposes ${alias}`, `Un’indagine smaschera ${alias}`), () => {
+    if (Y(p)) return L(`You proved ${pn(o)} owns ${nm(s)}. Fine: ${fmt(got)}.`, `Hai dimostrato che ${nm(s)} è di ${pn(o)}. Multa: ${fmt(got)}.`);
+    if (Y(o)) return L(`${pn(p)} proved you own ${nm(s)}. Fine: ${fmt(got)}.`, `${pn(p)} ha dimostrato che ${nm(s)} è tua. Multa: ${fmt(got)}.`);
+    return L(`${pn(p)} proved ${pn(o)} owns ${nm(s)}. Fine: ${fmt(got)}.`, `${pn(p)} ha dimostrato che ${nm(s)} è di ${pn(o)}. Multa: ${fmt(got)}.`);
+  }, null);
+}
+function fileBid(i, amt) {
+  const p = cur(), s = G.board[i];
+  if (!s || s.t !== 'prop' || s.owner != null) return () => L('That space is already owned.', 'Questa casella ha già un proprietario.');
+  amt = r5(amt || 0);
+  const min = minBid(s);
+  if (amt < min) return () => L(`The minimum bid is ${fmt(min)}.`, `L’offerta minima è ${fmt(min)}.`);
+  const ex = G.filings.find(f => f.pid === p.id && f.i === i);
+  const other = G.filings.find(f => f.pid === p.id && f.i !== i);
+  if (!ex && other) return () => L(`One sealed bid per round. You already have one on ${nm(G.board[other.i])}.`, `Un\u2019offerta sigillata per round. Ne hai gi\u00e0 una su ${nm(G.board[other.i])}.`);
+  const fee = ex ? 0 : FILE_FEE;
+  const avail = p.cash + (ex ? ex.amt : 0) - fee;
+  if (amt > avail) return () => L(`You only have ${fmt(avail)} available after the ${fmt(fee)} filing fee.`, `Hai solo ${fmt(avail)} disponibili dopo la tassa di deposito di ${fmt(fee)}.`);
+  if (ex) { p.cash += ex.amt; ex.amt = amt; } else G.filings.push({ pid: p.id, i, amt });
+  p.cash -= amt + fee; sfx.seal(); say(p, 'file');
+  log(() => Y(p) ? L('You lodged a sealed filing.', 'Depositi un’offerta sigillata.') : L(`${pn(p)} lodged a sealed filing.`, `${pn(p)} deposita un’offerta sigillata.`), '',
+    { pid: p.id, t: () => Y(p) ? L(`You filed a sealed bid of ${fmt(amt)} on ${nm(s)}.`, `Depositi un’offerta sigillata di ${fmt(amt)} su ${nm(s)}.`)
+      : L(`${pn(p)} filed a sealed bid of ${fmt(amt)} on ${nm(s)}.`, `${pn(p)} deposita un’offerta sigillata di ${fmt(amt)} su ${nm(s)}.`) });
+  return null;
+}
+function cancelFiling(i) {
+  const p = cur(), k = G.filings.findIndex(f => f.pid === p.id && f.i === i);
+  if (k < 0) return;
+  p.cash += G.filings[k].amt; G.filings.splice(k, 1);
+  const s = G.board[i];
+  log(null, '', { pid: p.id, t: () => L(`You withdrew your bid on ${nm(s)}.`, `Hai ritirato l’offerta su ${nm(s)}.`) });
+}
+function queueBuild(i) {
+  const p = cur(), s = G.board[i], cost = buildCost(s);
+  if (s.owner !== p.id || !fullDistrict(s.d, p.id) || publicMonopoly(s.d) != null || s.floors + s.pend >= 3 || p.cash < cost) return;
+  p.cash -= cost; s.pend++; sfx.seal();
+  const fl = s.floors + s.pend;
+  G.builds.push({ pid: p.id, i, cost });
+  log(() => Y(p) ? L('You lodged a building permit.', 'Depositi una licenza edilizia.') : L(`${pn(p)} lodged a building permit.`, `${pn(p)} deposita una licenza edilizia.`), '',
+    { pid: p.id, t: () => L(`Permit filed for floor ${fl} on ${nm(s)} (${fmt(cost)}).`, `Licenza depositata per il piano ${fl} su ${nm(s)} (${fmt(cost)}).`) });
+}
+function buyShare(d) {
+  const p = cur(), pr = G.prices[d];
+  if (p.cash < pr || sharesOut(d) >= SHARE_CAP) return;
+  p.cash -= pr; p.shares[d]++; bump(d, 4); fx(p.id, -pr, () => L(DIST[d].k + ' share', 'azione ' + DIST[d].k), true);
+  log(() => Y(p) ? L(`You bought a ${DIST[d].k} share at ${fmt(pr)}.`, `Compri un’azione ${DIST[d].k} a ${fmt(pr)}.`) : L(`${pn(p)} bought a ${DIST[d].k} share at ${fmt(pr)}.`, `${pn(p)} compra un’azione ${DIST[d].k} a ${fmt(pr)}.`));
+}
+function sellShare(d) {
+  const p = cur();
+  if (p.shares[d] < 1) return;
+  const pr = G.prices[d];
+  p.cash += pr; p.shares[d]--; bump(d, -4); fx(p.id, pr, () => L(DIST[d].k + ' sold', DIST[d].k + ' venduta'), true);
+  log(() => Y(p) ? L(`You sold a ${DIST[d].k} share at ${fmt(pr)}.`, `Vendi un’azione ${DIST[d].k} a ${fmt(pr)}.`) : L(`${pn(p)} sold a ${DIST[d].k} share at ${fmt(pr)}.`, `${pn(p)} vende un’azione ${DIST[d].k} a ${fmt(pr)}.`));
+}
+function settle(d) {
+  const p = cur();
+  if (publicMonopoly(d) !== p.id) return;
+  const c = settleParts(d, p).total;
+  if (p.cash < c) return;
+  p.cash -= c; p.settles = (p.settles || 0) + 1; G.cleared[d] = p.id;
+  fx(p.id, -c, () => L('settlement', 'sanatoria'), true); say(p, 'settle'); sfx.seal();
+  checkAntitrust();
+  log(() => Y(p) ? L(`You paid a ${fmt(c)} settlement. Antitrust on ${dn(d)} is closed: full rent and building are back.`, `Paghi una sanatoria di ${fmt(c)}. Il caso antitrust su ${dn(d)} è chiuso: affitti pieni e cantieri di nuovo aperti.`)
+    : L(`${pn(p)} paid a ${fmt(c)} settlement to close the antitrust case on ${dn(d)}.`, `${pn(p)} paga una sanatoria di ${fmt(c)} per chiudere il caso antitrust su ${dn(d)}.`), 'filing');
+  news(() => L(`${dn(d)} case settled`, `Sanatoria per ${dn(d)}`), () => L(`${Y(p) ? 'You' : pn(p)} paid ${fmt(c)} to keep the whole district.`, `${Y(p) ? 'Hai' : pn(p) + ' ha'} pagato ${fmt(c)} per tenersi tutto il quartiere.`), null);
+}
+function bribe(kind, arg) {
+  const p = cur(), c = bribeCost(kind, arg);
+  if (p.cash < c) return;
+  const s = kind === 'guard' ? G.board[arg] : null;
+  if (kind === 'guard' && !(s && s.owner === p.id && s.shell && !s.revealed && !s.guard)) return;
+  if (kind === 'audit' && p.auditPass) return;
+  if (kind === 'press' && p.pressPass) return;
+  if (kind === 'suspend' && publicMonopoly(arg) !== p.id) return;
+  if (kind === 'lawyer' && p.heat <= 0) return;
+  p.cash -= c; if (kind !== 'lawyer') p.bribed += c;
+  p.heat = clamp(p.heat + BRIBE[kind].heat, 0, 100);
+  fx(p.id, -c, () => kind === 'lawyer' ? L('legal fees', 'avvocato') : L('bribe', 'mazzetta'), false); sfx.seal();
+  const priv = t => log(null, '', { pid: p.id, t });
+  if (kind === 'guard') { s.guard = GUARD_RDS; priv(() => L(`You paid ${fmt(c)} to a registry clerk. The file on ${s.alias} is lost for ${GUARD_RDS} rounds.`, `Paghi ${fmt(c)} a un impiegato del catasto. La pratica di ${s.alias} sparisce per ${GUARD_RDS} round.`)); }
+  if (kind === 'audit') { p.auditPass = true; priv(() => L(`You paid ${fmt(c)} to a tax inspector. Your next audit is waived.`, `Paghi ${fmt(c)} a un ispettore del fisco. Il prossimo controllo salta.`)); }
+  if (kind === 'press') { p.pressPass = true; priv(() => L(`You paid ${fmt(c)} to a newspaper editor. The next leak about you gets spiked.`, `Paghi ${fmt(c)} a un direttore di giornale. Il prossimo scoop su di te verrà bloccato.`)); }
+  if (kind === 'lawyer') priv(() => L(`You paid ${fmt(c)} in legal fees to clean up your paper trail.`, `Paghi ${fmt(c)} di avvocato per ripulire le tue carte.`));
+  if (kind === 'suspend') {
+    G.susp[arg] = { pid: p.id, left: SUSP_RDS }; checkAntitrust();
+    log(() => L(`The antitrust case on ${dn(arg)} has been quietly suspended.`, `Il caso antitrust su ${dn(arg)} è stato sospeso in silenzio.`), 'bad',
+      { pid: p.id, t: () => L(`You paid ${fmt(c)} to an antitrust official. ${dn(arg)} is free for ${SUSP_RDS} rounds.`, `Paghi ${fmt(c)} a un funzionario antitrust. ${dn(arg)} è libero per ${SUSP_RDS} round.`) });
+  }
+}
+function scandal(p) {
+  const fine = Math.max(100, r5(p.bribed * 2));
+  let exposed = props().filter(s => s.owner === p.id && s.shell && !s.revealed && s.guard > 0);
+  if (!exposed.length) { const any = props().filter(s => s.owner === p.id && s.shell && !s.revealed); if (any.length) exposed = [rnd(any)]; }
+  exposed.forEach(s => { s.revealed = true; });
+  props().forEach(s => { if (s.owner === p.id) s.guard = 0; });
+  G.susp.forEach((su, d) => { if (su && su.pid === p.id) G.susp[d] = null; });
+  p.auditPass = false; p.pressPass = false; p.heat = 0; p.bribed = 0;
+  say(p, 'caught'); sfx.stamp();
+  const names = exposed.map(s => s.alias).join(', ');
+  const paid = charge(p, fine); fx(p.id, -paid, () => L('bribery fine', 'multa corruzione'), true);
+  log(() => L(`Bribery scandal! ${Y(p) ? 'You were' : pn(p) + ' was'} caught paying off officials. Fine: ${fmt(paid)}.${names ? ' Exposed: ' + names + '.' : ''}`,
+    `Scandalo corruzione! ${Y(p) ? 'Sei stato scoperto' : pn(p) + ' è stato scoperto'} a pagare funzionari. Multa: ${fmt(paid)}.${names ? ' Smascherate: ' + names + '.' : ''}`), 'bad');
+  news(() => L(`Bribery scandal rocks ${Y(p) ? 'you' : pn(p)}`, `Scandalo corruzione: travolto ${Y(p) ? 'tu' : pn(p)}`), () => L(`A ${fmt(paid)} fine, favors cancelled${names ? ', and ' + names + ' exposed' : ''}.`, `Multa di ${fmt(paid)}, favori annullati${names ? ' e smascherate ' + names : ''}.`), null);
+  checkAntitrust();
+}
+
+/* ---------- deals ---------- */
+const emptySide = () => ({ cash: 0, props: [], shares: DIST.map(() => 0), secrets: [], nsec: 0 });
+const knownSecretsOf = q => props().filter(s => s.shell && !s.revealed && s.owner != null && s.owner !== q.id && s.known.includes(q.id));
+const isEmptySide = x => !x.cash && !x.props.length && !x.shares.some(Boolean) && !x.secrets.length && !x.nsec;
+function validTrade(t) {
+  const a = G.players[t.from], b = G.players[t.to];
+  if (!a.alive || !b.alive || (isEmptySide(t.give) && isEmptySide(t.get))) return false;
+  if (a.cash < t.give.cash || b.cash < t.get.cash) return false;
+  if (!t.give.props.every(i => G.board[i].owner === a.id) || !t.get.props.every(i => G.board[i].owner === b.id)) return false;
+  return DIST.every((_, d) => t.give.shares[d] <= a.shares[d] && t.get.shares[d] <= b.shares[d]);
+}
+function sideText(x, withVal) {
+  const out = [];
+  if (x.cash) out.push(fmt(x.cash));
+  x.props.forEach(i => { const s = G.board[i]; out.push(nm(s) + (s.shell && !s.revealed ? ` (${s.alias})` : '') + (withVal ? ` · ${dn(s.d)} · ${L('value', 'valore')} ${fmt(propVal(s))}` : '')); });
+  x.shares.forEach((n, d) => { if (n) out.push(L(`${n} ${DIST[d].k} share${n > 1 ? 's' : ''}`, `${n} ${n > 1 ? 'azioni' : 'azione'} ${DIST[d].k}`)); });
+  x.secrets.forEach(i => out.push(L('who owns ', 'chi c’è dietro ') + G.board[i].alias));
+  if (x.nsec) out.push(L(`${x.nsec} secret${x.nsec > 1 ? 's' : ''} of their choice`, `${x.nsec} ${x.nsec > 1 ? 'segreti' : 'segreto'} a scelta`));
+  return out;
+}
+// Value of a deal from the receiving bot's point of view (t.to).
+function evalTrade(t) {
+  const b = G.players[t.to], a = G.players[t.from];
+  if (b.cash < t.get.cash) return { ok: false, reason: 'cash' };
+  if (t.get.nsec > knownSecretsOf(b).filter(s => !canSeeFor(s, a.id)).length) return { ok: false, reason: 'secrets' };
+  const after = i => t.give.props.includes(i) ? b.id : t.get.props.includes(i) ? a.id : G.board[i].owner;
+  const allAfter = (d, o) => props().filter(s => s.d === d).every(s => after(s.i) === o);
+  let gain = t.give.cash, loss = t.get.cash;
+  t.give.props.forEach(i => { const s = G.board[i]; gain += propVal(s) * 1.05 + (allAfter(s.d, b.id) && !fullDistrict(s.d, b.id) ? s.price * 1.3 : 0); });
+  t.get.props.forEach(i => { const s = G.board[i]; loss += propVal(s) * 1.1 + (fullDistrict(s.d, b.id) ? s.price * 1.5 : 0) + (allAfter(s.d, a.id) ? s.price * .6 : 0); });
+  t.give.shares.forEach((n, d) => { gain += n * G.prices[d]; });
+  t.get.shares.forEach((n, d) => { loss += n * G.prices[d] * 1.05; });
+  t.give.secrets.forEach(i => { const s = G.board[i]; gain += canSeeFor(s, b.id) ? 5 : 60 + s.price * .15; });
+  loss += t.get.nsec * 55;
+  const leader = aliveP().slice().sort((x, y) => publicAssets(y) - publicAssets(x))[0];
+  const need = Math.max(15, loss * .08) * (leader && leader.id === a.id ? 1.6 : 1);
+  const net = gain - loss;
+  return { ok: net >= need, net, need };
+}
+function executeTrade(t) {
+  const a = G.players[t.from], b = G.players[t.to];
+  const giveTxt = both(() => sideText(t.give).join(', ')), getTxt = both(() => sideText(t.get).join(', '));
+  const pubMoved = [...t.give.props, ...t.get.props].filter(i => isPublic(G.board[i]));
+  a.cash += t.get.cash - t.give.cash; b.cash += t.give.cash - t.get.cash;
+  const move = (i, from, to) => {
+    const s = G.board[i];
+    s.owner = to.id; s.guard = 0;
+    if (s.shell && !s.known.includes(from.id)) s.known.push(from.id);
+    s.known = s.known.filter(k => k !== to.id);
+    G.builds = G.builds.filter(x => { if (x.i === i) { G.players[x.pid].cash += x.cost; s.pend = Math.max(0, s.pend - 1); return false; } return true; });
+  };
+  t.give.props.forEach(i => move(i, a, b)); t.get.props.forEach(i => move(i, b, a));
+  DIST.forEach((_, d) => { a.shares[d] += t.get.shares[d] - t.give.shares[d]; b.shares[d] += t.give.shares[d] - t.get.shares[d]; });
+  const learnedB = t.give.secrets.map(i => G.board[i]).filter(s => !s.known.includes(b.id));
+  learnedB.forEach(s => s.known.push(b.id));
+  const learnedA = shuffle(knownSecretsOf(b).filter(s => !canSeeFor(s, a.id))).slice(0, t.get.nsec);
+  learnedA.forEach(s => s.known.push(a.id));
+  if (t.give.cash) { fx(a.id, -t.give.cash, () => L('deal', 'affare'), false); fx(b.id, t.give.cash, () => L('deal', 'affare'), false); }
+  if (t.get.cash) { fx(b.id, -t.get.cash, () => L('deal', 'affare'), false); fx(a.id, t.get.cash, () => L('deal', 'affare'), false); }
+  sfx.seal();
+  checkAntitrust();
+  const learnTxt = list => list.length ? ' ' + L('You learned: ', 'Hai scoperto: ') + list.map(s => `${s.alias} → ${pn(G.players[s.owner])}`).join(', ') + '.' : '';
+  const pub = () => (Y(a) || Y(b) ? L(`You and ${pn(Y(a) ? b : a)} made a deal.`, `Tu e ${pn(Y(a) ? b : a)} avete fatto un affare.`) : L(`${pn(a)} and ${pn(b)} made a deal.`, `${pn(a)} e ${pn(b)} hanno fatto un affare.`))
+    + (pubMoved.length ? ' ' + L(`${pubMoved.map(i => nm(G.board[i])).join(', ')} changed hands.`, `${pubMoved.map(i => nm(G.board[i])).join(', ')} ${pubMoved.length > 1 ? 'cambiano' : 'cambia'} proprietario.`) : '');
+  const none = () => L('nothing', 'niente');
+  log(pub, 'filing', { pid: a.id, t: () => L(`Deal with ${pn(b)}: you gave ${giveTxt[LANG] || none()}; you got ${getTxt[LANG] || none()}.`, `Affare con ${pn(b)}: hai dato ${giveTxt[LANG] || none()}; hai ricevuto ${getTxt[LANG] || none()}.`) + learnTxt(learnedA) });
+  log(null, '', { pid: b.id, t: () => L(`Deal with ${pn(a)}: you gave ${getTxt[LANG] || none()}; you got ${giveTxt[LANG] || none()}.`, `Affare con ${pn(a)}: hai dato ${getTxt[LANG] || none()}; hai ricevuto ${giveTxt[LANG] || none()}.`) + learnTxt(learnedB) });
+}
+function openTrade(pid) {
+  const v = viewer(), others = G.players.filter(q => q.alive && q.id !== v);
+  if (!others.length) return;
+  TD = { from: v, to: pid != null && others.some(q => q.id === pid) ? pid : others[0].id, give: emptySide(), get: emptySide(), msg: null, add: 0 };
+}
+function proposeTrade() {
+  const t = TD, a = G.players[t.from], b = G.players[t.to];
+  const err = m => { t.msg = both(m); t.add = 0; };
+  if (isEmptySide(t.give) && isEmptySide(t.get)) return err(() => L('Put something on the table first.', 'Prima metti qualcosa sul tavolo.'));
+  if (G.tradesLeft <= 0) return err(() => L('No more offers this turn.', 'Niente più offerte in questo turno.'));
+  if (a.cash < t.give.cash) return err(() => L(`You only have ${fmt(a.cash)}.`, `Hai solo ${fmt(a.cash)}.`));
+  G.tradesLeft--;
+  const deal = JSON.parse(JSON.stringify({ from: t.from, to: t.to, give: t.give, get: t.get }));
+  if (!b.bot) { G.tradeAsk = { t: deal, stage: 'ask' }; TD = null; return; }
+  const ev = evalTrade(deal);
+  if (ev.ok && validTrade(deal)) { executeTrade(deal); say(b, 'deal'); TD = null; return; }
+  say(b, 'nodeal');
+  if (ev.reason === 'cash') return err(() => L(`${pn(b)}: “I don’t have that kind of money.”`, `${pn(b)}: «Non ho tutti quei soldi.»`));
+  if (ev.reason === 'secrets') return err(() => L(`${pn(b)}: “I don’t know that many secrets.”`, `${pn(b)}: «Non conosco così tanti segreti.»`));
+  const add = r5(ev.need - ev.net + 5);
+  if (add > 0 && a.cash - t.give.cash >= add) { t.msg = both(() => L(`${pn(b)}: “Add ${fmt(add)} and we have a deal.”`, `${pn(b)}: «Aggiungi ${fmt(add)} e affare fatto.»`)); t.add = add; }
+  else err(() => L(`${pn(b)}: “Not interested.”`, `${pn(b)}: «Non mi interessa.»`));
+}
+
+function charge(p, amt) {
+  if (p.cash < amt) liquidate(p, amt);
+  if (p.cash >= amt) { p.cash -= amt; return amt; }
+  const paid = p.cash; p.cash = 0; bankrupt(p); return paid;
+}
+function liquidate(p, need) {
+  G.filings = G.filings.filter(f => { if (f.pid === p.id) { p.cash += f.amt; return false; } return true; });
+  G.builds = G.builds.filter(b => { if (b.pid === p.id) { p.cash += b.cost; G.board[b.i].pend--; return false; } return true; });
+  let sold = false;
+  for (let d = 0; d < ND && p.cash < need; d++) while (p.shares[d] > 0 && p.cash < need) { p.cash += G.prices[d]; p.shares[d]--; bump(d, -4); sold = true; }
+  const mine = () => props().filter(s => s.owner === p.id);
+  for (const s of mine().sort((a, b) => b.floors - a.floors)) while (s.floors > 0 && p.cash < need) { s.floors--; p.cash += r5(buildCost(s) / 2); sold = true; }
+  for (const s of mine().sort((a, b) => a.price - b.price)) {
+    if (p.cash >= need) break;
+    p.cash += r5(s.price / 2);
+    log(() => L(`${nm(s)} went back to the bank.`, `${nm(s)} torna alla banca.`));
+    release(s); sold = true;
+  }
+  if (sold) log(() => Y(p) ? L('You sold assets to cover a debt.', 'Vendi beni per coprire un debito.') : L(`${pn(p)} sold assets to cover a debt.`, `${pn(p)} vende beni per coprire un debito.`), 'bad');
+}
+function release(s) { s.owner = null; s.shell = false; s.revealed = false; s.alias = null; s.known = []; s.guard = 0; s.failed = []; s.floors = 0; s.pend = 0; }
+function bankrupt(p) {
+  if (!p.alive) return;
+  say(p, 'broke');
+  p.alive = false;
+  props().forEach(s => { if (s.owner === p.id) release(s); });
+  p.shares = DIST.map(() => 0);
+  G.filings = G.filings.filter(f => f.pid !== p.id);
+  G.builds = G.builds.filter(b => b.pid !== p.id);
+  log(() => Y(p) ? L('You went bankrupt and are out.', 'Fai bancarotta e sei fuori.') : L(`${pn(p)} went bankrupt and is out.`, `${pn(p)} fa bancarotta ed è fuori.`), 'bad');
+  news(() => Y(p) ? L('You go bust', 'Sei fallito') : L(`${pn(p)} goes bust`, `${pn(p)} fallisce`), () => L('Every holding returns to the bank.', 'Tutti i beni tornano alla banca.'), null);
+  if (aliveP().length <= 1) endGame();
+}
+function endTurn() {
+  if (G.over || G.anim || G.phase === 'offer' || (G.phase === 'pre' && cur().alive)) return;
+  const n = G.players.length; let i = G.cur, wrapped = false;
+  do { i = (i + 1) % n; if (i === 0) wrapped = true; } while (!G.players[i].alive);
+  if (wrapped) {
+    endRound();
+    if (G.over) { render(); return; }
+    if (G.gazette) { G.nextCur = i; sfx.news(); render(); if (!G.players.some(p => !p.bot && p.alive)) setTimeout(closeGazette, 2600 * SPEED); return; }
+  }
+  G.cur = i; startTurn();
+}
+function closeGazette() {
+  if (!G || !G.gazette) return;
+  G.gazette = null; G.cur = G.nextCur; startTurn();
+}
+function endRound() {
+  const byI = {};
+  G.filings.forEach(f => (byI[f.i] ??= []).push(f));
+  for (const k in byI) {
+    const s = G.board[k], fs = byI[k];
+    if (s.owner != null) {
+      fs.forEach(f => { G.players[f.pid].cash += f.amt; log(null, '', { pid: f.pid, t: () => L(`Your bid on ${nm(s)} was void because it sold first. ${fmt(f.amt)} refunded.`, `La tua offerta su ${nm(s)} è nulla: è stata venduta prima. ${fmt(f.amt)} rimborsati.`) }); });
+      continue;
+    }
+    fs.sort((a, b) => b.amt - a.amt || Math.random() - .5);
+    const w = fs[0];
+    fs.slice(1).forEach(f => { G.players[f.pid].cash += f.amt; log(null, '', { pid: f.pid, t: () => L(`You were outbid on ${nm(s)}. ${fmt(f.amt)} refunded.`, `La tua offerta su ${nm(s)} è stata superata. ${fmt(f.amt)} rimborsati.`) }); });
+    s.owner = w.pid; s.shell = true; s.revealed = false; s.alias = nextAlias();
+    const alias = s.alias, n = fs.length - 1, amt = w.amt;
+    log(() => L(`Filings: ${alias} acquired ${nm(s)} for ${fmt(amt)}${rivalsTxt(n)}.`, `Offerte: ${alias} acquisisce ${nm(s)} per ${fmt(amt)}${rivalsTxt(n)}.`), 'filing',
+      { pid: w.pid, t: () => L(`Filings: your shell ${alias} acquired ${nm(s)} for ${fmt(amt)}${rivalsTxt(n)}.`, `Offerte: la tua società ${alias} acquisisce ${nm(s)} per ${fmt(amt)}${rivalsTxt(n)}.`) });
+    news(() => L(`Mystery buyer takes ${nm(s)}`, `Compratore misterioso si prende ${nm(s)}`), () => L(`${alias} paid ${fmt(amt)}${rivalsTxt(n)}. Owner unknown.`, `${alias} ha pagato ${fmt(amt)}${rivalsTxt(n)}. Proprietario ignoto.`), w.pid);
+  }
+  G.filings = [];
+  G.builds.forEach(b => {
+    const s = G.board[b.i];
+    s.pend = Math.max(0, s.pend - 1);
+    if (s.owner !== b.pid) { G.players[b.pid].cash += b.cost; return; }
+    s.floors = Math.min(3, s.floors + 1); bump(s.d, 12);
+    const fl = s.floors, rent = rentOf(s);
+    log(() => L(`Construction finished on ${nm(s)}: ${fl} floor${fl > 1 ? 's' : ''}.`, `Lavori finiti su ${nm(s)}: ${fl} ${fl > 1 ? 'piani' : 'piano'}.`), 'filing');
+    news(() => L(`Cranes over ${nm(s)}`, `Gru su ${nm(s)}`), () => L(`Floor ${fl} is up. Rent there is now ${fmt(rent)}.`, `Il piano ${fl} è pronto. Ora l’affitto è ${fmt(rent)}.`), b.pid);
+  });
+  G.builds = [];
+  props().forEach(s => { if (s.guard > 0) s.guard--; });
+  G.susp.forEach((su, d) => { if (su && --su.left <= 0) G.susp[d] = null; });
+  checkAntitrust();
+  aliveP().forEach(p => {
+    if (p.heat > 0 && Math.random() * 100 < scandalRisk(p)) scandal(p);
+    p.heat = Math.max(0, p.heat - 3);
+  });
+  const before = G.hist.map(h => h[h.length - 1]);
+  G.prices = G.prices.map(x => clamp(Math.round(x * (.96 + Math.random() * .08)), 10, 600));
+  G.hist.forEach((h, d) => { h.push(G.prices[d]); if (h.length > 19) h.shift(); });
+  if (G.news.length) {
+    const ch = G.prices.map((x, d) => (x - before[d]) / before[d]);
+    const d = ch.reduce((m, c, k) => Math.abs(c) > Math.abs(ch[m]) ? k : m, 0);
+    const pct = Math.round(ch[d] * 100), price = G.prices[d];
+    if (pct) news(() => pct > 0 ? L(`${DIST[d].k} rallies ${pct}%`, `${DIST[d].k} vola del ${pct}%`) : L(`${DIST[d].k} slides ${-pct}%`, `${DIST[d].k} cala del ${-pct}%`),
+      () => L(`${dn(d)} shares close at ${fmt(price)}.`, `Le azioni ${dn(d)} chiudono a ${fmt(price)}.`), null);
+    G.gazette = { round: G.round, items: G.news.slice() };
+  }
+  G.news = [];
+  if (G.round >= MAXR) { G.gazette = null; endGame(); return; }
+  G.round++;
+  const r = G.round;
+  log(() => L(`Round ${r} begins.`, `Inizia il round ${r}.`), 'round');
+}
+function endGame() {
+  if (G.over) return;
+  G.over = true; G.phase = 'over'; G.showResults = true; G.pass = false; G.anim = false;
+  const w = aliveP().sort((a, b) => netWorth(b) - netWorth(a))[0], nw = netWorth(w);
+  log(() => Y(w) ? L(`Game over. You win with ${fmt(nw)}.`, `Partita finita. Vinci con ${fmt(nw)}.`) : L(`Game over. ${pn(w)} wins with ${fmt(nw)}.`, `Partita finita. ${pn(w)} vince con ${fmt(nw)}.`), 'round');
+  sfx.news();
+}
+function checkPass() {
+  const c = cur();
+  if (c.bot) return;
+  const humans = G.players.filter(p => !p.bot && p.alive);
+  if (humans.length > 1 && G.lastHuman !== c.id) G.pass = true;
+  else G.lastHuman = c.id;
+}
+
+/* ---------- bots ---------- */
+function runBot() {
+  if (!G || G.over || G.gazette || !cur().bot || G.botBusy) return;
+  botTurn(G);
+}
+async function botTurn(g) {
+  g.botBusy = true;
+  const p = cur(), step = async ms => { await wait(ms * SPEED); flushFx(); return G === g && !g.over; };
+  if (!await step(650)) return;
+  // Shares: favor districts with the most rent flowing through them
+  let acted = false;
+  if (p.cash > 450 && Math.random() < .5) {
+    const score = d => props().filter(s => s.d === d && s.owner != null).reduce((a, s) => a + rentOf(s), 5) / G.prices[d];
+    const d = DIST.map((_, d) => d).filter(d => sharesOut(d) < SHARE_CAP).sort((a, b) => score(b) - score(a))[Math.random() < .7 ? 0 : 1];
+    if (d != null) { buyShare(d); if (p.cash > 800) buyShare(d); say(p, 'share'); acted = true; }
+  }
+  if (p.cash < 150) for (let d = 0; d < ND; d++) if (p.shares[d] && p.cash < 150) sellShare(d);
+  render(); if (acted && !await step(700)) return;
+  botBackroom(p); render();
+  if (Math.random() < .5) { await botPropose(p, g); if (G !== g || g.over) return; }
+  // Investigate: shells the bot has heard about first, then shells that would trigger antitrust on a rival
+  const targets = props().filter(s => s.shell && !s.revealed && s.owner !== p.id && !(s.guard > 0 && s.failed.includes(p.id)));
+  if (targets.length && !G.invUsed) {
+    const val = s => (s.known.includes(p.id) ? 5 : 0) + (props().filter(x => x.d === s.d && x.owner === s.owner && x !== s && isPublic(x)).length === 2 ? 4 : 0) + s.price / 200;
+    targets.sort((a, b) => val(b) - val(a));
+    const t = targets[0], sure = t.known.includes(p.id);
+    if ((p.tips > 0 || p.cash > 350) && (sure ? .85 : p.tips > 0 ? .7 : .25) > Math.random()) { investigate(t.i); render(); if (!await step(1100)) return; }
+  }
+  // Sealed bid: complete own district > block a rival > build a foothold
+  if (!G.filings.some(f => f.pid === p.id)) botFile(p, null);
+  render();
+  for (let d = 0; d < ND; d++) if (fullDistrict(d, p.id) && publicMonopoly(d) == null) {
+    const s = props().filter(x => x.d === d && x.floors + x.pend < 3).sort((a, b) => (a.floors + a.pend) - (b.floors + b.pend))[0];
+    if (s && p.cash > buildCost(s) + 200) queueBuild(s.i);
+  }
+  await doRoll(); if (G !== g || g.over) return;
+  flushFx();
+  if (!await step(650)) return;
+  if (G.phase === 'offer') {
+    const s = G.board[p.pos], others = props().filter(x => x.d === s.d && x !== s);
+    const completesPublicly = others.every(x => x.owner === p.id && isPublic(x));
+    const blocks = G.players.some(q => q.id !== p.id && q.alive && seenOwned(s.d, q.id, p.id) === 2);
+    if (completesPublicly) { passLanded(); if (!G.filings.some(f => f.pid === p.id)) botFile(p, s); }
+    else if (p.cash >= s.price + (blocks ? 40 : 150)) buyLanded();
+    else passLanded();
+    render();
+    if (!await step(700)) return;
+  }
+  g.botBusy = false;
+  endTurn();
+}
+function botBackroom(p) {
+  for (let d = 0; d < ND; d++) if (publicMonopoly(d) === p.id) {
+    const c = settleParts(d, p).total;
+    if (p.cash > c + 120 && Math.random() < .6) settle(d);
+    else if (p.heat < 55 && p.cash > bribeCost('suspend', d) + 80 && Math.random() < .6) bribe('suspend', d);
+  }
+  const sh = props().filter(s => s.owner === p.id && s.shell && !s.revealed && !s.guard).sort((a, b) => b.price - a.price);
+  const key = sh.find(s => props().filter(x => x.d === s.d).every(x => x.owner === p.id && (x.shell && !x.revealed || x === s)) || fullDistrict(s.d, p.id));
+  if (key && p.heat < 60 && p.cash > bribeCost('guard', key.i) + 150 && Math.random() < .55) bribe('guard', key.i);
+  else if (sh[0] && p.heat < 40 && p.cash > bribeCost('guard', sh[0].i) + 250 && Math.random() < .25) bribe('guard', sh[0].i);
+  const onRecord = props().filter(s => s.owner === p.id && isPublic(s)).reduce((a, s) => a + propVal(s), 0);
+  if (!p.auditPass && p.heat < 45 && p.cash > 350 && (p.cash + onRecord) * .1 > BRIBE.audit.cost * .8 && Math.random() < .2) bribe('audit');
+  if (!p.pressPass && p.heat < 45 && p.cash > 300 && sh.length >= 2 && Math.random() < .2) bribe('press');
+  if (p.heat >= 60 && p.cash > 300 && Math.random() < .6) bribe('lawyer');
+}
+async function botPropose(p, g) {
+  const others = shuffle(G.players.filter(q => q.alive && q.id !== p.id));
+  const mk = (q, give, get) => ({ from: p.id, to: q.id, give: { ...emptySide(), ...give }, get: { ...emptySide(), ...get } });
+  const inD = (s, o) => props().filter(x => x.d === s.d && x !== s && x.owner === o).length;
+  for (const q of others) {
+    const theirs = props().filter(s => s.owner === q.id && canSeeFor(s, p.id));
+    // Complete my district
+    const s1 = theirs.find(s => inD(s, p.id) === 2);
+    if (s1) { const offer = Math.min(r5(propVal(s1) * (1.5 + Math.random() * .4)), p.cash - 120); if (offer >= propVal(s1) * 1.2) return sendBotTrade(mk(q, { cash: offer }, { props: [s1.i] }), g); }
+    // Sell them the piece that completes theirs, at a steep price
+    const s2 = props().find(s => s.owner === p.id && isPublic(s) && inD(s, q.id) === 2 && props().filter(x => x.d === s.d && x !== s).every(x => canSeeFor(x, p.id)));
+    if (s2 && Math.random() < .6) return sendBotTrade(mk(q, { props: [s2.i] }, { cash: r5(propVal(s2) * (1.9 + Math.random() * .3)) }), g);
+    // Build a foothold
+    const s3 = theirs.find(s => inD(s, p.id) === 1 && inD(s, q.id) === 0);
+    if (s3 && Math.random() < .35) { const offer = Math.min(r5(propVal(s3) * (1.25 + Math.random() * .25)), p.cash - 150); if (offer >= propVal(s3) * 1.15) return sendBotTrade(mk(q, { cash: offer }, { props: [s3.i] }), g); }
+  }
+  const h = G.players[viewer()];
+  if (h && !h.bot && h.alive && Math.random() < .6) {
+    const secs = knownSecretsOf(p).filter(s => s.owner !== h.id && !canSeeFor(s, h.id));
+    if (secs.length) { const s = rnd(secs); return sendBotTrade(mk(h, { secrets: [s.i] }, { cash: r5(50 + s.price * .2) }), g); }
+  }
+}
+async function sendBotTrade(t, g) {
+  const a = G.players[t.from], b = G.players[t.to];
+  if (b.bot) {
+    if (evalTrade(t).ok && validTrade(t)) { executeTrade(t); say(a, 'deal'); render(); await wait(700 * SPEED); }
+    return;
+  }
+  if (b.id !== viewer() || G.pass) return;
+  sfx.seal();
+  const ok = await new Promise(res => { G.incoming = { t, res }; render(); });
+  if (G !== g) return;
+  if (ok && validTrade(t)) { executeTrade(t); say(a, 'deal'); } else say(a, 'spurned');
+  render(); await wait(600 * SPEED);
+}
+function botFile(p, forced) {
+  const opts = props().filter(s => s.owner == null && minBid(s) <= p.cash - 150 - FILE_FEE);
+  if (!opts.length) return;
+  const score = s => {
+    const others = props().filter(x => x.d === s.d && x !== s);
+    if (others.every(x => x.owner === p.id)) return 10;
+    if (G.players.some(q => q.id !== p.id && q.alive && seenOwned(s.d, q.id, p.id) === 2)) return 7;
+    if (others.some(x => x.owner === p.id)) return 3;
+    return 1;
+  };
+  const s = forced || opts.sort((a, b) => score(b) - score(a) || Math.random() - .5)[0];
+  const sc = score(s);
+  if (!forced && Math.random() > (sc >= 10 ? .95 : sc >= 7 ? .8 : sc >= 3 ? .45 : .22)) return;
+  const [lo, hi] = sc >= 10 ? [1.5, 1.85] : sc >= 7 ? [1.4, 1.7] : [1.25, 1.45];
+  const amt = Math.min(r5(s.price * (lo + Math.random() * (hi - lo))), p.cash - 150 - FILE_FEE);
+  if (amt >= minBid(s)) fileBid(s.i, amt);
+}
+
+/* ---------- render ---------- */
+const FACE_ROT = { 1: [0, 0], 2: [90, 0], 3: [0, -90], 4: [0, 90], 5: [-90, 0], 6: [0, 180] };
+function pips(n) {
+  const on = { 1: [4], 2: [0, 8], 3: [0, 4, 8], 4: [0, 2, 6, 8], 5: [0, 2, 4, 6, 8], 6: [0, 2, 3, 5, 6, 8] }[n];
+  return Array.from({ length: 9 }, (_, k) => on.includes(k) ? '<b></b>' : '<span></span>').join('');
+}
+function buildDice() { ['#d0', '#d1'].forEach(id => { $(id).innerHTML = [1, 2, 3, 4, 5, 6].map(n => `<div class="face f${n}">${pips(n)}</div>`).join(''); }); }
+function spinDice(a, b) {
+  spin++;
+  [a, b].forEach((n, k) => { const [x, y] = FACE_ROT[n]; $('#d' + k).style.transform = `rotateX(${x + 360 * spin * (k ? 1 : -1)}deg) rotateY(${y + 360 * spin}deg)`; });
+}
+function render() {
+  if (!G) return;
+  document.documentElement.lang = LANG;
+  renderTools(); renderTiles(); renderTokens(false); renderCtrl(); renderSeats(); renderSide(); renderOverlay(); flushFx();
+  $('#roundline').textContent = G.over ? L(`Final · round ${G.round} of ${MAXR}`, `Finale · round ${G.round} di ${MAXR}`) : L(`Round ${G.round} of ${MAXR}`, `Round ${G.round} di ${MAXR}`);
+  G.stampAt = -1;
+}
+function renderTools() {
+  $('#tools').innerHTML = `
+    <button class="chip lang" data-act="lang" aria-label="${L('Switch to Italian', 'Passa all’inglese')}">${LANG === 'en' ? '<b>EN</b> <span>· IT</span>' : '<span>EN ·</span> <b>IT</b>'}</button>
+    <button class="chip${SPEED < 1 ? ' on' : ''}" data-act="speed">${L('Bots: ', 'Bot: ') + (SPEED < 1 ? L('fast', 'veloci') : L('normal', 'normali'))}</button>
+    <button class="chip" data-act="sound">${L('Sound: ', 'Audio: ') + (SOUND ? L('on', 'sì') : L('off', 'no'))}</button>
+    <button class="chip" data-act="rules">${L('How to play', 'Come si gioca')}</button>
+    <button class="chip" data-act="new">${L('New game', 'Nuova partita')}</button>`;
+}
+function renderTiles() {
+  const v = viewer();
+  let h = '';
+  G.board.forEach((s, i) => {
+    const [r, c] = cellPos(i);
+    const corner = CORNERS.includes(i);
+    let cls = 'tile ' + (s.t === 'pros' ? 'tax pros' : s.t) + (corner ? ' corner' : '') + (sel === i ? ' sel' : '');
+    let inner = '';
+    if (s.t === 'prop') {
+      const D = DIST[s.d];
+      const secret = s.owner != null && s.shell && !s.revealed && !G.over;
+      const houses = '<span class="house"></span>'.repeat(s.floors) + (publicMonopoly(s.d) != null ? '<span class="anti">ANTITRUST</span>' : '');
+      const rentLbl = L('rent ', 'affitto ') + fmt(rentOf(s));
+      if (secret) {
+        cls += ' env';
+        const mine = s.owner === v || s.known.includes(v), o = G.players[s.owner];
+        inner = `<span class="band" style="background:${D.c}">${houses}</span><span class="tname">${nm(s)}</span><span class="alias">${s.alias}</span>
+          <span class="tfoot"><span class="trent">${rentLbl}</span><span class="seal${mine ? ' mine' : ''}" style="--pc:${o.color}">${mine ? ini(o) : '?'}</span></span>`;
+      } else {
+        const myBid = s.owner == null && !G.over && G.filings.some(f => f.pid === v && f.i === i);
+        const foot = s.owner == null
+          ? `<span class="tprice">${fmt(s.price)}</span>${myBid ? `<span class="bidpin" title="${L('Your sealed bid', 'La tua offerta sigillata')}"></span>` : ''}`
+          : `<span class="trent">${rentLbl}</span><span class="own" style="--pc:${G.players[s.owner].color}">${ini(G.players[s.owner])}</span>`;
+        inner = `<span class="band" style="background:${D.c}">${houses}</span><span class="tname">${nm(s)}</span><span class="tfoot">${foot}</span>${s.shell && s.revealed ? `<span class="stamp${G.stampAt === i ? ' in' : ''}">${L('EXPOSED', 'SMASCHERATA')}</span>` : ''}`;
+      }
+    } else {
+      inner = `<span class="tname">${nm(s)}</span>${ICON[s.t]}<span class="tfoot"><span class="tsub">${L(s.subEn, s.subIt)}</span></span>`;
+    }
+    const label = s.t === 'prop' ? `${nm(s)}, ${dn(s.d)}` : nm(s);
+    h += `<button class="${cls}" style="grid-row:${r};grid-column:${c}" data-act="sel" data-i="${i}" aria-label="${label}">${inner}</button>`;
+  });
+  $('#tiles').innerHTML = h;
+}
+function tokenXY(i, k, n) {
+  const [r, c] = cellPos(i), cell = (100 - 1.6 - 4.5) / 10;
+  const x = .8 + (c - 1) * (cell + .5) + cell / 2 + (k - (n - 1) / 2) * 2.3;
+  const y = .8 + (r - 1) * (cell + .5) + cell * .56 + (n > 2 ? (k % 2 ? .9 : -.9) : 0);
+  return [x, y];
+}
+let hopFlip = false;
+function renderTokens(hopping) {
+  const layer = $('#tokens');
+  const alive = G.players.filter(p => p.alive);
+  layer.querySelectorAll('.token').forEach(el => { if (!alive.some(p => p.id === +el.dataset.pid)) el.remove(); });
+  hopFlip = !hopFlip;
+  alive.forEach(p => {
+    let el = layer.querySelector(`.token[data-pid="${p.id}"]`);
+    if (!el) { el = document.createElement('div'); el.className = 'token'; el.dataset.pid = p.id; el.style.setProperty('--pc', p.color); layer.appendChild(el); }
+    el.textContent = ini(p);
+    const same = alive.filter(q => q.pos === p.pos), k = same.indexOf(p);
+    const [x, y] = tokenXY(p.pos, k, same.length);
+    el.style.left = x + 'cqi'; el.style.top = y + 'cqi';
+    el.classList.toggle('active', !G.over && p.id === G.cur);
+    if (hopping && p.id === G.cur) { el.classList.remove('h1', 'h2'); el.classList.add(hopFlip ? 'h1' : 'h2'); }
+  });
+}
+function renderCtrl() {
+  const p = cur(), me = G.players[viewer()];
+  let h = '';
+  const last = visibleLog().find(e => e.c !== 'round');
+  const lastMsg = last ? `<p class="msg">${last.text}</p>` : '';
+  if (G.over) {
+    h = `<p class="msg"><strong>${L('Game over.', 'Partita finita.')}</strong> ${L('Every shell is on the record now.', 'Ora tutte le società fantasma sono allo scoperto.')}</p>
+      <div class="row"><button class="big" data-act="results">${L('Final standings', 'Classifica')}</button><button class="big ghost" data-act="new">${L('New game', 'Nuova partita')}</button></div>`;
+  } else if (G.gazette) {
+    h = `<p class="msg">${L('The evening paper is out.', 'È uscito il giornale della sera.')}</p>`;
+  } else if (G.anim) {
+    h = `<p class="msg">${Y(p) ? L('Rolling', 'Tiri') : L(`${pn(p)} is rolling`, `${pn(p)} tira`)}…</p>`;
+  } else if (!isMyTurn()) {
+    h = `${lastMsg}<p class="thinking">${L(`${pn(p)} is scheming`, `${pn(p)} sta tramando`)}<i></i><i></i><i></i></p>`;
+  } else if (G.phase === 'pre') {
+    const tips = [
+      L('Tap any unowned space to slip in a <strong>sealed bid</strong>. Nobody will know it’s yours, and hidden districts dodge <strong>antitrust</strong>.', 'Tocca una casella libera per fare un’<strong>offerta sigillata</strong>. Nessuno saprà che è tua, e i quartieri nascosti evitano l’<strong>antitrust</strong>.'),
+      L('Open the <strong>Exchange</strong>: shares pay you whenever anyone pays rent in that district.', 'Apri la <strong>Borsa</strong>: le azioni ti pagano ogni volta che qualcuno paga un affitto in quel quartiere.'),
+      L('A black envelope is a <strong>shell</strong>. Tap it and investigate to expose the owner and collect a fine.', 'Una busta nera è una <strong>società fantasma</strong>. Toccala e indaga per smascherare il proprietario e incassare una multa.'),
+      L('Tap a rival’s seat at the top to <strong>make a deal</strong>: cash, streets, shares or secrets.', 'Tocca il posto di un rivale in alto per <strong>fare un affare</strong>: soldi, strade, azioni o segreti.'),
+    ];
+    const tip = me.turns <= 4 && G.players.some(q => q.bot) ? `<p class="tipnote"><b>${L('TIP', 'DRITTA')}</b>${tips[me.turns - 1]}</p>` : lastMsg;
+    h = `${tip}<div class="row"><button class="big" data-act="roll" id="primary">${L('Roll', 'Tira')}</button><button class="big ghost" data-act="trade">${L('Deal', 'Affare')}</button></div>`;
+  } else if (G.phase === 'offer') {
+    const s = G.board[p.pos];
+    h = `<p class="msg">${L(`You landed on <strong>${nm(s)}</strong>. Buy it openly at list price?`, `Sei su <strong>${nm(s)}</strong>. La compri alla luce del sole a prezzo di listino?`)}</p>
+      <div class="row"><button class="big" data-act="buy" id="primary" ${p.cash < s.price ? 'disabled' : ''}>${L('Buy', 'Compra')} ${fmt(s.price)}</button><button class="big ghost" data-act="pass">${L('Pass', 'Passa')}</button></div>`;
+  } else {
+    h = `${lastMsg}<div class="row"><button class="big" data-act="end" id="primary">${L('End turn', 'Fine turno')}</button><button class="big ghost" data-act="trade">${L('Deal', 'Affare')}</button></div>`;
+  }
+  $('#ctrl').innerHTML = h;
+}
+function visibleLog() {
+  const v = viewer();
+  return G.log.map(e => {
+    const priv = e.p && (e.p.pid === v || G.over);
+    const src = priv ? e.p.t : e.t;
+    const text = src ? src[LANG] : '';
+    return text ? { text, c: e.c, r: e.r, priv: priv && (!e.t || e.p.t[LANG] !== e.t[LANG]) } : null;
+  }).filter(Boolean);
+}
+function renderSeats() {
+  const v = viewer();
+  $('#seats').innerHTML = G.players.map(q => {
+    const show = q.id === v || G.over;
+    const role = q.bot ? 'bot' : L('human', 'umano');
+    const dealable = isMyTurn() && q.alive && q.id !== v;
+    const scrut = q.alive && q.heat >= 50 ? ` · <span class="scrut">${L('under scrutiny', 'sotto osservazione')}</span>` : '';
+    return `<div class="seat${!G.over && G.cur === q.id ? ' turn' : ''}${q.alive ? '' : ' dead'}" data-pid="${q.id}"${dealable ? ` data-act="trade" role="button" tabindex="0" title="${L('Make a deal with ', 'Fai un affare con ') + pn(q)}"` : ''}>
+      <span class="av" style="--pc:${q.color}">${ini(q)}</span>
+      <span class="nm">${pn(q)}<small>${q.alive ? role + ' · ' + fmt(publicAssets(q)) + L(' public', ' pubblici') + scrut : L('bankrupt', 'in bancarotta')}</small></span>
+      <span class="cash${show ? '' : ' hid'}">${show ? fmt(q.cash) : L('cash ???', 'soldi ???')}</span></div>`;
+  }).join('');
+}
+function renderSide() {
+  const v = viewer(), me = G.players[v];
+  const pendingN = G.filings.filter(f => f.pid === v).length;
+  const tabs = [['deed', L('Inspect', 'Esamina')], ['exchange', L('Exchange', 'Borsa')], ['backroom', L('Backroom', 'Mazzette')], ['empire', L('Empire', 'Impero') + (pendingN ? `<span class="n">${pendingN}</span>` : '')], ['ledger', L('Ledger', 'Registro')]];
+  $('#tabs').innerHTML = tabs.map(([k, l]) => `<button class="tab${tab === k ? ' on' : ''}" data-act="tab" data-tab="${k}">${l}</button>`).join('');
+  $('#pane').innerHTML = tab === 'deed' ? deedHTML() : tab === 'exchange' ? exchangeHTML(me) : tab === 'backroom' ? backroomHTML(me) : tab === 'empire' ? empireHTML(me) : ledgerHTML();
+}
+function deedHTML() {
+  if (sel == null) return `<h3>${L('Inspect', 'Esamina')}</h3><p class="lede">${L('Tap any space on the board. Unowned spaces take <strong>sealed bids</strong>; black envelopes are <strong>shell companies</strong> you can investigate.', 'Tocca una casella del tabellone. Le caselle libere accettano <strong>offerte sigillate</strong>; le buste nere sono <strong>società fantasma</strong> su cui puoi indagare.')}</p>`;
+  const s = G.board[sel], v = viewer(), me = G.players[v], my = isMyTurn();
+  if (s.t !== 'prop') return `<div class="deed"><div class="deed-top" style="background:#0F2B22"><small>${L('Special space', 'Casella speciale')}</small><h4>${nm(s)}</h4></div><div class="deed-body"><p style="margin:0">${L(s.descEn, s.descIt)}</p></div></div>`;
+  const D = DIST[s.d], vis = canSee(s), secret = s.shell && !s.revealed && !G.over;
+  let owner;
+  if (s.owner == null) owner = `<span class="badge">${L('Unowned', 'Libera')}</span> <span>${L('for sale', 'in vendita')}</span>`;
+  else if (!vis) owner = `<span class="qmark">?</span><span><b>${s.alias}</b></span><span class="badge dark">${L('owner unknown', 'proprietario ignoto')}</span>`;
+  else {
+    const o = G.players[s.owner];
+    owner = `<span class="av" style="--pc:${o.color}">${ini(o)}</span><span><b>${pn(o)}</b>${s.shell ? L(' via ', ' tramite ') + s.alias : ''}</span>${s.shell ? `<span class="badge${s.revealed ? ' red' : ' dark'}">${s.revealed ? L('exposed', 'smascherata') : s.owner === v ? L('secret', 'segreta') : L('only you know', 'lo sai solo tu')}</span>` : ''}`;
+  }
+  const full = s.owner != null && fullDistrict(s.d, s.owner);
+  const level = s.owner == null ? -1 : s.floors ? s.floors + 1 : full ? 1 : 0;
+  const rows = [[L('Rent', 'Affitto'), s.base], [L('Whole district', 'Quartiere completo'), s.base * 2], [L('With 1 floor', 'Con 1 piano'), s.base * 3], [L('With 2 floors', 'Con 2 piani'), s.base * 6], [L('With 3 floors', 'Con 3 piani'), s.base * 10]]
+    .map(([l, x], k) => `<div class="rl${k === level ? ' on' : ''}"><span>${l}</span><span>${fmt(x)}</span></div>`).join('');
+  let act = '';
+  if (my) {
+    if (s.owner == null) {
+      const f = G.filings.find(f => f.pid === v && f.i === s.i), min = minBid(s);
+      const landedOffer = G.phase === 'offer' && cur().pos === s.i;
+      const othersD = props().filter(x => x.d === s.d && x !== s);
+      let hint = '';
+      if (othersD.every(x => x.owner === v)) hint = othersD.every(isPublic)
+        ? `<p class="warn">${L(`This completes ${dn(s.d)}. Buying it openly puts the whole district on the public record: antitrust halves the rent and freezes building. A sealed bid keeps it hidden.`, `Questa completa ${dn(s.d)}. Comprandola alla luce del sole tutto il quartiere risulta tuo: l\u2019antitrust dimezza gli affitti e blocca i cantieri. Un\u2019offerta sigillata lo tiene nascosto.`)}</p>`
+        : `<p class="warn good">${L(`This completes your ${dn(s.d)} district: double rent and the right to build.`, `Questa completa il tuo quartiere ${dn(s.d)}: affitto doppio e diritto di costruire.`)}</p>`;
+      else { const q = G.players.find(q => q.id !== v && q.alive && seenOwned(s.d, q.id, v) === 2); if (q) hint = `<p class="warn">${L(`${pn(q)} owns the other two ${dn(s.d)} spaces. Take this one to block their monopoly.`, `${pn(q)} possiede le altre due caselle di ${dn(s.d)}. Prendi questa per bloccare il suo monopolio.`)}</p>`; }
+      act = `${hint}${landedOffer ? `<div class="act"><h5>${L('You’re standing here', 'Sei qui')}</h5><p>${L('Buy openly at list price. Everyone will see it’s yours.', 'Compra alla luce del sole a prezzo di listino. Tutti sapranno che è tua.')}</p><button class="btn" data-act="buy" ${me.cash < s.price ? 'disabled' : ''}>${L('Buy for ', 'Compra per ')}${fmt(s.price)}</button></div>` : ''}
+        <div class="act"><h5>${L('Sealed bid · anonymous', 'Offerta sigillata · anonima')}</h5>
+        <p>${L(`One bid per round, ${fmt(FILE_FEE)} filing fee. Bids open at the end of the round. The highest wins and owns it through a <strong>secret shell company</strong>; losing bids are refunded. Shells keep you safe from antitrust.`, `Un’offerta per round, ${fmt(FILE_FEE)} di deposito. Le buste si aprono a fine round. Vince la più alta, che possiede la casella tramite una <strong>società fantasma segreta</strong>; le altre vengono rimborsate. Le società fantasma ti proteggono dall’antitrust.`)}</p>
+        <div class="quick">${[min, r5(s.price * 1.4), r5(s.price * 1.7)].map(a => `<button class="btn sec sm" data-act="quickbid" data-a="${a}" ${me.cash + (f ? f.amt : 0) < a ? 'disabled' : ''}>${fmt(a)}</button>`).join('')}</div>
+        <div class="bidrow"><input id="bidAmt" type="number" inputmode="numeric" min="${min}" step="5" value="${f ? f.amt : min}" aria-label="${L('Bid amount', 'Importo offerta')}"><button class="btn" data-act="file">${f ? L('Update bid', 'Aggiorna') : L('Seal bid', 'Sigilla')}</button></div>
+        ${f ? `<button class="btn sec sm" data-act="cancelfile" data-i="${s.i}">${L(`Withdraw my ${fmt(f.amt)} bid`, `Ritira la mia offerta da ${fmt(f.amt)}`)}</button>` : ''}</div>`;
+    } else if (secret && s.owner !== v) {
+      const free = me.tips > 0, fine = r5(s.price * .25), blocked = s.guard > 0 && s.failed.includes(v);
+      act = `<div class="act"><h5>${L('Investigate', 'Indaga')}</h5><p>${L(`Expose who’s behind <strong>${s.alias}</strong>. The owner pays you <strong>${fmt(fine)}</strong>.`, `Scopri chi c’è dietro <strong>${s.alias}</strong>. Il proprietario ti paga <strong>${fmt(fine)}</strong>.`)}</p>
+        ${blocked ? `<p class="warn">${L('The registry file on this one has vanished. Someone paid off the clerk. Try again in a few rounds.', 'La pratica di questa è sparita. Qualcuno ha pagato l’impiegato. Riprova tra qualche round.')}</p>` : ''}
+        <button class="btn" data-act="inv" ${blocked || G.invUsed || (!free && me.cash < INV_COST) ? 'disabled' : ''}>${free ? L('Investigate with tip-off (free)', 'Indaga con la soffiata (gratis)') : L('Investigate for ', 'Indaga per ') + fmt(INV_COST)}</button>
+        ${G.invUsed ? `<p>${L('You already investigated this turn.', 'Hai già indagato in questo turno.')}</p>` : ''}</div>`;
+    } else if (s.owner === v) {
+      if (publicMonopoly(s.d) != null) act = settleCard(s.d, me);
+      else if (!fullDistrict(s.d, v)) act = `<div class="act"><h5>${L('Build', 'Costruisci')}</h5><p>${L(`Own all three ${dn(s.d)} spaces to add floors. Rent climbs to 3×, 6× and 10×.`, `Possiedi tutte e tre le caselle di ${dn(s.d)} per aggiungere piani. L’affitto sale a 3×, 6× e 10×.`)}</p></div>`;
+      else if (s.floors + s.pend < 3) act = `<div class="act"><h5>${L('Build · anonymous permit', 'Costruisci · licenza anonima')}</h5><p>${L('The floor goes up at the end of the round.', 'Il piano sarà pronto a fine round.')}</p><button class="btn" data-act="build" ${me.cash < buildCost(s) ? 'disabled' : ''}>${L(`Add floor ${s.floors + s.pend + 1} for ${fmt(buildCost(s))}`, `Aggiungi il piano ${s.floors + s.pend + 1} per ${fmt(buildCost(s))}`)}</button></div>`;
+    }
+    const pr = G.prices[s.d];
+    act += `<div class="act"><h5>${L('Invest in ', 'Investi in ') + dn(s.d)}</h5><p>${L(`Own <strong>${D.k}</strong> shares and you get a cut of every rent paid in ${dn(s.d)}, including this space.`, `Con le azioni <strong>${D.k}</strong> ricevi una quota di ogni affitto pagato in ${dn(s.d)}, compresa questa casella.`)}</p>
+      <button class="btn sec" data-act="bs" data-d="${s.d}" ${me.cash >= pr && sharesOut(s.d) < SHARE_CAP ? '' : 'disabled'}>${L(`Buy 1 ${D.k} share`, `Compra 1 azione ${D.k}`)} · ${fmt(pr)}</button></div>`;
+  } else if (!G.over) act = `<p class="lede">${L('Actions open on your turn.', 'Le azioni si sbloccano nel tuo turno.')}</p>`;
+  return `<div class="deed"><div class="deed-top${secret && !vis ? ' envtop' : ''}" style="${secret && !vis ? '' : 'background:' + D.c}"><small>${dn(s.d)} · ${L('Title deed', 'Contratto')}</small><h4>${nm(s)}</h4></div>
+    <div class="deed-body">${rows}
+      <div class="deed-meta"><span>${L('List price', 'Prezzo di listino')} <b>${fmt(s.price)}</b></span><span>${L('Floors', 'Piani')} <b>${s.floors}/3</b>${s.pend && vis ? ` (+${s.pend})` : ''}</span></div>
+      <div class="owner-line">${owner}</div>${publicMonopoly(s.d) != null ? `<div class="owner-line"><span class="badge anti-b">Antitrust</span><span>${L('rent halved, building frozen', 'affitti dimezzati, cantieri bloccati')}</span></div>`
+        : openMonopoly(s.d) != null ? `<div class="owner-line"><span class="badge">${G.cleared[s.d] != null ? L('Settled', 'Sanato') : L('Suspended', 'Sospeso')}</span><span>${G.cleared[s.d] != null ? L('antitrust case closed', 'caso antitrust chiuso') : L('antitrust quietly on hold', 'antitrust in pausa, chissà perché')}</span></div>` : ''}
+      ${s.owner === v && s.guard > 0 ? `<div class="owner-line"><span class="badge dark">${L('Protected', 'Protetta')}</span><span>${L(`registry file lost for ${s.guard} more round${s.guard > 1 ? 's' : ''}`, `pratica sparita per altri ${s.guard} round`)}</span></div>` : ''}</div></div>
+    ${act}${G.flash ? `<p class="flash">${G.flash[LANG]}</p>` : ''}`;
+}
+function settleCard(d, me) {
+  const sp = settleParts(d, me), my = isMyTurn();
+  return `<div class="act"><h5>${L('Antitrust settlement', 'Sanatoria antitrust')} · ${dn(d)}</h5>
+    <p>${L('Rent here is halved and building is frozen. Pay the regulator to close the case for good and keep the whole district.', 'Qui l’affitto è dimezzato e i cantieri sono bloccati. Paga l’autorità per chiudere il caso e tenerti tutto il quartiere.')}</p>
+    <div class="rl"><span>${L('4× full district rent', '4× affitto pieno del quartiere')}</span><span>${fmt(sp.rent)}</span></div>
+    <div class="rl"><span>${L('20% of property value', '20% del valore immobiliare')}</span><span>${fmt(sp.val)}</span></div>
+    ${sp.surPct ? `<div class="rl"><span>${L('Repeat offender surcharge', 'Maggiorazione recidiva')}</span><span>+${sp.surPct}%</span></div>` : ''}
+    <button class="btn" data-act="settle" data-d="${d}" ${my && me.cash >= sp.total ? '' : 'disabled'}>${L('Settle for ', 'Paga la sanatoria: ')}${fmt(sp.total)}</button>
+    <p>${L(`Or suspend it quietly for ${SUSP_RDS} rounds in the Backroom.`, `Oppure sospendila in silenzio per ${SUSP_RDS} round nelle Mazzette.`)}</p></div>`;
+}
+function backroomHTML(me) {
+  const my = isMyTurn(), risk = scandalRisk(me);
+  const col = me.heat < 30 ? 'var(--mint)' : me.heat < 60 ? 'var(--brass)' : 'var(--red)';
+  const btn = (kind, arg, ok) => `<button class="btn sm" data-act="bribe" data-k="${kind}" data-a="${arg ?? ''}" ${my && ok ? '' : 'disabled'}>${fmt(bribeCost(kind, arg))}</button>`;
+  const heatTag = k => BRIBE[k].heat > 0 ? `+${BRIBE[k].heat} ${L('heat', 'calore')}` : `${BRIBE[k].heat} ${L('heat', 'calore')}`;
+  const shells = props().filter(s => s.owner === me.id && s.shell && !s.revealed);
+  const antiD = DIST.map((_, d) => d).filter(d => publicMonopoly(d) === me.id || (G.susp[d] && G.susp[d].pid === me.id));
+  const card = (title, k, body, extra) => `<div class="act"><h5>${title} · ${heatTag(k)}</h5><p>${body}</p>${extra}</div>`;
+  const ready = `<span class="badge dark">${L('arranged', 'fatto')}</span>`;
+  return `<div class="heat"><div class="heat-l"><span>${L('Heat', 'Calore')} <b>${me.heat}%</b></span><span>${L('Scandal risk per round', 'Rischio scandalo a round')} <b>${risk}%</b></span></div>
+      <div class="heat-bar"><i style="width:${me.heat}%;background:${col}"></i></div>
+      <p class="meta" style="margin:0">${L(`Every bribe raises your heat, which cools by 3 a round. If you’re caught: a fine of 2× all bribes paid (${fmt(Math.max(100, me.bribed * 2))} now), protected shells exposed, favors cancelled. The Prosecutor space checks you at full heat. At 50% rivals see you’re under scrutiny.`,
+        `Ogni mazzetta alza il tuo calore, che scende di 3 a round. Se ti scoprono: multa pari a 2× le mazzette pagate (${fmt(Math.max(100, me.bribed * 2))} ora), società protette smascherate, favori annullati. La casella Procura ti controlla col calore pieno. Al 50% i rivali vedono che sei sotto osservazione.`)}</p></div>
+    ${my ? '' : `<p class="lede">${L('Bribes can only be paid on your turn.', 'Le mazzette si pagano solo nel tuo turno.')}</p>`}
+    ${card(L('Registry clerk', 'Impiegato del catasto'), 'guard', L(`Lose the file on one of your shells for ${GUARD_RDS} rounds. Investigations find nothing, and the investigator wastes the fee.`, `Fa sparire la pratica di una tua società per ${GUARD_RDS} round. Le indagini non trovano nulla e chi indaga butta i soldi.`),
+      shells.length ? `<ul class="items">${shells.map(s => `<li><span><span class="sw" style="--dc:${DIST[s.d].c}"></span><b>${s.alias}</b> <span class="meta">${nm(s)}</span></span>${s.guard ? `<span class="badge dark">${L(`safe ${s.guard} rd`, `protetta ${s.guard} rd`)}</span>` : btn('guard', s.i, me.cash >= bribeCost('guard', s.i))}</li>`).join('')}</ul>` : `<p class="meta">${L('You have no secret shells to protect.', 'Non hai società segrete da proteggere.')}</p>`)}
+    ${card(L('Tax inspector', 'Ispettore del fisco'), 'audit', L('Your next Audit costs nothing.', 'Il tuo prossimo controllo del Fisco non costa nulla.'), me.auditPass ? ready : btn('audit', null, me.cash >= BRIBE.audit.cost))}
+    ${card(L('Newspaper editor', 'Direttore del giornale'), 'press', L('The next Leak about you gets spiked.', 'Il prossimo Scoop su di te viene bloccato.'), me.pressPass ? ready : btn('press', null, me.cash >= BRIBE.press.cost))}
+    ${card(L('Antitrust official', 'Funzionario antitrust'), 'suspend', L(`Suspend antitrust on one of your districts for ${SUSP_RDS} rounds. Cheaper than a settlement, but it runs out, and everyone notices the case went quiet.`, `Sospendi l’antitrust su un tuo quartiere per ${SUSP_RDS} round. Costa meno della sanatoria, ma scade, e tutti notano che il caso si è fermato.`),
+      antiD.length ? `<ul class="items">${antiD.map(d => `<li><span><span class="sw" style="--dc:${DIST[d].c}"></span>${dn(d)}</span>${G.susp[d] && G.susp[d].pid === me.id ? `<span class="badge dark">${L(`on hold ${G.susp[d].left} rd`, `sospeso ${G.susp[d].left} rd`)}</span>` : btn('suspend', d, me.cash >= bribeCost('suspend', d))}</li>`).join('')}</ul>` : `<p class="meta">${L('None of your districts is under antitrust.', 'Nessun tuo quartiere è sotto antitrust.')}</p>`)}
+    ${card(L('Lawyer', 'Avvocato'), 'lawyer', L('Clean up your paper trail. Legal fees don’t count as bribes.', 'Ripulisci le tue carte. L’avvocato non conta come mazzetta.'), btn('lawyer', null, me.cash >= BRIBE.lawyer.cost && me.heat > 0))}`;
+}
+function tradeHTML() {
+  const t = TD, me = G.players[t.from], them = G.players[t.to];
+  const others = G.players.filter(q => q.alive && q.id !== me.id);
+  const chip = (s, side) => `<button class="pick${t[side].props.includes(s.i) ? ' on' : ''}" data-act="tdprop" data-side="${side}" data-i="${s.i}"><span class="sw" style="--dc:${DIST[s.d].c}"></span><span>${nm(s)}${s.shell && !s.revealed ? `<small>${s.alias}</small>` : ''}</span><b>${fmt(propVal(s))}</b></button>`;
+  const steppers = (holder, side) => DIST.map((D, d) => holder.shares[d] ? `<div class="stp"><span class="tick" style="--dc:${D.c}">${D.k}</span><span class="meta">${fmt(G.prices[d])}</span>
+      <button class="btn sec sm" data-act="tdsh" data-side="${side}" data-d="${d}" data-v="-1" aria-label="−">−</button><b>${t[side].shares[d]}</b><button class="btn sec sm" data-act="tdsh" data-side="${side}" data-d="${d}" data-v="1" aria-label="+">+</button><span class="meta">/ ${holder.shares[d]}</span></div>` : '').join('');
+  const col = (title, side, holder, list, extra) => {
+    const st = steppers(holder, side);
+    return `<section class="tcol"><h4>${title}</h4>
+      <label class="tl" for="td-${side}">${L('Cash', 'Contanti')}${side === 'give' ? `<span>${L('you have ', 'hai ')}${fmt(me.cash)}</span>` : ''}</label>
+      <input id="td-${side}" class="tcash" data-side="${side}" type="number" inputmode="numeric" min="0" step="5" placeholder="0" value="${t[side].cash || ''}">
+      <div class="tl">${L('Properties', 'Proprietà')}</div><div class="picks">${list.length ? list.map(s => chip(s, side)).join('') : `<span class="meta">${L('None', 'Nessuna')}</span>`}</div>
+      ${st ? `<div class="tl">${L('Shares', 'Azioni')}</div>${st}` : ''}${extra}</section>`;
+  };
+  const mySecrets = knownSecretsOf(me).filter(s => s.owner !== them.id);
+  const giveExtra = mySecrets.length ? `<div class="tl">${L('Secrets you know', 'Segreti che conosci')}</div><div class="picks">${mySecrets.map(s => `<button class="pick${t.give.secrets.includes(s.i) ? ' on' : ''}" data-act="tdsec" data-i="${s.i}"><span class="sw" style="--dc:${DIST[s.d].c}"></span><span>${s.alias}<small>${nm(s)} → ${pn(G.players[s.owner])}</small></span></button>`).join('')}</div>` : '';
+  const getExtra = `<div class="tl">${L('Secrets', 'Segreti')}</div><div class="stp"><span class="meta">${L('Shell owners they reveal to you', 'Proprietari di società che ti rivelano')}</span>
+    <button class="btn sec sm" data-act="tdnsec" data-v="-1" aria-label="−">−</button><b>${t.get.nsec}</b><button class="btn sec sm" data-act="tdnsec" data-v="1" aria-label="+">+</button></div>`;
+  return `<div class="modal trade"><h2>${L('Make a deal', 'Fai un affare')}</h2>
+    <div class="whos">${others.map(q => `<button class="whob${q.id === t.to ? ' on' : ''}" data-act="tdto" data-pid="${q.id}"><span class="av" style="--pc:${q.color}">${ini(q)}</span>${pn(q)}</button>`).join('')}</div>
+    <div class="tcols">${col(L('You give', 'Tu dai'), 'give', me, props().filter(s => s.owner === me.id), giveExtra)}${col(L(`${pn(them)} gives`, `${pn(them)} dà`), 'get', them, props().filter(s => s.owner === them.id && canSeeFor(s, me.id)), getExtra)}</div>
+    ${t.msg ? `<p class="warn">${t.msg[LANG]}</p>` : ''}
+    <div class="row" style="justify-content:space-between;margin-top:12px">
+      <span class="meta">${L(`${G.tradesLeft} offer${G.tradesLeft === 1 ? '' : 's'} left this turn`, `${G.tradesLeft} ${G.tradesLeft === 1 ? 'offerta rimasta' : 'offerte rimaste'} in questo turno`)}</span>
+      <span class="row">${t.add ? `<button class="btn sec" data-act="tdadd">${L('Add ', 'Aggiungi ')}${fmt(t.add)}</button>` : ''}<button class="btn sec" data-act="tdclose">${L('Close', 'Chiudi')}</button><button class="btn" data-act="tdgo" ${G.tradesLeft > 0 ? '' : 'disabled'}>${L('Propose', 'Proponi')}</button></span></div></div>`;
+}
+function dealSummary(t, pid) {
+  const recv = pid === t.to, youGet = recv ? t.give : t.get, youGive = recv ? t.get : t.give;
+  const li = x => { const a = sideText(x, true); return a.length ? a.map(v => `<li>${v}</li>`).join('') : `<li><span class="meta">${L('nothing', 'niente')}</span></li>`; };
+  const other = G.players[recv ? t.from : t.to];
+  const after = i => youGive.props.includes(i) ? other.id : youGet.props.includes(i) ? pid : G.board[i].owner;
+  const warns = [];
+  new Set([...youGive.props, ...youGet.props].map(i => G.board[i].d)).forEach(d => {
+    const all = o => props().filter(s => s.d === d).every(s => after(s.i) === o);
+    if (all(other.id) && !fullDistrict(d, other.id)) warns.push(`<p class="warn">${L(`This completes ${pn(other)}’s ${dn(d)} district.`, `Così ${pn(other)} completa il quartiere ${dn(d)}.`)}</p>`);
+    if (all(pid) && !fullDistrict(d, pid)) warns.push(`<p class="warn good">${L(`This completes your ${dn(d)} district.`, `Così completi il tuo quartiere ${dn(d)}.`)}</p>`);
+  });
+  return warns.join('') + `<div class="tcols tsum"><section class="tcol"><h4>${L('You get', 'Ricevi')}</h4><ul class="items">${li(youGet)}</ul></section><section class="tcol"><h4>${L('You give', 'Dai')}</h4><ul class="items">${li(youGive)}</ul></section></div>`;
+}
+
+function spark(d) {
+  const h = [...G.hist[d], G.prices[d]], w = 90, H = 26;
+  const mn = Math.min(...h), mx = Math.max(...h), sp = mx - mn || 1;
+  const pts = h.map((x, k) => [(k * (w - 6) / (h.length - 1)) + 3, H - 3 - (x - mn) / sp * (H - 6)]);
+  const line = pts.map(p => p.map(n => n.toFixed(1)).join(',')).join(' ');
+  const [lx, ly] = pts[pts.length - 1];
+  return `<svg width="${w}" height="${H}" viewBox="0 0 ${w} ${H}" aria-hidden="true"><polyline points="${line}" fill="none" stroke="${DIST[d].c}" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/><circle cx="${lx.toFixed(1)}" cy="${ly.toFixed(1)}" r="3" fill="${DIST[d].c}"/></svg>`;
+}
+function exchangeHTML(me) {
+  const my = isMyTurn();
+  const certs = DIST.map((D, d) => {
+    const pr = G.prices[d], prev = G.hist[d][G.hist[d].length - 1], ch = Math.round((pr - prev) / prev * 100);
+    const out = sharesOut(d), mineN = me.shares[d];
+    let slots = '';
+    G.players.forEach(q => { for (let k = 0; k < q.shares[d]; k++) slots += `<i style="background:${q.color}" title="${pn(q)}"></i>`; });
+    slots += '<i></i>'.repeat(SHARE_CAP - out);
+    const rentHere = props().filter(s => s.d === d && s.owner != null).reduce((a, s) => a + rentOf(s), 0);
+    const cut = out ? Math.round(mineN / out * 100) : 0;
+    const sharesTxt = L(`${mineN} share${mineN === 1 ? '' : 's'}`, `${mineN} ${mineN === 1 ? 'azione' : 'azioni'}`);
+    return `<div class="cert"><div class="cert-h" style="background:${D.c}"><span class="tk">${D.k}</span><span class="dn">${dn(d)}</span><span class="pr">${fmt(pr)}</span></div>
+      <div class="cert-b">
+        <div class="cert-row"><span class="chg ${ch > 0 ? 'up' : ch < 0 ? 'down' : ''}">${ch > 0 ? '▲ +' : ch < 0 ? '▼ ' : ''}${ch}% ${L('this round', 'in questo round')}</span>${spark(d)}</div>
+        <div class="slots" title="${L(`${out} of ${SHARE_CAP} shares issued`, `${out} azioni emesse su ${SHARE_CAP}`)}">${slots}</div>
+        <div class="cert-legend"><span>${L('You', 'Tu')}: <b>${sharesTxt}</b>${out ? ` · ${cut}% ${L('of payouts', 'dei dividendi')}` : ''}</span><span>${L('Earned', 'Incassati')} <b>${fmt(me.divs[d])}</b></span></div>
+        <div class="cert-legend"><span>${L('Rent on this street now', 'Affitti attuali in questo quartiere')}: <b>${fmt(rentHere)}</b> ${L('per visit', 'a visita')}</span></div>
+        <div class="btns"><button class="btn" data-act="bs" data-d="${d}" ${my && me.cash >= pr && out < SHARE_CAP ? '' : 'disabled'}>${L('Buy', 'Compra')} · ${fmt(pr)}</button><button class="btn sec" data-act="ss" data-d="${d}" ${my && mineN ? '' : 'disabled'}>${L('Sell', 'Vendi')}</button></div>
+      </div></div>`;
+  }).join('');
+  return `<div class="explain">${L('<b>How shares pay:</b> whenever anyone pays rent in a district, <b>30%</b> of it goes to that district’s shareholders, split by how many shares each one holds. The owner keeps the rest.',
+      '<b>Come pagano le azioni:</b> ogni volta che qualcuno paga un affitto in un quartiere, il <b>30%</b> va agli azionisti di quel quartiere, diviso in base alle azioni di ciascuno. Il resto va al proprietario.')}
+    <div class="flow"><span>${L(`${fmt(40)} rent paid in ${dn(0)}`, `Affitto di ${fmt(40)} pagato al ${dn(0)}`)}</span>→<span>${L(`${fmt(28)} to owner`, `${fmt(28)} al proprietario`)}</span>+<span>${L(`${fmt(12)} split among HRB holders`, `${fmt(12)} divisi tra gli azionisti HRB`)}</span></div></div>
+    ${my ? '' : `<p class="lede">${L('You can trade on your turn.', 'Puoi fare scambi nel tuo turno.')}</p>`}
+    <div class="certs">${certs}</div>`;
+}
+function empireHTML(me) {
+  const my = isMyTurn();
+  const shells = props().filter(s => s.owner === me.id && s.shell);
+  const pub = props().filter(s => s.owner === me.id && !s.shell);
+  const fil = G.filings.filter(f => f.pid === me.id);
+  const blds = G.builds.filter(b => b.pid === me.id);
+  const shares = DIST.map((D, d) => [D, d]).filter(([, d]) => me.shares[d]);
+  const dot = s => `<span class="sw" style="--dc:${DIST[s.d].c}"></span>`;
+  const empty = t => `<li><span class="meta">${t}</span></li>`;
+  return `<div class="stats"><div class="stat"><span>${L('Cash', 'Contanti')}</span><b>${fmt(me.cash)}</b></div><div class="stat"><span>${L('Net worth', 'Patrimonio')}</span><b>${fmt(netWorth(me))}</b></div></div>
+    <h3>${L('Secret shells', 'Società fantasma')}</h3><ul class="items">${shells.length ? shells.map(s => `<li><span>${dot(s)}<b>${s.alias}</b> <span class="meta">${nm(s)}</span></span><span class="badge${s.revealed ? ' red' : ' dark'}">${s.revealed ? L('exposed', 'smascherata') : L('secret', 'segreta')}</span></li>`).join('') : empty(L('None yet. Win a sealed bid to get one.', 'Nessuna. Vinci un’offerta sigillata per averne una.'))}</ul>
+    <h3>${L('Public deeds', 'Proprietà pubbliche')}</h3><ul class="items">${pub.length ? pub.map(s => `<li><span>${dot(s)}${nm(s)}</span><span class="meta">${L('rent ', 'affitto ')}${fmt(rentOf(s))}</span></li>`).join('') : empty(L('None yet. Buy where you land.', 'Nessuna. Compra dove ti fermi.'))}</ul>
+    <h3>${L('Shares', 'Azioni')}</h3><ul class="items">${shares.length ? shares.map(([D, d]) => `<li><span><span class="sw" style="--dc:${D.c}"></span>${D.k} × ${me.shares[d]}</span><span class="meta">${L('worth ', 'valore ')}${fmt(me.shares[d] * G.prices[d])} · ${L('earned ', 'incassati ')}${fmt(me.divs[d])}</span></li>`).join('') : empty(L('None yet. See the Exchange tab.', 'Nessuna. Guarda la scheda Borsa.'))}</ul>
+    ${fil.length || blds.length ? `<h3>${L('Sealed this round', 'Sigillate in questo round')}</h3><ul class="items">${fil.map(f => `<li><span>${L('Bid on ', 'Offerta su ')}${nm(G.board[f.i])} <span class="meta">${fmt(f.amt)}</span></span>${my ? `<button class="btn sec sm" data-act="cancelfile" data-i="${f.i}">${L('Withdraw', 'Ritira')}</button>` : ''}</li>`).join('')}${blds.map(b => `<li><span>${L('Permit on ', 'Licenza su ')}${nm(G.board[b.i])}</span><span class="meta">${fmt(b.cost)}</span></li>`).join('')}</ul>` : ''}
+    ${DIST.some((_, d) => publicMonopoly(d) === me.id) ? `<h3>${L('Antitrust cases', 'Casi antitrust')}</h3>${DIST.map((_, d) => d).filter(d => publicMonopoly(d) === me.id).map(d => settleCard(d, me)).join('')}` : ''}
+    ${me.tips ? `<p class="lede">${L(`You hold <strong>${me.tips} tip-off</strong> token${me.tips > 1 ? 's' : ''} for free investigations.`, `Hai <strong>${me.tips} ${me.tips > 1 ? 'soffiate' : 'soffiata'}</strong> per indagini gratis.`)}</p>` : ''}`;
+}
+function ledgerHTML() {
+  return `<ol class="log">${visibleLog().slice(0, 120).map(e => `<li class="${e.c || ''}${e.priv ? ' priv' : ''}" data-priv="${L('private', 'privato')}"><b>R${e.r}</b><span>${e.text}</span></li>`).join('')}</ol>`;
+}
+function flushFx() {
+  if (!G) return;
+  const layer = $('#fx'), v = viewer(), count = {};
+  G.fx.splice(0).forEach(f => {
+    if (!(f.pub || f.pid === v || G.over)) return;
+    if (f.type !== 'say' && !f.amt) return;
+    const seat = document.querySelector(`.seat[data-pid="${f.pid}"]`);
+    if (!seat) return;
+    const r = seat.getBoundingClientRect();
+    const k = count[f.pid] = (count[f.pid] ?? -1) + 1;
+    const el = document.createElement('div');
+    if (f.type === 'say') {
+      el.className = 'say'; el.textContent = f.text[LANG];
+      el.style.left = (r.left + r.width / 2) + 'px'; el.style.top = (r.bottom + 10) + 'px';
+      setTimeout(() => el.remove(), 2900);
+    } else {
+      el.className = 'pop ' + (f.amt > 0 ? 'plus' : 'minus');
+      el.innerHTML = `${f.amt > 0 ? '+' : '−'}${fmt(Math.abs(f.amt))}<small>${f.label[LANG]}</small>`;
+      el.style.left = (r.left + r.width / 2 + k * 28) + 'px'; el.style.top = (r.bottom + 4 + k * 8) + 'px';
+      el.style.animationDelay = (k * .15) + 's';
+      setTimeout(() => el.remove(), 2000);
+      if (f.pid === v) (f.amt > 0 ? sfx.plus : sfx.minus)();
+    }
+    layer.appendChild(el);
+  });
+}
+function renderOverlay() {
+  const ov = $('#overlay');
+  if (G.setup) {
+    const mode = (h, b, t, s, hot) => `<button class="mode${hot ? ' hot' : ''}" data-act="start" data-h="${h}" data-b="${b}"><b>${t}</b><small>${s}</small></button>`;
+    ov.className = 'overlay';
+    ov.innerHTML = `<div class="modal"><h2>${L('New game', 'Nuova partita')}</h2><p>${L(`${MAXR} rounds, ${fmt(START_CASH)} each. Pick a table.`, `${MAXR} round, ${fmt(START_CASH)} a testa. Scegli il tavolo.`)}</p>
+      <div class="modes">
+        ${mode(1, 3, L('You vs 3 bots', 'Tu contro 3 bot'), L('Best way to learn', 'Il modo migliore per imparare'), true)}
+        ${mode(1, 1, L('You vs 1 bot', 'Tu contro 1 bot'), L('Quick duel', 'Duello veloce'))}
+        ${mode(2, 0, L('2 players', '2 giocatori'), L('Hot-seat, pass the device', 'Stesso dispositivo, a turno'))}
+        ${mode(2, 2, L('2 players + 2 bots', '2 giocatori + 2 bot'), L('Hot-seat with bots', 'Stesso dispositivo, con bot'))}
+        ${mode(3, 0, L('3 players', '3 giocatori'), L('Hot-seat', 'Stesso dispositivo'))}
+        ${mode(4, 0, L('4 players', '4 giocatori'), L('Hot-seat', 'Stesso dispositivo'))}
+      </div>
+      <div class="row" style="justify-content:flex-end"><button class="btn sec" data-act="closeov">${L('Cancel', 'Annulla')}</button></div></div>`;
+    ov.hidden = false; return;
+  }
+  if (G.rules) {
+    const items = LANG === 'it' ? [
+      '<b>Tira e muoviti.</b> Se finisci su una casella libera puoi comprarla a prezzo di listino. Quell’acquisto è pubblico.',
+      `<b>Offerte sigillate.</b> Nel tuo turno tocca una casella libera qualsiasi e sigilla un’offerta (listino +25% o più, più ${fmt(FILE_FEE)} di deposito). Una sola offerta per round. Le buste si aprono a fine round: chi vince possiede la casella tramite una società fantasma segreta, mostrata come una busta nera.`,
+      '<b>Antitrust.</b> Se tutti possono vedere che possiedi un intero quartiere, gli affitti lì vengono dimezzati e i cantieri bloccati. Completa i quartieri tramite società fantasma per restare nascosto.',
+      '<b>Blocca.</b> Se un rivale possiede apertamente due caselle di un quartiere, prendi tu la terza prima di lui.',
+      `<b>Indaga</b> su una busta per ${fmt(INV_COST)} (gratis con una Soffiata). Il proprietario viene smascherato, ti paga il 25% del listino e può finire sotto antitrust.`,
+      '<b>Voci</b> ti rivela in privato il proprietario di una busta. <b>Scoop</b> smaschera una delle tue. <b>Fisco</b> tassa contanti e proprietà pubbliche; le società fantasma lo evitano.',
+      '<b>Soldi nascosti.</b> I contanti degli avversari sono segreti, e l’affitto pagato a una società fantasma va al proprietario nascosto.',
+      '<b>Costruisci</b> quando possiedi un quartiere intero (non sotto antitrust). I piani moltiplicano l’affitto fino a 10×.',
+      '<b>Azioni.</b> Ogni quartiere è un titolo. Gli azionisti si dividono il 30% di ogni affitto pagato lì.',
+      '<b>Sanatoria.</b> Sotto antitrust? Paga una sanatoria (4× l’affitto pieno del quartiere più il 20% del suo valore, e ogni volta costa di più) per chiudere il caso per sempre.',
+      '<b>Affari.</b> Nel tuo turno tocca il posto di un rivale o il pulsante Affare per scambiare soldi, proprietà, azioni e segreti. I bot trattano e ti fanno offerte.',
+      '<b>Mazzette.</b> Proteggono le società dalle indagini, cancellano controlli e scoop o sospendono l’antitrust. Ognuna alza il tuo calore: a ogni round c’è il rischio di uno scandalo, e la casella Procura ti controlla direttamente.',
+      `Dopo ${MAXR} round vince il più ricco. Chi fa bancarotta è fuori.`,
+    ] : [
+      '<b>Roll and move.</b> Land on an unowned space and you can buy it at list price. That deal is public.',
+      `<b>Sealed bids.</b> On your turn, tap any unowned space and seal a bid (list price +25% or more, plus a ${fmt(FILE_FEE)} filing fee). One bid per round. Bids open at the end of the round, and the winner owns the space through a secret shell company, shown as a black envelope.`,
+      '<b>Antitrust.</b> If everyone can see you own a whole district, rent there is halved and building is frozen. Complete districts through shells to stay hidden.',
+      '<b>Block.</b> When a rival openly owns two spaces of a district, grab the third before they do.',
+      `<b>Investigate</b> an envelope for ${fmt(INV_COST)} (free with a Tip-off). The owner is exposed, pays you 25% of list price, and may fall under antitrust.`,
+      '<b>Rumor</b> privately tells you who owns one envelope. <b>Leak</b> exposes one of yours. <b>Audit</b> taxes cash and public property; shells dodge it.',
+      '<b>Hidden money.</b> Rivals’ cash is secret, and rent paid to a shell goes to its hidden owner.',
+      '<b>Build</b> once you own a whole district that isn’t under antitrust. Floors multiply rent up to 10×.',
+      '<b>Shares.</b> Every district is a stock. Shareholders split 30% of all rent paid there.',
+      '<b>Settlement.</b> Under antitrust? Pay a settlement (4× the district’s full rent plus 20% of its value, dearer each time) to close the case for good.',
+      '<b>Deals.</b> On your turn, tap a rival’s seat or the Deal button to trade cash, properties, shares and secrets. Bots haggle and make offers of their own.',
+      '<b>Backroom.</b> Bribes protect shells from investigation, waive audits, spike leaks or suspend antitrust. Each one raises your heat: every round there’s a chance of a scandal, and the Prosecutor space checks you directly.',
+      `After ${MAXR} rounds the richest player wins. Go bankrupt and you’re out.`,
+    ];
+    ov.className = 'overlay';
+    ov.innerHTML = `<div class="modal"><h2>${L('How to play', 'Come si gioca')}</h2><p>${L('Monopoly, but owning a whole district in the open brings the regulators.', 'Come Monopoli, ma se possiedi un quartiere alla luce del sole arriva l’antitrust.')}</p>
+      <ol class="rules">${items.map(t => `<li>${t}</li>`).join('')}</ol>
+      <div class="row" style="justify-content:flex-end;margin-top:18px"><button class="btn" data-act="closeov">${L('Got it', 'Ho capito')}</button></div></div>`;
+    ov.hidden = false; return;
+  }
+  if (TD && isMyTurn()) { ov.className = 'overlay'; ov.innerHTML = tradeHTML(); ov.hidden = false; return; }
+  if (G.incoming) {
+    const t = G.incoming.t, a = G.players[t.from];
+    ov.className = 'overlay';
+    ov.innerHTML = `<div class="modal"><div class="dealhead"><span class="av" style="--pc:${a.color}">${ini(a)}</span><h2>${L(`${pn(a)} wants a deal`, `${pn(a)} propone un affare`)}</h2></div>
+      <p>${L('Private offer. Nobody else sees the terms.', 'Offerta privata. Nessun altro vede i termini.')}</p>${dealSummary(t, t.to)}
+      <div class="row" style="justify-content:flex-end"><button class="btn sec" data-act="indecline">${L('Decline', 'Rifiuta')}</button><button class="btn" data-act="inaccept" ${validTrade(t) ? '' : 'disabled'}>${L('Accept', 'Accetta')}</button></div></div>`;
+    ov.hidden = false; return;
+  }
+  if (G.tradeAsk) {
+    const ta = G.tradeAsk, t = ta.t, a = G.players[t.from], b = G.players[t.to];
+    ov.className = 'overlay opaque';
+    ov.innerHTML = ta.stage === 'ask'
+      ? `<div class="modal"><div class="dealhead"><span class="av" style="--pc:${b.color}">${ini(b)}</span><h2>${L('Pass to ', 'Passa a ')}${pn(b)}</h2></div>
+        <p>${L(`${pn(a)} offers you a deal.`, `${pn(a)} ti propone un affare.`)}</p>${dealSummary(t, t.to)}
+        <div class="row" style="justify-content:flex-end"><button class="btn sec" data-act="tdecline">${L('Decline', 'Rifiuta')}</button><button class="btn" data-act="taccept" ${validTrade(t) ? '' : 'disabled'}>${L('Accept', 'Accetta')}</button></div></div>`
+      : `<div class="modal pass"><span class="av" style="--pc:${a.color}">${ini(a)}</span><h2>${L('Pass back to ', 'Ripassa a ')}${pn(a)}</h2>
+        <p>${ta.ok ? L(`${pn(b)} accepted the deal.`, `${pn(b)} ha accettato l’affare.`) : L(`${pn(b)} turned it down.`, `${pn(b)} ha rifiutato.`)}</p><button class="btn" data-act="tback" id="primary">${L('Continue', 'Continua')}</button></div>`;
+    ov.hidden = false; return;
+  }
+  if (G.gazette) {
+    const g = G.gazette, v = viewer();
+    ov.className = 'overlay';
+    ov.innerHTML = `<div class="gazette" role="dialog" aria-label="${L('The Evening Ledger', 'Il Registro della Sera')}"><div class="mast"><h2>${L('The Evening Ledger', 'Il Registro della Sera')}</h2><small><span>Round ${g.round}</span><span>${L('Final edition', 'Ultima edizione')}</span><span>${L('5 cents', '5 centesimi')}</span></small></div>
+      <div class="news">${g.items.map(n => `<article><h3>${n.h[LANG]}${n.pid === v ? `<span class="yours">${L('yours', 'tua')}</span>` : ''}</h3><p>${n.s[LANG]}</p></article>`).join('')}</div>
+      <button class="btn" data-act="gaz" id="primary">${L('Next round', 'Prossimo round')}</button></div>`;
+    ov.hidden = false; return;
+  }
+  if (G.pass) {
+    const p = cur();
+    ov.className = 'overlay opaque';
+    ov.innerHTML = `<div class="modal pass"><span class="av" style="--pc:${p.color}">${ini(p)}</span><h2>${L('Pass to ', 'Passa a ')}${pn(p)}</h2><p>${L('Everyone else look away. Cash, shells and sealed bids stay hidden until you continue.', 'Gli altri guardino altrove. Contanti, società e offerte restano nascosti finché non continui.')}</p><button class="btn" data-act="passok" id="primary">${L(`I’m ${pn(p)}, show my table`, `Sono ${pn(p)}, mostrami il tavolo`)}</button></div>`;
+    ov.hidden = false; return;
+  }
+  if (G.showResults) {
+    const ranked = G.players.slice().sort((a, b) => (b.alive - a.alive) || netWorth(b) - netWorth(a));
+    const shells = props().filter(s => s.shell && s.owner != null);
+    const w = ranked[0];
+    ov.className = 'overlay';
+    ov.innerHTML = `<div class="modal"><h2>${Y(w) ? L('You win!', 'Hai vinto!') : L(`${pn(w)} wins`, `Vince ${pn(w)}`)}</h2><p>${L(`Final standings after ${G.round} round${G.round > 1 ? 's' : ''}. Every envelope has been opened.`, `Classifica finale dopo ${G.round} round. Tutte le buste sono state aperte.`)}</p>
+      <div class="tbl-wrap"><table class="res"><thead><tr><th>${L('Player', 'Giocatore')}</th><th>${L('Cash', 'Contanti')}</th><th>${L('Property', 'Proprietà')}</th><th>${L('Shares', 'Azioni')}</th><th>${L('Total', 'Totale')}</th></tr></thead><tbody>
+      ${ranked.map((q, k) => {
+        const pv = props().filter(s => s.owner === q.id).reduce((a, s) => a + propVal(s), 0);
+        const sv = q.shares.reduce((a, n, d) => a + n * G.prices[d], 0);
+        return `<tr class="${k === 0 ? 'win' : ''}"><td><span class="av" style="--pc:${q.color}">${ini(q)}</span>${pn(q)}${q.alive ? '' : L(' (bust)', ' (fallito)')}</td><td>${fmt(q.cash)}</td><td>${fmt(pv)}</td><td>${fmt(sv)}</td><td>${fmt(netWorth(q))}</td></tr>`;
+      }).join('')}</tbody></table></div>
+      ${shells.length ? `<h3 style="font-family:var(--display);font-weight:400;margin:0 0 6px">${L('Who was behind the shells', 'Chi c’era dietro le società')}</h3><ul class="items">${shells.map(s => `<li><span><b>${s.alias}</b> <span class="meta">${nm(s)}</span></span><span>${pn(G.players[s.owner])}</span></li>`).join('')}</ul>` : ''}
+      <div class="row" style="justify-content:flex-end;margin-top:16px"><button class="btn sec" data-act="closeov">${L('Look at the board', 'Guarda il tabellone')}</button><button class="btn" data-act="new">${L('New game', 'Nuova partita')}</button></div></div>`;
+    ov.hidden = false; return;
+  }
+  ov.hidden = true; ov.innerHTML = '';
+}
+
+/* ---------- input ---------- */
+const bidMsg = m => m ? both(m) : both(() => L('Bid sealed. It opens at the end of the round.', 'Offerta sigillata. Si apre a fine round.'));
+document.addEventListener('click', async e => {
+  const b = e.target.closest('[data-act]');
+  if (!b || !G) return;
+  const a = b.dataset.act;
+  if (a === 'lang') { LANG = LANG === 'en' ? 'it' : 'en'; try { localStorage.setItem('sg-lang', LANG); } catch (e) {} render(); return; }
+  if (a === 'new') { G.setup = true; G.showResults = false; render(); return; }
+  if (a === 'start') { newGame(+b.dataset.h, +b.dataset.b); return; }
+  if (a === 'rules') { G.rules = true; render(); return; }
+  if (a === 'closeov') { G.setup = false; G.rules = false; G.showResults = false; render(); return; }
+  if (a === 'results') { G.showResults = true; render(); return; }
+  if (a === 'gaz') { closeGazette(); return; }
+  if (a === 'passok') { G.pass = false; G.lastHuman = cur().id; sel = null; tab = 'exchange'; render(); return; }
+  if (a === 'sel') { sel = +b.dataset.i; tab = 'deed'; G.flash = null; render(); return; }
+  if (a === 'tab') { tab = b.dataset.tab; render(); return; }
+  if (a === 'speed') { SPEED = SPEED < 1 ? 1 : .35; try { localStorage.setItem('sg-speed', SPEED); } catch (e) {} render(); return; }
+  if (a === 'sound') { SOUND = !SOUND; try { localStorage.setItem('sg-sound', SOUND ? 'on' : 'off'); } catch (e) {} render(); return; }
+  if (a === 'inaccept' || a === 'indecline') { const inc = G.incoming; if (!inc) return; G.incoming = null; inc.res(a === 'inaccept'); render(); return; }
+  if (a === 'taccept' || a === 'tdecline') {
+    const ta = G.tradeAsk; if (!ta || ta.stage !== 'ask') return;
+    ta.ok = a === 'taccept' && validTrade(ta.t); if (ta.ok) executeTrade(ta.t);
+    ta.stage = 'back'; render(); return;
+  }
+  if (a === 'tback') { G.tradeAsk = null; render(); return; }
+  if (TD && a.startsWith('td')) {
+    const side = b.dataset.side, holder = G.players[side === 'get' ? TD.to : TD.from];
+    TD.msg = null; TD.add = a === 'tdadd' ? TD.add : 0;
+    if (a === 'tdclose') TD = null;
+    else if (a === 'tdto') { TD.to = +b.dataset.pid; TD.get = emptySide(); TD.give.secrets = TD.give.secrets.filter(i => G.board[i].owner !== TD.to); }
+    else if (a === 'tdprop') { const i = +b.dataset.i, arr = TD[side].props; arr.includes(i) ? arr.splice(arr.indexOf(i), 1) : arr.push(i); }
+    else if (a === 'tdsh') { const d = +b.dataset.d; TD[side].shares[d] = clamp(TD[side].shares[d] + +b.dataset.v, 0, holder.shares[d]); }
+    else if (a === 'tdsec') { const i = +b.dataset.i, arr = TD.give.secrets; arr.includes(i) ? arr.splice(arr.indexOf(i), 1) : arr.push(i); }
+    else if (a === 'tdnsec') TD.get.nsec = clamp(TD.get.nsec + +b.dataset.v, 0, 3);
+    else if (a === 'tdadd') { TD.give.cash += TD.add; TD.add = 0; }
+    else if (a === 'tdgo') proposeTrade();
+    render(); return;
+  }
+  if (!isMyTurn()) return;
+  G.flash = null;
+  if (a === 'roll') { await doRoll(); return; }
+  if (a === 'trade') { openTrade(b.dataset.pid != null ? +b.dataset.pid : null); render(); return; }
+  if (a === 'settle') settle(+b.dataset.d);
+  else if (a === 'bribe') bribe(b.dataset.k, b.dataset.a === '' ? null : +b.dataset.a);
+  else
+  if (a === 'buy') buyLanded();
+  else if (a === 'pass') passLanded();
+  else if (a === 'end') { endTurn(); return; }
+  else if (a === 'file') G.flash = bidMsg(fileBid(sel, +$('#bidAmt').value));
+  else if (a === 'quickbid') G.flash = bidMsg(fileBid(sel, +b.dataset.a));
+  else if (a === 'cancelfile') cancelFiling(+b.dataset.i);
+  else if (a === 'inv') investigate(sel);
+  else if (a === 'build') queueBuild(sel);
+  else if (a === 'bs') buyShare(+b.dataset.d);
+  else if (a === 'ss') sellShare(+b.dataset.d);
+  render();
+  if (!G.over && !cur().alive) endTurn();
+});
+document.addEventListener('input', e => {
+  if (TD && e.target.classList.contains('tcash')) TD[e.target.dataset.side].cash = Math.max(0, Math.floor(+e.target.value || 0));
+});
+document.addEventListener('keydown', e => {
+  if (e.key === 'Enter' && e.target.classList?.contains('seat') && e.target.dataset.act) { e.target.click(); return; }
+  if (e.target.id === 'bidAmt' && e.key === 'Enter') { e.preventDefault(); document.querySelector('[data-act="file"]')?.click(); return; }
+  if ((e.key === ' ' || e.key === 'Enter') && e.target === document.body) {
+    const p = document.getElementById('primary');
+    if (p && !p.disabled) { e.preventDefault(); p.click(); }
+  }
+});
+window.addEventListener('resize', () => { if (G) renderTokens(false); });
+
+buildDice();
+spinDice(3, 4);
+newGame(1, 3);
+})();
+</script>
+</body>
+</html>
